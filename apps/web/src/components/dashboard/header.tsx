@@ -1,0 +1,33 @@
+"use client"
+
+import { useSession } from "next-auth/react"
+import { Bell } from "lucide-react"
+
+export function Header({ title }: { title: string }) {
+  const { data: session } = useSession()
+
+  return (
+    <header className="flex h-16 items-center justify-between border-b bg-background px-6">
+      <h1 className="text-lg font-semibold">{title}</h1>
+      <div className="flex items-center gap-4">
+        <button className="relative rounded-full p-2 hover:bg-accent transition-colors">
+          <Bell className="h-5 w-5" />
+        </button>
+        <div className="flex items-center gap-2">
+          {session?.user?.image ? (
+            <img
+              src={session.user.image}
+              alt={session.user.name ?? ""}
+              className="h-8 w-8 rounded-full"
+            />
+          ) : (
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
+              {session?.user?.name?.[0]?.toUpperCase() ?? "U"}
+            </div>
+          )}
+          <span className="text-sm font-medium">{session?.user?.name}</span>
+        </div>
+      </div>
+    </header>
+  )
+}

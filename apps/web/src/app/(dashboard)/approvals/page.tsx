@@ -1,15 +1,26 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { approvals, users } from "../../../../db/schema"
+import { approvals } from "../../../../db/schema"
 import { eq, desc } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
 import { ApprovalCard } from "./approval-card"
+
+type ApprovalRow = {
+  id: string
+  title: string
+  description: string | null
+  context: unknown
+  status: "pending" | "approved" | "rejected"
+  expiresAt: Date | null
+  createdAt: Date
+  flowId: string | null
+}
 
 export default async function ApprovalsPage() {
   const session = await auth()
   const orgId = session!.user.organizationId!
 
-  const pending = await db
+  const rows: ApprovalRow[] = await db
     .select({
       id: approvals.id,
       title: approvals.title,
@@ -24,8 +35,8 @@ export default async function ApprovalsPage() {
     .where(eq(approvals.organizationId, orgId))
     .orderBy(desc(approvals.createdAt))
 
-  const pendingList = pending.filter((a) => a.status === "pending")
-  const resolvedList = pending.filter((a) => a.status !== "pending")
+  const pendingList = rows.filter((a) => a.status === "pending")
+  const resolvedList = rows.filter((a) => a.status !== "pending")
 
   return (
     <div>

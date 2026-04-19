@@ -1,0 +1,115 @@
+import { auth } from "@/lib/auth"
+import { db } from "@/lib/db"
+import { flows, approvals, flowRuns } from "../../../../db/schema"
+import { eq, desc, count, and } from "drizzle-orm"
+import { Header } from "@/components/dashboard/header"
+import Link from "next/link"
+import { GitBranch, CheckSquare, AlertCircle, Activity } from "lucide-react"
+
+export default async function DashboardPage() {
+  const session = await auth()
+  const orgId = session!.user.organizationId!
+
+  const [flowStats, pendingApprovals, recentRuns] = await Promise.all([
+    db.select({ total: count() }).from(flows).where(eq(flows.organizationId, orgId)),
+    db
+      .select({ total: count() })
+      .from(approvals)
+      .where(and(eq(approvals.organizationId, orgId), eq(approvals.status, "pending"))),
+    db
+      .select()
+      .from(flowRuns)
+      .where(eq(flowRuns.organizationId, orgId))
+      .orderBy(desc(flowRuns.createdAt))
+      .limit(5),
+  ])
+
+  const stats = [
+    {
+      label: "Fluxos ativos",
+      value: flowStats[0]?.total ?? 0,
+      icon: GitBranch,
+      href: "/flows",
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      label: "Aprovações pendentes",
+      value: pendingApprovals[0]?.total ?? 0,
+      icon: CheckSquare,
+      href: "/approvals",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+    },
+  ]
+
+  return (
+    <div>
+      <Header title="Dashboard" />
+      <div className="p-6 space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {stats.map((s) => (
+            <Link
+              key={s.label}
+              href={s.href}
+              className="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className={`rounded-lg p-2 ${s.bg}`}>
+                <s.icon className={`h-5 w-5 ${s.color}`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{s.value}</p>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Execuções recentes */}
+        <div className="rounded-xl border bg-card shadow-sm">
+          <div className="flex items-center gap-2 border-b px-6 py-4">
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-semibold">Execuções recentes</h2>
+          </div>
+          <div className="divide-y">
+            {recentRuns.length === 0 && (
+              <p className="px-6 py-8 text-center text-sm text-muted-foreground">
+                Nenhuma execução registrada ainda.
+              </p>
+            )}
+            {recentRuns.map((run) => (
+              <div key={run.id} className="flex items-center justify-between px-6 py-3">
+                <div className="flex items-center gap-3">
+                  <StatusDot status={run.status} />
+                  <span className="text-sm font-medium">{run.flowId}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  {run.errorMessage && (
+                    <span className="flex items-center gap-1 text-xs text-destructive">
+                      <AlertCircle className="h-3 w-3" />
+                      {run.errorMessage.slice(0, 40)}
+                    </span>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {run.createdAt.toLocaleString("pt-BR")}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StatusDot({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    success: "bg-green-500",
+    error: "bg-red-500",
+    running: "bg-blue-500 animate-pulse",
+    waiting: "bg-amber-500",
+  }
+  return <span className={`h-2 w-2 rounded-full ${colors[status] ?? "bg-gray-400"}`} />
+}

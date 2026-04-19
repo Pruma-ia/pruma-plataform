@@ -11,7 +11,7 @@ const flowUpdateSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   status: z.enum(["running", "success", "error", "waiting"]),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   errorMessage: z.string().optional(),
   startedAt: z.string().datetime().optional(),
   finishedAt: z.string().datetime().optional(),

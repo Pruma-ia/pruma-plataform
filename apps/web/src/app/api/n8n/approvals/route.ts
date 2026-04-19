@@ -12,7 +12,7 @@ const approvalRequestSchema = z.object({
   callbackUrl: z.string().url(),
   title: z.string(),
   description: z.string().optional(),
-  context: z.record(z.unknown()).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
   assignedToEmail: z.string().email().optional(),
   expiresAt: z.string().datetime().optional(),
 })

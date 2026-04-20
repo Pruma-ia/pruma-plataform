@@ -14,10 +14,10 @@ const statusLabel: Record<string, string> = {
 }
 
 const statusColors: Record<string, string> = {
-  running: "bg-blue-100 text-blue-700",
-  success: "bg-green-100 text-green-700",
+  running: "bg-[#E0F6FE] text-[#00AEEF]",
+  success: "bg-[#E0F6FE] text-[#0D1B4B]",
   error: "bg-red-100 text-red-700",
-  waiting: "bg-amber-100 text-amber-700",
+  waiting: "bg-[#E0F6FE] text-[#162460]",
 }
 
 export default async function FlowsPage() {

@@ -41,15 +41,15 @@ export function ApprovalCard({
   }
 
   const statusIcons: Record<string, React.ReactNode> = {
-    approved: <CheckCircle className="h-4 w-4 text-green-600" />,
+    approved: <CheckCircle className="h-4 w-4 text-[#00AEEF]" />,
     rejected: <XCircle className="h-4 w-4 text-red-600" />,
-    pending: <Clock className="h-4 w-4 text-amber-600" />,
+    pending: <Clock className="h-4 w-4 text-[#162460]" />,
   }
 
   const statusColors: Record<string, string> = {
-    approved: "border-green-200 bg-green-50/50",
+    approved: "border-[#5CCFF5]/40 bg-[#E0F6FE]/50",
     rejected: "border-red-200 bg-red-50/50",
-    pending: "border-amber-200 bg-amber-50/50",
+    pending: "border-[#5CCFF5]/30 bg-[#E0F6FE]/30",
   }
 
   const status = resolved ? "approved" : approval.status
@@ -95,7 +95,7 @@ export function ApprovalCard({
             <button
               onClick={() => resolve("approve")}
               disabled={!!loading}
-              className="flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 rounded-lg bg-[#00AEEF] px-4 py-2 text-sm font-medium text-white hover:bg-[#00AEEF]/90 disabled:opacity-50 transition-colors"
             >
               <CheckCircle className="h-4 w-4" />
               {loading === "approve" ? "Aprovando..." : "Aprovar"}
@@ -113,7 +113,7 @@ export function ApprovalCard({
       )}
 
       {resolved && (
-        <p className="mt-3 text-sm font-medium text-green-700">Aprovação registrada com sucesso.</p>
+        <p className="mt-3 text-sm font-medium text-[#00AEEF]">Aprovação registrada com sucesso.</p>
       )}
     </div>
   )

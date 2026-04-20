@@ -21,7 +21,7 @@ export function Header({ title }: { title: string }) {
               className="h-8 w-8 rounded-full"
             />
           ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00AEEF] text-white text-sm font-semibold">
               {session?.user?.name?.[0]?.toUpperCase() ?? "U"}
             </div>
           )}

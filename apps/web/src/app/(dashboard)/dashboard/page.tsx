@@ -30,16 +30,16 @@ export default async function DashboardPage() {
       value: flowStats[0]?.total ?? 0,
       icon: GitBranch,
       href: "/flows",
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-[#00AEEF]",
+      bg: "bg-[#E0F6FE]",
     },
     {
       label: "Aprovações pendentes",
       value: pendingApprovals[0]?.total ?? 0,
       icon: CheckSquare,
       href: "/approvals",
-      color: "text-amber-600",
-      bg: "bg-amber-50",
+      color: "text-[#0D1B4B]",
+      bg: "bg-[#E0F6FE]",
     },
   ]
 
@@ -106,10 +106,10 @@ export default async function DashboardPage() {
 
 function StatusDot({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    success: "bg-green-500",
+    success: "bg-[#00AEEF]",
     error: "bg-red-500",
-    running: "bg-blue-500 animate-pulse",
-    waiting: "bg-amber-500",
+    running: "bg-[#5CCFF5] animate-pulse",
+    waiting: "bg-[#0D1B4B]",
   }
   return <span className={`h-2 w-2 rounded-full ${colors[status] ?? "bg-gray-400"}`} />
 }

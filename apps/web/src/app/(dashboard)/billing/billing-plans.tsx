@@ -91,7 +91,7 @@ export function BillingPlans({ currentPlan }: { currentPlan: string | null }) {
               <ul className="mt-4 flex-1 space-y-2">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-green-600 shrink-0" />
+                    <Check className="h-4 w-4 text-[#00AEEF] shrink-0" />
                     {f}
                   </li>
                 ))}

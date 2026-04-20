@@ -6,11 +6,11 @@ import { Header } from "@/components/dashboard/header"
 import { BillingPlans } from "./billing-plans"
 
 const statusLabels: Record<string, { label: string; color: string }> = {
-  active: { label: "Ativo", color: "text-green-600 bg-green-50" },
-  trial: { label: "Período de teste", color: "text-blue-600 bg-blue-50" },
+  active: { label: "Ativo", color: "text-[#00AEEF] bg-[#E0F6FE]" },
+  trial: { label: "Período de teste", color: "text-[#0D1B4B] bg-[#E0F6FE]" },
   past_due: { label: "Pagamento em atraso", color: "text-amber-600 bg-amber-50" },
   canceled: { label: "Cancelado", color: "text-red-600 bg-red-50" },
-  inactive: { label: "Inativo", color: "text-gray-600 bg-gray-50" },
+  inactive: { label: "Inativo", color: "text-muted-foreground bg-muted" },
 }
 
 export default async function BillingPage() {

@@ -4,6 +4,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string
+      isSuperAdmin?: boolean
       organizationId?: string
       organizationSlug?: string
       role?: "owner" | "admin" | "member" | "viewer"

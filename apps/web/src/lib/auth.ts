@@ -51,7 +51,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.id) {
         session.user.id = token.id as string
 
-        // Carrega a organização ativa do usuário
+        const [dbUser] = await db
+          .select({ isSuperAdmin: users.isSuperAdmin })
+          .from(users)
+          .where(eq(users.id, token.id as string))
+          .limit(1)
+
+        if (dbUser?.isSuperAdmin) {
+          session.user.isSuperAdmin = true
+          return session
+        }
+
         const [membership] = await db
           .select({
             orgId: organizations.id,

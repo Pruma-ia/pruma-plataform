@@ -33,6 +33,7 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified"),
   image: text("image"),
   password: text("password"),
+  isSuperAdmin: boolean("is_super_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })

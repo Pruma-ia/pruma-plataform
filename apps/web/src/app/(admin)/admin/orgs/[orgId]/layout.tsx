@@ -3,13 +3,14 @@ import { organizations } from "../../../../../../db/schema"
 import { eq } from "drizzle-orm"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, LayoutDashboard, GitBranch, CheckSquare, CreditCard, ShieldAlert } from "lucide-react"
+import { ArrowLeft, LayoutDashboard, GitBranch, CheckSquare, CreditCard, ShieldAlert, Plug } from "lucide-react"
 
 const navItems = [
   { label: "Dashboard", href: "", icon: LayoutDashboard },
   { label: "Fluxos", href: "/flows", icon: GitBranch },
   { label: "Aprovações", href: "/approvals", icon: CheckSquare },
   { label: "Cobrança", href: "/billing", icon: CreditCard },
+  { label: "Integrações", href: "/integrations", icon: Plug },
 ]
 
 export default async function AdminOrgLayout({

@@ -7,7 +7,7 @@ import { z } from "zod"
 
 const approvalRequestSchema = z.object({
   organizationSlug: z.string(),
-  flowExternalId: z.string().optional(),
+  prumaFlowId: z.string().optional(),
   n8nExecutionId: z.string(),
   callbackUrl: z.string().url(),
   title: z.string(),
@@ -30,28 +30,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const {
-    organizationSlug,
-    flowExternalId,
-    n8nExecutionId,
-    callbackUrl,
-    title,
-    description,
-    context,
-    expiresAt,
-  } = parsed.data
+  const { organizationSlug, prumaFlowId, n8nExecutionId, callbackUrl, title, description, context, expiresAt } =
+    parsed.data
 
-  const [org] = await db.select().from(organizations).where(eq(organizations.slug, organizationSlug))
+  // Busca org pelo n8nSlug com fallback para slug de URL
+  const [org] = await db
+    .select()
+    .from(organizations)
+    .where(eq(organizations.n8nSlug, organizationSlug))
+    .limit(1)
+    .then(async (rows) => {
+      if (rows.length > 0) return rows
+      return db.select().from(organizations).where(eq(organizations.slug, organizationSlug)).limit(1)
+    })
+
   if (!org) {
     return NextResponse.json({ error: "Organization not found" }, { status: 404 })
   }
 
   let flowId: string | undefined
-  if (flowExternalId) {
+  if (prumaFlowId) {
     const [flow] = await db
       .select()
       .from(flows)
-      .where(and(eq(flows.organizationId, org.id), eq(flows.externalId, flowExternalId)))
+      .where(and(eq(flows.organizationId, org.id), eq(flows.prumaFlowId, prumaFlowId)))
+      .limit(1)
     flowId = flow?.id
   }
 

@@ -74,6 +74,8 @@ export const organizations = pgTable("organizations", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  // Slug imutável usado nas integrações n8n — separado do slug de URL para permitir rebranding
+  n8nSlug: text("n8n_slug").unique(),
   logo: text("logo"),
   // Asaas
   asaasCustomerId: text("asaas_customer_id").unique(),
@@ -126,8 +128,10 @@ export const flows = pgTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
-    // ID externo do fluxo no n8n
-    externalId: text("external_id").notNull(),
+    // ID estável definido pelo dev no pruma.json — nunca muda, único por org
+    prumaFlowId: text("pruma_flow_id").notNull(),
+    // ID do workflow no n8n — pode mudar se o workflow for deletado e recriado
+    n8nWorkflowId: text("n8n_workflow_id"),
     name: text("name").notNull(),
     description: text("description"),
     status: flowStatusEnum("status").default("running").notNull(),
@@ -138,7 +142,8 @@ export const flows = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
-    uniqueIndex("flow_org_external").on(t.organizationId, t.externalId),
+    uniqueIndex("flow_org_pruma_id").on(t.organizationId, t.prumaFlowId),
+    index("flow_n8n_workflow_idx").on(t.n8nWorkflowId),
     index("flow_org_idx").on(t.organizationId),
   ]
 )

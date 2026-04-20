@@ -7,7 +7,8 @@ import { z } from "zod"
 
 const flowUpdateSchema = z.object({
   organizationSlug: z.string(),
-  externalId: z.string(),
+  prumaFlowId: z.string(),
+  n8nWorkflowId: z.string().optional(),
   name: z.string(),
   description: z.string().optional(),
   status: z.enum(["running", "success", "error", "waiting"]),
@@ -30,41 +31,74 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { organizationSlug, externalId, name, description, status, metadata, errorMessage, startedAt, finishedAt } =
-    parsed.data
+  const {
+    organizationSlug,
+    prumaFlowId,
+    n8nWorkflowId,
+    name,
+    description,
+    status,
+    metadata,
+    errorMessage,
+    startedAt,
+    finishedAt,
+  } = parsed.data
 
+  // Busca org pelo n8nSlug (slug de integração), com fallback para slug de URL
   const [org] = await db
     .select()
     .from(organizations)
-    .where(eq(organizations.slug, organizationSlug))
+    .where(eq(organizations.n8nSlug, organizationSlug))
+    .limit(1)
+    .then(async (rows) => {
+      if (rows.length > 0) return rows
+      return db.select().from(organizations).where(eq(organizations.slug, organizationSlug)).limit(1)
+    })
 
   if (!org) {
     return NextResponse.json({ error: "Organization not found" }, { status: 404 })
   }
 
-  // Upsert do fluxo
-  const existing = await db
+  const [existing] = await db
     .select()
     .from(flows)
-    .where(and(eq(flows.organizationId, org.id), eq(flows.externalId, externalId)))
+    .where(and(eq(flows.organizationId, org.id), eq(flows.prumaFlowId, prumaFlowId)))
+    .limit(1)
 
   let flowId: string
 
-  if (existing.length > 0) {
+  if (existing) {
     await db
       .update(flows)
-      .set({ name, description, status, metadata, lastRunAt: new Date(), updatedAt: new Date() })
-      .where(eq(flows.id, existing[0].id))
-    flowId = existing[0].id
+      .set({
+        name,
+        description,
+        status,
+        metadata,
+        // Atualiza n8nWorkflowId se mudou (workflow recriado no n8n)
+        ...(n8nWorkflowId ? { n8nWorkflowId } : {}),
+        lastRunAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(flows.id, existing.id))
+    flowId = existing.id
   } else {
     const [inserted] = await db
       .insert(flows)
-      .values({ organizationId: org.id, externalId, name, description, status, metadata, lastRunAt: new Date() })
+      .values({
+        organizationId: org.id,
+        prumaFlowId,
+        n8nWorkflowId,
+        name,
+        description,
+        status,
+        metadata,
+        lastRunAt: new Date(),
+      })
       .returning()
     flowId = inserted.id
   }
 
-  // Registra run
   await db.insert(flowRuns).values({
     flowId,
     organizationId: org.id,

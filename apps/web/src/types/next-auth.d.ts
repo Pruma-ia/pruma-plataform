@@ -12,3 +12,16 @@ declare module "next-auth" {
     } & DefaultSession["user"]
   }
 }
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id?: string
+    isSuperAdmin?: boolean
+    organizationId?: string
+    organizationSlug?: string
+    role?: "owner" | "admin" | "member" | "viewer"
+    subscriptionStatus?: "active" | "trial" | "past_due" | "canceled" | "inactive"
+    /** Timestamp da última sincronização com o banco (ms). Usado para refresh de subscriptionStatus. */
+    refreshedAt?: number
+  }
+}

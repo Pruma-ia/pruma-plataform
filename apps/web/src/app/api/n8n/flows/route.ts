@@ -9,6 +9,8 @@ const flowUpdateSchema = z.object({
   organizationSlug: z.string(),
   prumaFlowId: z.string(),
   n8nWorkflowId: z.string().optional(),
+  // ID único da execução no n8n — enviado para garantir idempotência em reentregas
+  n8nExecutionId: z.string().optional(),
   name: z.string(),
   description: z.string().optional(),
   status: z.enum(["running", "success", "error", "waiting"]),
@@ -35,6 +37,7 @@ export async function POST(req: Request) {
     organizationSlug,
     prumaFlowId,
     n8nWorkflowId,
+    n8nExecutionId,
     name,
     description,
     status,
@@ -57,6 +60,19 @@ export async function POST(req: Request) {
 
   if (!org) {
     return NextResponse.json({ error: "Organization not found" }, { status: 404 })
+  }
+
+  // Idempotência: se este executionId já foi processado, retorna sem duplicar
+  if (n8nExecutionId) {
+    const [dup] = await db
+      .select({ id: flowRuns.id })
+      .from(flowRuns)
+      .where(eq(flowRuns.n8nExecutionId, n8nExecutionId))
+      .limit(1)
+
+    if (dup) {
+      return NextResponse.json({ ok: true, flowId: dup.id, idempotent: true })
+    }
   }
 
   const [existing] = await db
@@ -105,6 +121,7 @@ export async function POST(req: Request) {
     status,
     payload: metadata,
     errorMessage,
+    n8nExecutionId,
     startedAt: startedAt ? new Date(startedAt) : undefined,
     finishedAt: finishedAt ? new Date(finishedAt) : undefined,
   })

@@ -162,6 +162,8 @@ export const flowRuns = pgTable(
     // Payload completo do n8n
     payload: jsonb("payload"),
     errorMessage: text("error_message"),
+    // ID da execução no n8n — usado para idempotência (evita duplicatas em reentregas)
+    n8nExecutionId: text("n8n_execution_id").unique(),
     startedAt: timestamp("started_at"),
     finishedAt: timestamp("finished_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -193,6 +195,8 @@ export const approvals = pgTable(
     resolvedAt: timestamp("resolved_at"),
     comment: text("comment"),
     expiresAt: timestamp("expires_at"),
+    // Status do callback para o n8n: "sent" | "failed" | "blocked" (SSRF) | null (sem callback)
+    callbackStatus: text("callback_status"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

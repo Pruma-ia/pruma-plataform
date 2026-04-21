@@ -15,7 +15,8 @@ Nunca retornar dados cross-tenant. A única exceção é o superadmin via `/admi
 ## Fluxos (n8n)
 
 - Criados/atualizados **exclusivamente pelo n8n** via webhook — nunca pelo usuário.
-- `externalId` é o ID do fluxo no n8n, único por organização.
+- `prumaFlowId` é o ID estável definido pelo dev no `pruma.json`, único por organização.
+- `n8nWorkflowId` é o ID gerado pelo n8n, pode mudar se o workflow for recriado.
 - Cada execução gera um `flowRun` com payload completo.
 
 ## Aprovações

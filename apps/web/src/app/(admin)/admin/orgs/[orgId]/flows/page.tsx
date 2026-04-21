@@ -52,7 +52,7 @@ export default async function AdminOrgFlows({ params }: { params: Promise<{ orgI
                   {flow.description && (
                     <p className="text-sm text-muted-foreground">{flow.description}</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-0.5">ID externo: {flow.externalId}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">prumaFlowId: {flow.prumaFlowId}</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[flow.status]}`}>

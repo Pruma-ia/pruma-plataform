@@ -11,6 +11,8 @@
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
     "db:seed": "npx tsx db/seed.ts",
+    "db:migrate": "npx tsx scripts/migrate.ts",
+    "db:baseline": "npx tsx scripts/baseline-db.ts",
     "test": "vitest",
     "test:coverage": "vitest --coverage"
   },
@@ -52,7 +54,7 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "@types/pg": "^8.20.0",
-    "vitest": "^2.2.0",
-    "@vitest/coverage-v8": "^2.2.0"
+    "vitest": "^3.2.0",
+    "@vitest/coverage-v8": "^3.2.0"
   }
 }

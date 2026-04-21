@@ -8,6 +8,13 @@
       "when": 1776712068081,
       "tag": "0000_dark_mariko_yashida",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776798468081,
+      "tag": "0001_idempotency_and_callback_status",
+      "breakpoints": true
     }
   ]
 }

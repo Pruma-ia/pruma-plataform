@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+defaults:
+  run:
+    working-directory: apps/web
+
+jobs:
+  # ── 1. Tests ────────────────────────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - run: npm ci
+
+      - run: npm test -- --run
+
+  # ── 2. Build (type check + Next.js bundle) ──────────────────────────────────
+  build:
+    name: Build
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      # Placeholders para satisfazer validações em tempo de build.
+      # Nenhum valor real é necessário — nenhuma rota é executada durante o build.
+      DATABASE_URL: "postgresql://user:pass@localhost/placeholder"
+      AUTH_SECRET: "ci-placeholder-secret-must-be-32-chars-long"
+      AUTH_GOOGLE_ID: "placeholder"
+      AUTH_GOOGLE_SECRET: "placeholder"
+      N8N_WEBHOOK_SECRET: "placeholder"
+      ASAAS_API_KEY: "placeholder"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - run: npm ci
+
+      - run: npm run build
+
+  # ── 3. Migrate + Deploy (somente em merge para main/master) ─────────────────
+  deploy:
+    name: Migrate & Deploy
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - run: npm ci
+
+      - name: Run Drizzle migrations
+        run: npx tsx scripts/migrate.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Trigger Vercel deploy
+        run: curl -sf -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"

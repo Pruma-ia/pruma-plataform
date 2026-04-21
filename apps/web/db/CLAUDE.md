@@ -1,17 +1,36 @@
 # db — Schema e Migrations
 
-## Processo de migration
+## Fluxo de migration (local → produção)
 
 1. Editar `schema.ts`
 2. `npx drizzle-kit generate` — gera o SQL em `db/migrations/`
-3. `DATABASE_URL=... npx drizzle-kit migrate` — aplica ao banco
+3. Revisar o SQL gerado antes de commitar
+4. Commit + push para `main` → CI aplica automaticamente via `npm run db:migrate`
 
-**Para banco já existente com tabelas criadas:** se a migration for de coluna nova em tabela existente,
-rodar `ALTER TABLE` direto via `docker exec pruma_db psql ...` é mais seguro que tentar aplicar
-a migration completa (que tentaria recriar tabelas e falharia).
+**Não rodar `drizzle-kit push` em produção.** O `push` não rastreia histórico e pode
+descartar colunas sem aviso. Em produção usa-se sempre `scripts/migrate.ts`.
 
-**Neon em produção:** `drizzle-kit push` com `DATABASE_URL` apontando para Neon aplica o schema diretamente.
-Região do banco: `AWS US East 1 (N. Virginia)` — deve coincidir com a região das funções Vercel para minimizar latência.
+## Setup único — bancos criados com drizzle-kit push (já existentes)
+
+O Drizzle Migrate usa a tabela `__drizzle_migrations` no banco para saber o que já foi aplicado.
+Bancos criados com `push` não têm essa tabela. Antes do primeiro deploy com CI, rodar:
+
+```bash
+DATABASE_URL=<neon-url> npm run db:baseline
+```
+
+Isso cria a tabela de controle e marca `0000` e `0001` como já aplicadas — sem recriar nada.
+**Rodar apenas uma vez.** Após isso, `npm run db:migrate` funciona normalmente.
+
+## Scripts disponíveis
+
+| Script | Quando usar |
+|---|---|
+| `npm run db:generate` | Após editar `schema.ts` — gera o arquivo SQL |
+| `npm run db:migrate` | Aplica migrations pendentes (local ou produção) |
+| `npm run db:baseline` | **Uma vez** em bancos legados criados com `push` |
+| `npm run db:studio` | UI local para inspecionar o banco |
+| `npm run db:push` | **Apenas local** para iteração rápida de schema |
 
 ## Convenções de schema
 

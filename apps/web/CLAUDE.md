@@ -18,6 +18,14 @@ Forma de um argumento é erro de tipo.
 
 ---
 
+## Processo de desenvolvimento
+
+### Build antes de commitar (obrigatório)
+Sempre rodar `npm run build` em `apps/web` antes de qualquer commit.
+TypeScript e erros de tipo só aparecem no build — o Vercel falha se isso não for verificado localmente primeiro.
+
+---
+
 ## Stack
 
 - Next.js 16.2.4, App Router, TypeScript, Turbopack

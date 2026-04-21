@@ -42,8 +42,8 @@ export default async function FlowDetailPage({ params }: { params: Promise<{ id:
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
-              <dt className="text-xs text-muted-foreground">ID externo</dt>
-              <dd className="mt-1 font-mono text-sm">{flow.externalId}</dd>
+              <dt className="text-xs text-muted-foreground">Pruma Flow ID</dt>
+              <dd className="mt-1 font-mono text-sm">{flow.prumaFlowId}</dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Status</dt>

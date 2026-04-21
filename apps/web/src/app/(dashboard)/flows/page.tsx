@@ -61,7 +61,7 @@ export default async function FlowsPage() {
                       <p className="text-sm text-muted-foreground">{flow.description}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      ID externo: {flow.externalId}
+                      {flow.prumaFlowId}
                     </p>
                   </div>
                 </div>

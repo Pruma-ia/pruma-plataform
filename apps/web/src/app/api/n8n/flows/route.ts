@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { flows, flowRuns, organizations } from "../../../../../db/schema"
 import { eq, and } from "drizzle-orm"
-import { verifyN8nSecret } from "@/lib/n8n"
+import { verifyN8nSecret, validateCallbackUrl } from "@/lib/n8n"
 import { z } from "zod"
 
 const flowUpdateSchema = z.object({
@@ -18,6 +18,8 @@ const flowUpdateSchema = z.object({
   errorMessage: z.string().optional(),
   startedAt: z.string().datetime().optional(),
   finishedAt: z.string().datetime().optional(),
+  // URL base do n8n — auto-registrada na org se ainda não definida
+  n8nBaseUrl: z.string().url().optional(),
 })
 
 // POST /api/n8n/flows
@@ -45,6 +47,7 @@ export async function POST(req: Request) {
     errorMessage,
     startedAt,
     finishedAt,
+    n8nBaseUrl,
   } = parsed.data
 
   // Busca org pelo n8nSlug (slug de integração), com fallback para slug de URL
@@ -60,6 +63,15 @@ export async function POST(req: Request) {
 
   if (!org) {
     return NextResponse.json({ error: "Organization not found" }, { status: 404 })
+  }
+
+  // Auto-registra n8nBaseUrl na org se veio no payload e ainda não está definida
+  if (n8nBaseUrl && !org.n8nBaseUrl && validateCallbackUrl(n8nBaseUrl)) {
+    await db
+      .update(organizations)
+      .set({ n8nBaseUrl, updatedAt: new Date() })
+      .where(eq(organizations.id, org.id))
+    org.n8nBaseUrl = n8nBaseUrl
   }
 
   // Idempotência: se este executionId já foi processado, retorna sem duplicar

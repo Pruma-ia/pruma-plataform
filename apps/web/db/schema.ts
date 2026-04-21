@@ -76,6 +76,8 @@ export const organizations = pgTable("organizations", {
   slug: text("slug").notNull().unique(),
   // Slug imutável usado nas integrações n8n — separado do slug de URL para permitir rebranding
   n8nSlug: text("n8n_slug").unique(),
+  // URL base do n8n self-hosted — usada para validar callbackUrl nas approvals
+  n8nBaseUrl: text("n8n_base_url"),
   logo: text("logo"),
   // Asaas
   asaasCustomerId: text("asaas_customer_id").unique(),
@@ -195,13 +197,29 @@ export const approvals = pgTable(
     resolvedAt: timestamp("resolved_at"),
     comment: text("comment"),
     expiresAt: timestamp("expires_at"),
-    // Status do callback para o n8n: "sent" | "failed" | "blocked" (SSRF) | null (sem callback)
+    // Status do callback para o n8n: "sent" | "failed" | "blocked" (SSRF) | "exhausted" | null
     callbackStatus: text("callback_status"),
+    // Quantas vezes o retry automático tentou reenviar após falha inicial
+    callbackRetries: integer("callback_retries").default(0).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [index("approval_org_idx").on(t.organizationId)]
 )
+
+// ─── Onboarding Tokens ───────────────────────────────────────────────────────
+
+export const onboardingTokens = pgTable("onboarding_tokens", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  // SHA-256 do token raw — nunca armazenar o token em claro
+  tokenHash: text("token_hash").notNull().unique(),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
 
 // ─── Relations ────────────────────────────────────────────────────────────────
 
@@ -215,6 +233,14 @@ export const organizationsRelations = relations(organizations, ({ many }) => ({
   members: many(organizationMembers),
   flows: many(flows),
   approvals: many(approvals),
+  onboardingTokens: many(onboardingTokens),
+}))
+
+export const onboardingTokensRelations = relations(onboardingTokens, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [onboardingTokens.organizationId],
+    references: [organizations.id],
+  }),
 }))
 
 export const flowsRelations = relations(flows, ({ one, many }) => ({

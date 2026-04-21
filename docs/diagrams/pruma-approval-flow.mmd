@@ -1,0 +1,35 @@
+flowchart TD
+    N8N["n8n Wait Node\n(dispara webhook)"]
+    AP["POST /api/n8n/approvals"]
+    V1{"validateCallbackUrl\nbloqueia IPs privados"}
+    V2{"org tem n8nBaseUrl?\nconfere domínio"}
+    DB[("PostgreSQL\napproval inserida")]
+    USR["Usuário (painel web)\naprova ou rejeita"]
+    CB["POST callbackUrl\n(notifica n8n)"]
+    OK{"callback ok?"}
+    SENT["callbackStatus = sent"]
+    FAIL["callbackStatus = failed\ncallbackRetries++"]
+    CRON["Vercel Cron\na cada 15min"]
+    RETRY["retry-failed-callbacks\nmax 5 tentativas / 48h"]
+    EXHAUST["callbackStatus = exhausted"]
+
+    N8N -->|"x-n8n-secret + callbackUrl"| AP
+    AP --> V1
+    V1 -->|"IP privado"| BLOCK["422 bloqueado"]
+    V1 -->|"ok"| V2
+    V2 -->|"domínio errado"| BLOCK422["422 domínio inválido"]
+    V2 -->|"ok"| DB
+    DB --> USR
+    USR --> CB
+    CB --> OK
+    OK -->|"sim"| SENT
+    OK -->|"não"| FAIL
+    FAIL --> CRON
+    CRON --> RETRY
+    RETRY --> OK
+    RETRY -->|"5ª falha"| EXHAUST
+
+    style BLOCK fill:#ff6b6b,color:#fff
+    style BLOCK422 fill:#ff6b6b,color:#fff
+    style SENT fill:#51cf66,color:#fff
+    style EXHAUST fill:#ffa94d,color:#fff

@@ -1,0 +1,22 @@
+sequenceDiagram
+    actor SA as Superadmin
+    participant API as POST /api/admin/orgs
+    participant DB as PostgreSQL
+    actor CLI as Cliente (terminal)
+    participant OT as GET /api/onboarding/token
+
+    SA->>API: nome, slug, n8nSlug
+    API->>DB: INSERT organization
+    API->>DB: INSERT onboarding_token (SHA-256, expira 7d)
+    API-->>SA: onboardingToken pruma_ot_xxx
+
+    SA-->>CLI: envia token por Slack/e-mail
+
+    CLI->>CLI: make setup TOKEN=pruma_ot_xxx
+    CLI->>OT: GET /api/onboarding/pruma_ot_xxx
+    OT->>DB: lookup SHA-256(token)
+    OT->>DB: valida expiresAt e usedAt IS NULL
+    OT->>DB: UPDATE usedAt = now() (token queimado)
+    OT-->>CLI: organizationSlug, n8nSecret, apiUrl
+    CLI->>CLI: escreve .pruma-secrets e pruma.json
+    CLI->>API: make deploy - workflows registrados

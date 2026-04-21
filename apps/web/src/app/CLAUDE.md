@@ -16,8 +16,22 @@ Nunca retornar dados cross-tenant. A única exceção é o superadmin via `/admi
 
 - Criados/atualizados **exclusivamente pelo n8n** via webhook — nunca pelo usuário.
 - `prumaFlowId` é o ID estável definido pelo dev no `pruma.json`, único por organização.
-- `n8nWorkflowId` é o ID gerado pelo n8n, pode mudar se o workflow for recriado.
+- `n8nWorkflowId` é o ID gerado pelo n8n, pode mudar se o workflow for recriado — sempre atualizado no deploy.
 - Cada execução gera um `flowRun` com payload completo.
+
+## Integração n8n ↔ Pruma
+
+- Orgs têm dois slugs separados: `slug` (URL, pode mudar por rebranding) e `n8nSlug` (imutável, identifica a org no n8n).
+- `n8nSlug` é configurado pelo superadmin em `/admin/orgs/[orgId]/integrations` — nunca exposto ao cliente.
+- Webhooks do n8n enviam `organizationSlug` que é resolvido contra `n8nSlug` (fallback para `slug` por retrocompatibilidade).
+- Autenticação: header `x-n8n-secret` verificado por `verifyN8nSecret()` em todas as rotas `/api/n8n/*`.
+
+## pruma-deploy-kit
+
+- Tooling de deploy compartilhado entre todos os repos de clientes, distribuído como **git submodule**.
+- Repo: `github.com/Pruma-ia/pruma-deploy-kit` — qualquer melhoria no kit propaga via `git submodule update --remote`.
+- Cada repo cliente tem `pruma.json` com `organizationSlug`, `prumaApiUrl` e lista de `workflows`.
+- Credenciais do cliente ficam em `.pruma-secrets` (nunca versionado) — configurado via `make pruma-init`.
 
 ## Aprovações
 

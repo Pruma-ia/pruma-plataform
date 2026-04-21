@@ -10,6 +10,9 @@
 rodar `ALTER TABLE` direto via `docker exec pruma_db psql ...` é mais seguro que tentar aplicar
 a migration completa (que tentaria recriar tabelas e falharia).
 
+**Neon em produção:** `drizzle-kit push` com `DATABASE_URL` apontando para Neon aplica o schema diretamente.
+Região do banco: `AWS US East 1 (N. Virginia)` — deve coincidir com a região das funções Vercel para minimizar latência.
+
 ## Convenções de schema
 
 - Todo recurso de negócio tem coluna `organizationId` com FK para `organizations` — sem exceção.

@@ -2,8 +2,12 @@
  * Script de baseline — rodar UMA VEZ em bancos criados com drizzle-kit push.
  *
  * O Drizzle migrate usa drizzle.__drizzle_migrations (schema "drizzle", não "public").
- * Este script cria o schema/tabela e marca 0000 e 0001 como já aplicadas,
- * evitando que `drizzle-kit migrate` tente recriar tabelas que já existem.
+ * Este script cria o schema/tabela e marca APENAS 0000 como já aplicada
+ * (pois foi criada via drizzle-kit push). Migrations posteriores (0001+)
+ * serão aplicadas normalmente pelo CI via migrate.ts.
+ *
+ * ATENÇÃO: não adicionar aqui migrations que adicionam colunas/índices —
+ * marcar como aplicada sem executar o SQL causa erros em produção.
  *
  * Uso: DATABASE_URL=<neon-url> npx tsx scripts/baseline-db.ts
  */
@@ -29,8 +33,7 @@ async function main() {
   await sql`
     INSERT INTO drizzle.__drizzle_migrations (hash, created_at)
     VALUES
-      ('0000_dark_mariko_yashida',             1776712068081),
-      ('0001_idempotency_and_callback_status', 1776798468081)
+      ('0000_dark_mariko_yashida', 1776712068081)
     ON CONFLICT DO NOTHING
   `
 

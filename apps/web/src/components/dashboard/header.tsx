@@ -1,7 +1,7 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/components/theme-provider"
 import { Bell, Sun, Moon } from "lucide-react"
 
 export function Header({ title }: { title: string }) {

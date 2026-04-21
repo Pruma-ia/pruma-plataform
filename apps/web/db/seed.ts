@@ -18,17 +18,17 @@ async function main() {
   const sql = neon(process.env.DATABASE_URL!)
   const db = drizzle(sql)
 
-  const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email))
+  const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email as string))
 
   if (existing.length > 0) {
     console.log(`Super admin already exists: ${email}`)
     process.exit(0)
   }
 
-  const hashed = await bcrypt.hash(password, 12)
+  const hashed = await bcrypt.hash(password as string, 12)
 
   await db.insert(users).values({
-    email,
+    email: email as string,
     name,
     password: hashed,
     isSuperAdmin: true,

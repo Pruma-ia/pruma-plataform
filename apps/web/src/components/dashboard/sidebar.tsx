@@ -12,6 +12,7 @@ import {
   CreditCard,
   Settings,
   LogOut,
+  Building2,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 
@@ -24,7 +25,11 @@ const nav = [
   { href: "/settings", label: "Configurações", icon: Settings },
 ]
 
-export function Sidebar() {
+const adminNav = [
+  { href: "/admin", label: "Clientes", icon: Building2 },
+]
+
+export function Sidebar({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
   const pathname = usePathname()
 
   return (
@@ -46,10 +51,10 @@ export function Sidebar() {
             key={href}
             href={href}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm font-medium transition-colors",
               pathname === href || (href !== "/dashboard" && pathname.startsWith(href))
-                ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                ? "border-[#00AEEF] bg-white/10 text-white"
+                : "border-transparent text-sidebar-foreground/70 hover:bg-white/5 hover:text-white"
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
@@ -57,6 +62,29 @@ export function Sidebar() {
           </Link>
         ))}
       </nav>
+
+      {isSuperAdmin && (
+        <div className="border-t border-sidebar-border p-3">
+          <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
+            Super Admin
+          </p>
+          {adminNav.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm font-medium transition-colors",
+                pathname === href || pathname.startsWith(href)
+                  ? "border-[#00AEEF] bg-white/10 text-white"
+                  : "border-transparent text-sidebar-foreground/70 hover:bg-white/5 hover:text-white"
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </Link>
+          ))}
+        </div>
+      )}
 
       <div className="border-t border-sidebar-border p-3">
         <button

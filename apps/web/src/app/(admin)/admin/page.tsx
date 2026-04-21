@@ -1,8 +1,8 @@
 import { db } from "@/lib/db"
-import { organizations, organizationMembers, flows, approvals } from "../../../../db/schema"
-import { eq, count, sql } from "drizzle-orm"
+import { organizations, organizationMembers } from "../../../../db/schema"
+import { eq, count } from "drizzle-orm"
 import Link from "next/link"
-import { Building2, ChevronRight, Users, GitBranch, CheckSquare } from "lucide-react"
+import { Building2, ChevronRight, Users, ArrowLeft, CheckCircle2, Clock, AlertTriangle, XCircle } from "lucide-react"
 import Image from "next/image"
 
 export default async function AdminPage() {
@@ -20,6 +20,44 @@ export default async function AdminPage() {
     .leftJoin(organizationMembers, eq(organizationMembers.organizationId, organizations.id))
     .groupBy(organizations.id)
     .orderBy(organizations.createdAt)
+
+  const summary = [
+    {
+      label: "Total",
+      value: orgs.length,
+      icon: Building2,
+      color: "text-[#0D1B4B] dark:text-[#00AEEF]",
+      bg: "bg-[#E0F6FE] dark:bg-[#00AEEF]/15",
+    },
+    {
+      label: "Ativos",
+      value: orgs.filter((o) => o.subscriptionStatus === "active").length,
+      icon: CheckCircle2,
+      color: "text-[#00AEEF]",
+      bg: "bg-[#E0F6FE] dark:bg-[#00AEEF]/15",
+    },
+    {
+      label: "Em trial",
+      value: orgs.filter((o) => o.subscriptionStatus === "trial").length,
+      icon: Clock,
+      color: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-50 dark:bg-amber-500/15",
+    },
+    {
+      label: "Em atraso",
+      value: orgs.filter((o) => o.subscriptionStatus === "past_due").length,
+      icon: AlertTriangle,
+      color: "text-red-600 dark:text-red-400",
+      bg: "bg-red-50 dark:bg-red-500/15",
+    },
+    {
+      label: "Cancelados",
+      value: orgs.filter((o) => o.subscriptionStatus === "canceled").length,
+      icon: XCircle,
+      color: "text-muted-foreground",
+      bg: "bg-muted",
+    },
+  ]
 
   const statusColors: Record<string, string> = {
     active: "bg-[#E0F6FE] text-[#00AEEF]",
@@ -46,15 +84,39 @@ export default async function AdminPage() {
             Painel Admin
           </span>
         </div>
-        <p className="text-sm text-muted-foreground">Acesso somente leitura</p>
+        <div className="flex items-center gap-4">
+          <p className="text-sm text-muted-foreground">Acesso somente leitura</p>
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar ao Dashboard
+          </Link>
+        </div>
       </header>
 
       <main className="p-6">
+        <div className="mx-auto max-w-6xl">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Organizações</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {orgs.length} {orgs.length === 1 ? "cliente cadastrado" : "clientes cadastrados"}
           </p>
+        </div>
+
+        <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
+          {summary.map((s) => (
+            <div key={s.label} className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+              <div className={`rounded-lg p-2 ${s.bg}`}>
+                <s.icon className={`h-4 w-4 ${s.color}`} />
+              </div>
+              <div>
+                <p className="text-xl font-bold">{s.value}</p>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="rounded-xl border bg-card shadow-sm">
@@ -105,6 +167,7 @@ export default async function AdminPage() {
               </Link>
             ))}
           </div>
+        </div>
         </div>
       </main>
     </div>

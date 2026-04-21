@@ -31,15 +31,15 @@ export default async function DashboardPage() {
       icon: GitBranch,
       href: "/flows",
       color: "text-[#00AEEF]",
-      bg: "bg-[#E0F6FE]",
+      bg: "bg-[#E0F6FE] dark:bg-[#00AEEF]/15",
     },
     {
       label: "Aprovações pendentes",
       value: pendingApprovals[0]?.total ?? 0,
       icon: CheckSquare,
       href: "/approvals",
-      color: "text-[#0D1B4B]",
-      bg: "bg-[#E0F6FE]",
+      color: "text-[#0D1B4B] dark:text-[#00AEEF]",
+      bg: "bg-[#E0F6FE] dark:bg-[#00AEEF]/15",
     },
   ]
 

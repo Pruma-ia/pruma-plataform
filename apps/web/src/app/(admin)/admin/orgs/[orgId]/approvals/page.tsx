@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { approvals } from "../../../../../../../db/schema"
+import { approvals, users } from "../../../../../../../db/schema"
 import { eq, desc } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
 import { ApprovalCard } from "@/app/(dashboard)/approvals/approval-card"
@@ -20,9 +20,12 @@ export default async function AdminOrgApprovals({
       status: approvals.status,
       expiresAt: approvals.expiresAt,
       createdAt: approvals.createdAt,
+      resolvedAt: approvals.resolvedAt,
+      resolvedByName: users.name,
       flowId: approvals.flowId,
     })
     .from(approvals)
+    .leftJoin(users, eq(approvals.resolvedBy, users.id))
     .where(eq(approvals.organizationId, orgId))
     .orderBy(desc(approvals.createdAt))
 

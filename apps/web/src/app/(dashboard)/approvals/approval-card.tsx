@@ -11,6 +11,8 @@ type Approval = {
   status: string
   expiresAt?: Date | null
   createdAt: Date
+  resolvedAt?: Date | null
+  resolvedByName?: string | null
   flowId?: string | null
 }
 
@@ -79,6 +81,12 @@ export function ApprovalCard({
             {new Date(approval.createdAt).toLocaleString("pt-BR")}
             {approval.expiresAt && ` · Expira ${new Date(approval.expiresAt).toLocaleString("pt-BR")}`}
           </p>
+          {approval.resolvedAt && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Resolvido em {new Date(approval.resolvedAt).toLocaleString("pt-BR")}
+              {approval.resolvedByName && ` por ${approval.resolvedByName}`}
+            </p>
+          )}
         </div>
       </div>
 

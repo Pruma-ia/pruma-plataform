@@ -32,6 +32,10 @@ Isso cria a tabela de controle e marca `0000` e `0001` como já aplicadas — se
 | `npm run db:studio` | UI local para inspecionar o banco |
 | `npm run db:push` | **Apenas local** para iteração rápida de schema |
 
+## Variáveis de ambiente para drizzle-kit
+
+`drizzle-kit` lê `.env`, **não** `.env.local`. O arquivo `apps/web/.env` deve existir localmente com `DATABASE_URL` para que `db:push`, `db:generate`, `db:studio` e `db:migrate` funcionem sem passar a variável manualmente. Esse arquivo está no `.gitignore` (`*.env*`) — não versionar.
+
 ## Convenções de schema
 
 - Todo recurso de negócio tem coluna `organizationId` com FK para `organizations` — sem exceção.

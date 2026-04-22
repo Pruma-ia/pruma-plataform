@@ -1,0 +1,47 @@
+graph TB
+    subgraph PRUMA["Pruma IA — Vercel / Next.js 16"]
+        ADMIN["POST /api/admin/orgs\ncria org + token"]
+        OT["GET /api/onboarding/token\nconsome token one-time"]
+        FLOWS["POST /api/n8n/flows\nregistra flow + n8nBaseUrl"]
+        APPROVALS["POST /api/n8n/approvals\nvalida domínio + cria aprovação"]
+        RESOLVE["POST /approvals/id/approve\nPOST /approvals/id/reject"]
+        RETRY["GET /maintenance/retry-failed-callbacks\ncron 15min"]
+        PANEL["Painel Web\n/dashboard /approvals /flows"]
+    end
+
+    subgraph CLIENT["Repo do Cliente"]
+        ENV[".env\nN8N_URL + credenciais"]
+        SECRETS[".pruma-secrets\nPRUMA_API_URL + PRUMA_N8N_SECRET"]
+        MAKE["make setup\nmake deploy"]
+    end
+
+    subgraph N8N_HOST["n8n Self-hosted"]
+        WF["Workflow com Wait Node"]
+        CBURL["callbackUrl único\npor execução"]
+    end
+
+    DB[("PostgreSQL\nNeon")]
+    SA(["Superadmin"])
+    USER(["Usuário"])
+
+    SA -->|"cria org"| ADMIN
+    ADMIN --> DB
+    SA -->|"token pruma_ot_xxx"| MAKE
+    MAKE -->|"consome token"| OT
+    OT --> DB
+    OT -->|"slug + secret"| SECRETS
+    MAKE -->|"registra workflows"| FLOWS
+    FLOWS --> DB
+    WF -->|"dispara com callbackUrl"| APPROVALS
+    APPROVALS -->|"valida SSRF + domínio"| DB
+    USER --> PANEL
+    PANEL --> RESOLVE
+    RESOLVE -->|"notifica"| CBURL
+    CBURL --> WF
+    RETRY -->|"reprocessa failed"| DB
+    RETRY -->|"notifica"| CBURL
+
+    style PRUMA fill:#f0f4ff,stroke:#4c6ef5
+    style CLIENT fill:#f8fff0,stroke:#51cf66
+    style N8N_HOST fill:#fff8f0,stroke:#ff922b
+    style DB fill:#f8f0ff,stroke:#9c36b5

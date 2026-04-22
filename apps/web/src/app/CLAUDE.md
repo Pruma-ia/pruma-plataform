@@ -39,6 +39,8 @@ Nunca retornar dados cross-tenant. A única exceção é o superadmin via `/admi
 - `callbackUrl`: após aprovação/rejeição, o sistema POST de volta para o n8n continuar o fluxo.
 - Rejeição exige comentário — validação obrigatória no cliente e no servidor.
 - `canResolve={false}` no painel admin — aprovações são sempre read-only para superadmin.
+- `n8nExecutionId` é **obrigatório** no POST `/api/n8n/approvals` — string opaca gerada pelo n8n (qualquer formato). Tem constraint `unique` para idempotência: se o n8n retentar o webhook com o mesmo execution ID, a Pruma rejeita a duplicata em vez de criar duas aprovações.
+- `callbackUrl` passa por duas validações: (1) blocklist SSRF em `validateCallbackUrl()` — rejeita IPs privados/localhost; (2) se a org tem `n8nBaseUrl` configurada, o hostname do `callbackUrl` deve ser o mesmo — evita que um payload malicioso redirecione callbacks para fora do n8n da org.
 
 ## Billing (Asaas)
 

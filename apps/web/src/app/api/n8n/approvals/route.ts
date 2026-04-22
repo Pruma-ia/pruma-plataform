@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { approvals, flows, organizations } from "../../../../../db/schema"
 import { eq, and } from "drizzle-orm"
-import { verifyN8nSecret } from "@/lib/n8n"
+import { verifyN8nSecret, validateCallbackUrl } from "@/lib/n8n"
 import { z } from "zod"
 
 const approvalRequestSchema = z.object({
@@ -46,6 +46,23 @@ export async function POST(req: Request) {
 
   if (!org) {
     return NextResponse.json({ error: "Organization not found" }, { status: 404 })
+  }
+
+  // Bloqueia SSRF independente do n8nBaseUrl
+  if (!validateCallbackUrl(callbackUrl)) {
+    return NextResponse.json({ error: "callbackUrl inválida ou aponta para rede privada" }, { status: 422 })
+  }
+
+  // Se org tem n8nBaseUrl registrada, exige que callbackUrl seja do mesmo domínio
+  if (org.n8nBaseUrl) {
+    const allowedHost = new URL(org.n8nBaseUrl).hostname
+    const callbackHost = new URL(callbackUrl).hostname
+    if (callbackHost !== allowedHost) {
+      return NextResponse.json(
+        { error: `callbackUrl deve pertencer ao domínio n8n registrado (${allowedHost})` },
+        { status: 422 }
+      )
+    }
   }
 
   let flowId: string | undefined

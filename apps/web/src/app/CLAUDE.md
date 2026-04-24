@@ -42,6 +42,14 @@ Nunca retornar dados cross-tenant. Exceção única: superadmin via `/admin`.
 - `n8nExecutionId` **obrigatório** no POST `/api/n8n/approvals` — string opaca gerada pelo n8n (qualquer formato). Constraint `unique` para idempotência: n8n retentando webhook com mesmo execution ID → Pruma rejeita duplicata em vez de criar duas aprovações.
 - `callbackUrl` passa por duas validações: (1) blocklist SSRF em `validateCallbackUrl()` — rejeita IPs privados/localhost; (2) se org tem `n8nBaseUrl` configurada, hostname do `callbackUrl` deve ser o mesmo — evita payload malicioso redirecionando callbacks para fora do n8n da org.
 
+## Dívida técnica
+
+### retry-failed-callbacks — cron removido (Vercel free tier)
+- Rota `/api/maintenance/retry-failed-callbacks` existe mas **não tem trigger automático**.
+- Vercel free só suporta cron com recorrência diária (`0 X * * *`). Retry a cada 15min é incompatível — causava erro no deploy.
+- Callbacks com falha ficam sem reprocessamento automático até resolver.
+- Solução futura: GitHub Actions scheduled (`*/15 * * * *` não tem restrição), Inngest, ou upstash/qstash.
+
 ## Billing (Asaas)
 
 - Gateway brasileiro, suporte a PIX e boleto. Sandbox: `sandbox.asaas.com/api/v3`.

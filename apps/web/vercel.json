@@ -3,10 +3,6 @@
     {
       "path": "/api/maintenance/cleanup-flow-runs",
       "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/maintenance/retry-failed-callbacks",
-      "schedule": "*/15 * * * *"
     }
   ]
 }

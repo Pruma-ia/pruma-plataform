@@ -78,5 +78,3 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - name: Trigger Vercel deploy
-        run: curl -sf -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"

@@ -1,6 +1,6 @@
 # Project Management Skills - Claude Code Guidance
 
-This guide covers the 6 production-ready project management skills, 12 Python automation tools, and Atlassian MCP integration.
+6 PM skills, 12 Python tools, Atlassian MCP integration.
 
 ## PM Skills Overview
 
@@ -15,18 +15,18 @@ This guide covers the 6 production-ready project management skills, 12 Python au
 **Total Tools:** 12 Python automation tools
 **Agent:** cs-project-manager (orchestrates all 6 skills)
 **Slash Commands:** 3 (/sprint-health, /project-health, /retro)
-**Key Feature:** Atlassian MCP Server integration for direct Jira/Confluence operations
+**Key Feature:** Atlassian MCP Server for direct Jira/Confluence ops
 
 ## Atlassian MCP Integration
 
-**Purpose:** Direct integration with Jira and Confluence via Model Context Protocol (MCP)
+**Purpose:** Direct Jira/Confluence via MCP
 
 **Capabilities:**
 - Create, read, update Jira issues
-- Manage Confluence pages and spaces
-- Automate workflows and transitions
-- Generate reports and dashboards
-- Bulk operations on issues
+- Manage Confluence pages/spaces
+- Automate workflows/transitions
+- Generate reports/dashboards
+- Bulk issue ops
 
 **Setup:** Atlassian MCP server configured in Claude Code settings
 
@@ -43,13 +43,13 @@ mcp__atlassian__create_page space="TEAM" title="Sprint Retrospective"
 
 ### Senior PM (`senior-pm/`)
 
-**Focus:** Project planning, stakeholder management, risk mitigation
+**Focus:** Project planning, stakeholder mgmt, risk mitigation
 
 **Key Workflows:**
 - Project charter creation
-- Stakeholder analysis and communication plans
+- Stakeholder analysis/comms plans
 - Risk register maintenance
-- Status reporting and escalation
+- Status reporting/escalation
 
 ### Scrum Master (`scrum-master/`)
 
@@ -63,7 +63,7 @@ mcp__atlassian__create_page space="TEAM" title="Sprint Retrospective"
 
 ### Jira Expert (`jira-expert/`)
 
-**Focus:** Jira configuration, custom workflows, automation rules
+**Focus:** Jira config, custom workflows, automation rules
 
 **Scripts:**
 - `scripts/jql_query_builder.py` — Pattern-matching JQL builder from natural language
@@ -77,7 +77,7 @@ mcp__atlassian__create_page space="TEAM" title="Sprint Retrospective"
 
 ### Confluence Expert (`confluence-expert/`)
 
-**Focus:** Documentation strategy, templates, knowledge management
+**Focus:** Docs strategy, templates, knowledge mgmt
 
 **Scripts:**
 - `scripts/space_structure_generator.py` — Generates space hierarchy from team description
@@ -91,15 +91,15 @@ mcp__atlassian__create_page space="TEAM" title="Sprint Retrospective"
 
 ### Atlassian Admin (`atlassian-admin/`)
 
-**Focus:** Suite administration, user management, integrations
+**Focus:** Suite admin, user mgmt, integrations
 
 **Scripts:**
 - `scripts/permission_audit_tool.py` — Analyzes permission schemes for security gaps
 
 **Key Workflows:**
-- User provisioning and permissions
+- User provisioning/permissions
 - SSO/SAML configuration
-- App marketplace management
+- App marketplace mgmt
 - Performance monitoring
 
 ### Atlassian Templates (`atlassian-templates/`)

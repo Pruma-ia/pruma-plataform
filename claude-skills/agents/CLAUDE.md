@@ -1,24 +1,24 @@
 # Agent Development Guide
 
-This guide provides comprehensive instructions for creating **cs-* prefixed agents** that seamlessly integrate with the 42 production skills in this repository.
+Guide for creating **cs-* prefixed agents** integrating with 42 production skills.
 
 ## Agent Architecture
 
 ### What are cs-* Agents?
 
-**cs-* agents** are specialized Claude Code agents that orchestrate the 177 existing skills. Each agent:
+**cs-* agents** = specialized Claude Code agents orchestrating 177 existing skills. Each agent:
 - References skills via relative paths (`../../marketing-skill/`)
 - Executes Python automation tools from skill packages
 - Follows established workflows and templates
 - Maintains skill portability and independence
 
-**Key Principle**: Agents ORCHESTRATE skills, they don't replace them. Skills remain self-contained and portable.
+**Key Principle**: Agents ORCHESTRATE skills, don't replace them. Skills stay self-contained and portable.
 
 ### ClawHub Publishing Constraints
 
-When skills are published to **ClawHub** (clawhub.com):
-- **cs- prefix for slug conflicts only** — applies only on the ClawHub registry when another publisher already owns the slug. Repo folder names and local skill names are never renamed.
-- **No paid/commercial service dependencies** — skills must not require paid third-party API keys or commercial services unless provided by the project itself.
+When skills published to **ClawHub** (clawhub.com):
+- **cs- prefix for slug conflicts only** — applies only on ClawHub registry when another publisher owns slug. Repo folder names and local skill names never renamed.
+- **No paid/commercial service dependencies** — skills must not require paid third-party API keys or commercial services unless provided by project itself.
 - **plugin.json** — ONLY fields: `name`, `description`, `version`, `author`, `homepage`, `repository`, `license`, `skills: "./"`.
 - **Rate limit:** 5 new skills/hour on ClawHub. Use drip publishing for bulk operations.
 
@@ -45,7 +45,7 @@ When skills are published to **ClawHub** (clawhub.com):
 | [cs-project-manager](project-management/cs-project-manager.md) | PM | Project management with Atlassian integration |
 | [cs-quality-regulatory](ra-qm-team/cs-quality-regulatory.md) | RA/QM | Regulatory affairs and quality management |
 
-**Template Available**: [templates/agent-template.md](../templates/agent-template.md) (318 lines) - Use this to create new agents
+**Template Available**: [templates/agent-template.md](../templates/agent-template.md) (318 lines)
 
 ### Agent vs Skill
 
@@ -60,8 +60,6 @@ When skills are published to **ClawHub** (clawhub.com):
 ## Agent File Structure
 
 ### Required YAML Frontmatter
-
-Every agent file must start with valid YAML frontmatter:
 
 ```yaml
 ---
@@ -84,7 +82,7 @@ tools: [Read, Write, Bash, Grep, Glob]
 
 ### Required Markdown Sections
 
-After YAML frontmatter, include these sections:
+After YAML frontmatter:
 
 1. **Purpose** (2-3 paragraphs)
 2. **Skill Integration** (with subsections)
@@ -92,17 +90,15 @@ After YAML frontmatter, include these sections:
    - Python Tools
    - Knowledge Bases
    - Templates
-3. **Workflows** (minimum 3 workflows)
+3. **Workflows** (minimum 3)
 4. **Integration Examples** (concrete code/command examples)
-5. **Success Metrics** (how to measure effectiveness)
+5. **Success Metrics**
 6. **Related Agents** (cross-references)
-7. **References** (links to documentation)
+7. **References**
 
 ## Relative Path Resolution
 
 ### Path Pattern
-
-All skill references use the `../../` pattern:
 
 ```markdown
 **Skill Location:** `../../marketing-skill/content-creator/`
@@ -120,18 +116,13 @@ All skill references use the `../../` pattern:
 
 ### Why `../../`?
 
-From agent location: `agents/marketing/cs-content-creator.md`
-To skill location: `marketing-skill/content-creator/`
-
-Navigation: `agents/marketing/` → `../../` (up to root) → `marketing-skill/content-creator/`
+From `agents/marketing/cs-content-creator.md` → `../../` (up to root) → `marketing-skill/content-creator/`
 
 **Always test paths resolve correctly!**
 
 ## Python Tool Integration
 
 ### Execution Pattern
-
-Agents execute Python tools from skill packages:
 
 ```bash
 # From agent context
@@ -148,8 +139,8 @@ python ../../product-team/product-manager-toolkit/scripts/rice_prioritizer.py fe
 
 All Python tools must:
 - Use standard library only (or minimal dependencies documented in SKILL.md)
-- Support both JSON and human-readable output
-- Provide `--help` flag with usage information
+- Support JSON and human-readable output
+- Provide `--help` flag
 - Return appropriate exit codes (0 = success, 1 = error)
 - Handle missing arguments gracefully
 
@@ -160,13 +151,11 @@ When Python tools fail:
 2. Verify input file exists
 3. Check Python version compatibility (3.8+)
 4. Review tool's `--help` output
-5. Inspect error messages in stderr
+5. Inspect stderr
 
 ## Workflow Documentation
 
 ### Workflow Structure
-
-Each workflow must include:
 
 ```markdown
 ### Workflow 1: [Clear Descriptive Name]
@@ -191,14 +180,12 @@ python ../../marketing-skill/content-creator/scripts/seo_optimizer.py article.md
 
 ### Minimum Requirements
 
-Each agent must document **at least 3 workflows** covering:
-1. Primary use case (most common scenario)
-2. Advanced use case (complex scenario)
+At least 3 workflows covering:
+1. Primary use case (most common)
+2. Advanced use case (complex)
 3. Integration use case (combining multiple tools)
 
 ## Agent Template
-
-Use this template when creating new agents:
 
 ```markdown
 ---
@@ -287,11 +274,9 @@ python ../../domain-skill/skill-name/scripts/tool.py input.txt
 
 ### Agent Quality Checklist
 
-Before committing an agent:
-
 - [ ] YAML frontmatter valid (no parsing errors)
 - [ ] All required fields present (name, description, skills, domain, model, tools)
-- [ ] cs-* prefix used for agent naming
+- [ ] cs-* prefix used
 - [ ] Relative paths resolve correctly (../../ pattern)
 - [ ] Skill location documented and accessible
 - [ ] Python tools referenced with correct paths
@@ -301,8 +286,6 @@ Before committing an agent:
 - [ ] Related agents cross-referenced
 
 ### Testing Agent Integration
-
-Test these aspects:
 
 **1. Path Resolution**
 ```bash
@@ -331,47 +314,47 @@ cat ../../marketing-skill/content-creator/references/brand_guidelines.md
 ## Domain-Specific Guidelines
 
 ### Marketing Agents (agents/marketing/)
-- Focus on content creation, SEO, demand generation
+- Focus: content creation, SEO, demand generation
 - Reference: `../../marketing-skill/`
 - Tools: brand_voice_analyzer.py, seo_optimizer.py
 
 ### Product Agents (agents/product/)
-- Focus on prioritization, user research, agile workflows
+- Focus: prioritization, user research, agile workflows
 - Reference: `../../product-team/`
 - Tools: rice_prioritizer.py, user_story_generator.py, okr_cascade_generator.py
 
 ### C-Level Agents (agents/c-level/)
-- Focus on strategic decision-making
+- Focus: strategic decision-making
 - Reference: `../../c-level-advisor/`
 - Tools: Strategic analysis and planning tools
 
 ### Engineering Agents (agents/engineering/)
-- Focus on scaffolding, code quality, fullstack development
+- Focus: scaffolding, code quality, fullstack development
 - Reference: `../../engineering-team/`
 - Tools: project_scaffolder.py, code_quality_analyzer.py
 
 ## Common Pitfalls
 
-**Avoid these mistakes:**
+**Avoid:**
 
 ❌ Hardcoding absolute paths
 ❌ Skipping YAML frontmatter validation
 ❌ Forgetting to test relative paths
 ❌ Documenting workflows without examples
-❌ Creating agent dependencies (keep them independent)
+❌ Creating agent dependencies (keep independent)
 ❌ Duplicating skill content in agent files
 ❌ Using LLM calls instead of referencing Python tools
 
 ## Next Steps
 
-After creating an agent:
+After creating agent:
 
 1. Test all relative paths resolve
 2. Execute all Python tools from agent context
 3. Verify all workflows with concrete examples
 4. Update agent catalog in main README.md
 5. Create GitHub issue for agent testing
-6. Commit with conventional commit message: `feat(agents): implement cs-agent-name`
+6. Commit: `feat(agents): implement cs-agent-name`
 
 ---
 

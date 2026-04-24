@@ -1,18 +1,18 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) working in this repo.
 
 ## Project Purpose
 
-This is a **comprehensive skills library** for Claude AI and Claude Code - reusable, production-ready skill packages that bundle domain expertise, best practices, analysis tools, and strategic frameworks. The repository provides modular skills that teams can download and use directly in their workflows.
+**Comprehensive skills library** for Claude AI and Claude Code — reusable, production-ready skill packages bundling domain expertise, best practices, analysis tools, strategic frameworks. Modular skills teams download and deploy directly.
 
-**Current Scope:** 235 production-ready skills across 9 domains with 314 Python automation tools, 435 reference guides, 28 agents, and 27 slash commands.
+**Current Scope:** 235 production-ready skills across 9 domains with 314 Python automation tools, 435 reference guides, 28 agents, 27 slash commands.
 
-**Key Distinction**: This is NOT a traditional application. It's a library of skill packages meant to be extracted and deployed by users into their own Claude workflows.
+**Key Distinction**: NOT a traditional application. Library of skill packages meant to be extracted and deployed by users into their own Claude workflows.
 
 ## Navigation Map
 
-This repository uses **modular documentation**. For domain-specific guidance, see:
+**Modular documentation**. Domain-specific guidance:
 
 | Domain | CLAUDE.md Location | Focus |
 |--------|-------------------|-------|
@@ -66,15 +66,15 @@ skill-name/
 └── assets/               # User templates
 ```
 
-**Design Philosophy**: Skills are self-contained packages. Each includes executable tools (Python scripts), knowledge bases (markdown references), and user-facing templates. Teams can extract a skill folder and use it immediately.
+**Design Philosophy**: Self-contained packages. Each includes executable tools (Python scripts), knowledge bases (markdown references), user-facing templates. Extract skill folder, use immediately.
 
-**Key Pattern**: Knowledge flows from `references/` → into `SKILL.md` workflows → executed via `scripts/` → applied using `assets/` templates.
+**Key Pattern**: Knowledge flows `references/` → `SKILL.md` workflows → `scripts/` → `assets/` templates.
 
 ## Git Workflow
 
 **Branch Strategy:** feature → dev → main (PR only)
 
-**Branch Protection Active:** Main branch requires PR approval. Direct pushes blocked.
+**Branch Protection Active:** Main requires PR approval. Direct pushes blocked.
 
 ### Quick Start
 
@@ -101,7 +101,7 @@ gh pr create --base dev --head feature/agents-{name}
 
 **Branch Protection Rules:**
 - ✅ Main: Requires PR approval, no direct push
-- ✅ Dev: Unprotected, but PRs recommended
+- ✅ Dev: Unprotected, PRs recommended
 - ✅ All: Conventional commits enforced
 
 See [documentation/WORKFLOW.md](documentation/WORKFLOW.md) for complete workflow guide.
@@ -109,40 +109,40 @@ See [standards/git/git-workflow-standards.md](standards/git/git-workflow-standar
 
 ## Development Environment
 
-**No build system or test frameworks** - intentional design choice for portability.
+**No build system or test frameworks** — intentional, for portability.
 
 **Python Scripts:**
-- Use standard library only (minimal dependencies)
-- CLI-first design for easy automation
-- Support both JSON and human-readable output
+- Standard library only (minimal dependencies)
+- CLI-first for easy automation
+- JSON and human-readable output
 - No ML/LLM calls (keeps skills portable and fast)
 
-**If adding dependencies:**
-- Keep scripts runnable with minimal setup (`pip install package` at most)
+**Adding dependencies:**
+- Keep runnable with minimal setup (`pip install package` at most)
 - Document all dependencies in SKILL.md
-- Prefer standard library implementations
+- Prefer standard library
 
 ## Current Version
 
 **Version:** v2.3.0 (latest)
 
 **v2.3.0 Highlights:**
-- **llm-wiki plugin** — new POWERFUL-tier skill implementing Karpathy's LLM Wiki pattern. Second brain for Claude Code + Obsidian where the LLM incrementally ingests sources into a persistent, interlinked markdown vault. Ships SKILL.md (with `context: fork`), 3 sub-agents (wiki-ingestor, wiki-librarian, wiki-linter), 5 slash commands (/wiki-init, /wiki-ingest, /wiki-query, /wiki-lint, /wiki-log), 8 stdlib-only Python tools, 8 reference guides, full vault templates, and a worked example. Cross-tool compatible with Claude Code, Codex CLI, Cursor, Antigravity, OpenCode, Gemini CLI.
-- **tc-tracker** — new engineering skill: task context tracker with lifecycle, handoff format, schema, and 5 Python tools (tc_init, tc_create, tc_update, tc_status, tc_validator) plus `/tc` slash command
-- **apple-hig-expert** — new product skill: Apple Human Interface Guidelines expert with Liquid Glass aesthetic focus. Audits iOS/macOS/visionOS apps with `hig_checker` Python tool and comprehensive reference docs on visual design, platform specifics, and accessibility
+- **llm-wiki plugin** — new POWERFUL-tier skill implementing Karpathy's LLM Wiki pattern. Second brain for Claude Code + Obsidian: LLM incrementally ingests sources into persistent, interlinked markdown vault. Ships SKILL.md (with `context: fork`), 3 sub-agents (wiki-ingestor, wiki-librarian, wiki-linter), 5 slash commands (/wiki-init, /wiki-ingest, /wiki-query, /wiki-lint, /wiki-log), 8 stdlib-only Python tools, 8 reference guides, full vault templates, worked example. Cross-tool compatible: Claude Code, Codex CLI, Cursor, Antigravity, OpenCode, Gemini CLI.
+- **tc-tracker** — new engineering skill: task context tracker with lifecycle, handoff format, schema, 5 Python tools (tc_init, tc_create, tc_update, tc_status, tc_validator) plus `/tc` slash command
+- **apple-hig-expert** — new product skill: Apple Human Interface Guidelines expert with Liquid Glass aesthetic focus. Audits iOS/macOS/visionOS apps with `hig_checker` Python tool and comprehensive reference docs on visual design, platform specifics, accessibility
 - 235 total skills, 314 Python tools, 435 references, 28 agents, 27 commands
 
 **Version:** v2.2.0
 
 **v2.2.0 Highlights:**
 - **Security skills suite** — 6 new engineering-team skills: adversarial-reviewer, ai-security, cloud-security, incident-response, red-team, threat-detection (5 Python tools, 4 reference guides)
-- **Self-eval skill** — Honest AI work quality evaluation with two-axis scoring, score inflation detection, and session persistence
-- **Snowflake development** — Data warehouse development, SQL optimization, and data pipeline patterns
+- **Self-eval skill** — Honest AI work quality evaluation with two-axis scoring, score inflation detection, session persistence
+- **Snowflake development** — Data warehouse development, SQL optimization, data pipeline patterns
 - 234 total skills across 9 domains, 306 Python tools, 427 references, 25 agents, 22 commands
 - MkDocs docs site expanded to 269 generated pages (301 HTML pages)
 
 **v2.1.2 (2026-03-10):**
-- Landing page generator now outputs **Next.js TSX + Tailwind CSS** by default (4 design styles, 7 section generators)
+- Landing page generator outputs **Next.js TSX + Tailwind CSS** by default (4 design styles, 7 section generators)
 - **Brand voice integration** — landing page workflow uses marketing brand voice analyzer to match copy tone to design style
 - 25 Python scripts fixed across all domains (syntax, dependencies, argparse)
 - 237/237 scripts verified passing `--help`
@@ -155,60 +155,60 @@ See [standards/git/git-workflow-standards.md](standards/git/git-workflow-standar
 **v2.0.0 (2026-02-16):**
 - 25 POWERFUL-tier engineering skills added (engineering/ folder)
 - Plugin marketplace infrastructure (.claude-plugin/marketplace.json)
-- Multi-platform support: Claude Code, OpenAI Codex, OpenClaw, Hermes Agent, Gemini CLI, Cursor, and 6 more
+- Multi-platform: Claude Code, OpenAI Codex, OpenClaw, Hermes Agent, Gemini CLI, Cursor, and 6 more
 
-**Past Sprints:** See [documentation/delivery/](documentation/delivery/) and [CHANGELOG.md](CHANGELOG.md) for history.
+**Past Sprints:** See [documentation/delivery/](documentation/delivery/) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Roadmap
 
 **Phase 1-3 Complete:** 235 production-ready skills deployed across 9 domains
 - Engineering Core (37), Engineering POWERFUL (45), Product (16), Marketing (44), PM (9), C-Level (34), RA/QM (14), Business & Growth (5), Finance (4)
 - 314 Python automation tools, 435 reference guides, 28 agents, 27 commands
-- Complete enterprise coverage from engineering through regulatory compliance, sales, customer success, and finance
+- Full enterprise coverage: engineering through regulatory compliance, sales, customer success, finance
 - MkDocs Material docs site with 293+ indexed pages for SEO
 
 See domain-specific roadmaps in each skill folder's README.md or roadmap files.
 
 ## Key Principles
 
-1. **Skills are products** - Each skill deployable as standalone package
-2. **Documentation-driven** - Success depends on clear, actionable docs
-3. **Algorithm over AI** - Use deterministic analysis (code) vs LLM calls
-4. **Template-heavy** - Provide ready-to-use templates users customize
-5. **Platform-specific** - Specific best practices > generic advice
+1. **Skills are products** — each deployable as standalone package
+2. **Documentation-driven** — success depends on clear, actionable docs
+3. **Algorithm over AI** — deterministic analysis (code) vs LLM calls
+4. **Template-heavy** — ready-to-use templates users customize
+5. **Platform-specific** — specific best practices > generic advice
 
 ## ClawHub Publishing Constraints
 
-This repository publishes skills to **ClawHub** (clawhub.com) as the distribution registry. The following rules are **non-negotiable**:
+Repo publishes to **ClawHub** (clawhub.com). Rules **non-negotiable**:
 
-1. **cs- prefix for slug conflicts only.** When a skill slug is already taken on ClawHub by another publisher, publish with the `cs-` prefix (e.g., `cs-copywriting`, `cs-seo-audit`). The `cs-` prefix applies **only on the ClawHub registry** — repo folder names, local skill names, and all other tools (Claude Code, Codex, Gemini CLI) remain unchanged.
-2. **Never rename repo folders or local skill names** to match ClawHub slugs. The repo is the source of truth.
-3. **No paid/commercial service dependencies.** Skills must not require paid third-party API keys or commercial services unless provided by the project itself. Free-tier APIs and BYOK (bring-your-own-key) patterns are acceptable.
-4. **Rate limit: 5 new skills per hour** on ClawHub. Batch publishes must respect this. Use the drip timer (`clawhub-drip.timer`) for bulk operations.
+1. **cs- prefix for slug conflicts only.** Slug taken on ClawHub by another publisher → publish with `cs-` prefix (e.g., `cs-copywriting`, `cs-seo-audit`). `cs-` applies **only on ClawHub registry** — repo folder names, local skill names, all other tools unchanged.
+2. **Never rename repo folders or local skill names** to match ClawHub slugs. Repo is source of truth.
+3. **No paid/commercial service dependencies.** No required paid third-party API keys unless provided by project. Free-tier and BYOK acceptable.
+4. **Rate limit: 5 new skills per hour** on ClawHub. Batch publishes must respect this. Use `clawhub-drip.timer` for bulk ops.
 5. **plugin.json schema** — ONLY these fields: `name`, `description`, `version`, `author`, `homepage`, `repository`, `license`, `skills: "./"`. No extra fields.
-6. **Version follows repo versioning.** ClawHub package versions must match the repo release version (currently v2.2.0+).
+6. **Version follows repo versioning.** ClawHub package versions must match repo release version (currently v2.2.0+).
 
 ## Anti-Patterns to Avoid
 
-- Creating dependencies between skills (keep each self-contained)
-- Adding complex build systems or test frameworks (maintain simplicity)
-- Generic advice (focus on specific, actionable frameworks)
+- Dependencies between skills (keep each self-contained)
+- Complex build systems or test frameworks (maintain simplicity)
+- Generic advice (specific, actionable frameworks only)
 - LLM calls in scripts (defeats portability and speed)
-- Over-documenting file structure (skills are simple by design)
+- Over-documenting file structure (skills simple by design)
 
 ## Working with This Repository
 
-**Creating New Skills:** Follow the appropriate domain's roadmap and CLAUDE.md guide (see Navigation Map above).
+**Creating New Skills:** Follow domain's roadmap and CLAUDE.md guide (see Navigation Map).
 
-**Editing Existing Skills:** Maintain consistency across markdown files. Use the same voice, formatting, and structure patterns.
+**Editing Existing Skills:** Maintain consistency across markdown files — same voice, formatting, structure.
 
-**Quality Standard:** Each skill should save users 40%+ time while improving consistency/quality by 30%+.
+**Quality Standard:** Each skill saves users 40%+ time while improving consistency/quality 30%+.
 
 ## Additional Resources
 
 - **.gitignore:** Excludes .vscode/, .DS_Store, AGENTS.md, PROMPTS.md, .env*
-- **Plugin Registry:** [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json) - Marketplace distribution
-- **Standards Library:** [standards/](standards/) - Communication, quality, git, documentation, security
+- **Plugin Registry:** [.claude-plugin/marketplace.json](.claude-plugin/marketplace.json) — marketplace distribution
+- **Standards Library:** [standards/](standards/) — communication, quality, git, documentation, security
 - **Implementation Plans:** [documentation/implementation/](documentation/implementation/)
 - **Sprint Delivery:** [documentation/delivery/](documentation/delivery/)
 

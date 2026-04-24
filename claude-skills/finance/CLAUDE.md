@@ -1,6 +1,6 @@
 # Finance Skills - Claude Code Guidance
 
-This guide covers the finance skills and their Python automation tools.
+Finance skills + Python automation tools.
 
 ## Finance Skills Overview
 
@@ -16,7 +16,7 @@ This guide covers the finance skills and their Python automation tools.
 
 ### 1. Ratio Calculator (`financial-analyst/scripts/ratio_calculator.py`)
 
-**Purpose:** Calculate and interpret financial ratios from statement data
+**Purpose:** Calculate + interpret financial ratios from statement data
 
 **Features:**
 - Profitability ratios (ROE, ROA, Gross/Operating/Net Margin)
@@ -24,7 +24,7 @@ This guide covers the finance skills and their Python automation tools.
 - Leverage ratios (Debt-to-Equity, Interest Coverage, DSCR)
 - Efficiency ratios (Asset/Inventory/Receivables Turnover, DSO)
 - Valuation ratios (P/E, P/B, P/S, EV/EBITDA, PEG)
-- Built-in interpretation and benchmarking
+- Built-in interpretation + benchmarking
 
 **Usage:**
 ```bash
@@ -34,13 +34,13 @@ python financial-analyst/scripts/ratio_calculator.py financial_data.json --forma
 
 ### 2. DCF Valuation (`financial-analyst/scripts/dcf_valuation.py`)
 
-**Purpose:** Discounted Cash Flow enterprise and equity valuation
+**Purpose:** Discounted Cash Flow enterprise + equity valuation
 
 **Features:**
-- Revenue and cash flow projections
+- Revenue + cash flow projections
 - WACC calculation (CAPM-based)
-- Terminal value (perpetuity growth and exit multiple methods)
-- Enterprise and equity value derivation
+- Terminal value (perpetuity growth + exit multiple methods)
+- Enterprise + equity value derivation
 - Two-way sensitivity analysis
 - No external dependencies (uses math/statistics)
 
@@ -55,10 +55,10 @@ python financial-analyst/scripts/dcf_valuation.py valuation_data.json --format j
 **Purpose:** Analyze actual vs budget vs prior year performance
 
 **Features:**
-- Variance calculation (actual vs budget, actual vs prior year)
+- Variance calc (actual vs budget, actual vs prior year)
 - Materiality threshold filtering
 - Favorable/unfavorable classification
-- Department and category breakdown
+- Department + category breakdown
 
 **Usage:**
 ```bash
@@ -68,7 +68,7 @@ python financial-analyst/scripts/budget_variance_analyzer.py budget_data.json --
 
 ### 4. Forecast Builder (`financial-analyst/scripts/forecast_builder.py`)
 
-**Purpose:** Driver-based revenue forecasting and cash flow projection
+**Purpose:** Driver-based revenue forecasting + cash flow projection
 
 **Features:**
 - Driver-based revenue forecast model
@@ -85,17 +85,17 @@ python financial-analyst/scripts/forecast_builder.py forecast_data.json --format
 ## Quality Standards
 
 **All finance Python tools must:**
-- Use standard library only (math, statistics, json, argparse)
-- Support both JSON and human-readable output via `--format` flag
-- Provide clear error messages for invalid input
-- Return appropriate exit codes
-- Process files locally (no API calls)
-- Include argparse CLI with `--help` support
+- Standard library only (math, statistics, json, argparse)
+- JSON + human-readable output via `--format` flag
+- Clear error messages for invalid input
+- Appropriate exit codes
+- Local file processing (no API calls)
+- argparse CLI with `--help`
 
 ## Related Skills
 
-- **C-Level:** Strategic financial decision-making -> `../c-level-advisor/`
-- **Business & Growth:** Revenue operations, sales metrics -> `../business-growth/`
+- **C-Level:** Strategic financial decisions -> `../c-level-advisor/`
+- **Business & Growth:** Revenue ops, sales metrics -> `../business-growth/`
 - **Product Team:** Budget allocation, RICE scoring -> `../product-team/`
 
 ---

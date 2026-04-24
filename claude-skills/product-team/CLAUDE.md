@@ -1,6 +1,6 @@
 # Product Team Skills - Claude Code Guidance
 
-This guide covers the 16 production-ready product management skills and their Python automation tools.
+16 production-ready product skills + Python automation tools.
 
 ## Product Skills Overview
 
@@ -17,10 +17,10 @@ This guide covers the 16 production-ready product management skills and their Py
 10. **experiment-designer/** - Experiment design and sample size planning (1 tool)
 11. **product-discovery/** - Discovery frameworks and assumption mapping (1 tool)
 12. **roadmap-communicator/** - Roadmap communication and changelog generation (1 tool)
-13. **code-to-prd/** - Reverse-engineer any codebase into PRD (2 tools: codebase_analyzer, prd_scaffolder)
+13. **code-to-prd/** - Reverse-engineer codebase into PRD (2 tools: codebase_analyzer, prd_scaffolder)
 14. **research-summarizer/** - Research synthesis and summarization (1 tool)
-15. **apple-hig-expert/** - Apple Human Interface Guidelines compliance and design (1 tool: hig_checker)
-16. **spec-to-repo/** - Convert a spec document into a scaffolded repository
+15. **apple-hig-expert/** - Apple HIG compliance and design (1 tool: hig_checker)
+16. **spec-to-repo/** - Convert spec doc into scaffolded repo
 
 **Total Tools:** 17 Python automation tools
 
@@ -32,18 +32,12 @@ This guide covers the 16 production-ready product management skills and their Py
 
 ### 1. RICE Prioritizer (`product-manager-toolkit/scripts/rice_prioritizer.py`)
 
-**Purpose:** RICE framework implementation for feature prioritization
+RICE framework for feature prioritization.
 
 **Formula:** (Reach × Impact × Confidence) / Effort
 
-**Features:**
-- Portfolio analysis (quick wins vs big bets)
-- Quarterly roadmap generation
-- Capacity planning (story points or dev days)
-- CSV input/output for Jira/Linear integration
-- JSON export for dashboards
+**Features:** portfolio analysis, quarterly roadmap gen, capacity planning (story points or dev days), CSV input/output for Jira/Linear, JSON export for dashboards
 
-**Usage:**
 ```bash
 # Basic prioritization
 python product-manager-toolkit/scripts/rice_prioritizer.py features.csv
@@ -55,7 +49,6 @@ python product-manager-toolkit/scripts/rice_prioritizer.py features.csv --capaci
 python product-manager-toolkit/scripts/rice_prioritizer.py features.csv --output json
 ```
 
-**CSV Format:**
 ```csv
 feature,reach,impact,confidence,effort
 User Dashboard,500,3,0.8,5
@@ -65,16 +58,10 @@ Dark Mode,300,1,1.0,2
 
 ### 2. Customer Interview Analyzer (`product-manager-toolkit/scripts/customer_interview_analyzer.py`)
 
-**Purpose:** NLP-based interview transcript analysis
+NLP-based interview transcript analysis.
 
-**Features:**
-- Pain point extraction with severity scoring
-- Feature request identification
-- Sentiment analysis
-- Theme extraction
-- Jobs-to-be-done pattern recognition
+**Features:** pain point extraction with severity scoring, feature request ID, sentiment analysis, theme extraction, JTBD pattern recognition
 
-**Usage:**
 ```bash
 # Analyze transcript
 python product-manager-toolkit/scripts/customer_interview_analyzer.py interview.txt
@@ -85,16 +72,10 @@ python product-manager-toolkit/scripts/customer_interview_analyzer.py interview.
 
 ### 3. User Story Generator (`agile-product-owner/scripts/user_story_generator.py`)
 
-**Purpose:** INVEST-compliant user story generation
+INVEST-compliant user story generation.
 
-**Features:**
-- Sprint planning with capacity allocation
-- Epic breakdown into deliverable stories
-- Acceptance criteria generation
-- Story point estimation
-- Priority scoring
+**Features:** sprint planning with capacity allocation, epic breakdown, acceptance criteria gen, story point estimation, priority scoring
 
-**Usage:**
 ```bash
 # Interactive mode
 python agile-product-owner/scripts/user_story_generator.py
@@ -105,15 +86,10 @@ python agile-product-owner/scripts/user_story_generator.py sprint 30
 
 ### 4. OKR Cascade Generator (`product-strategist/scripts/okr_cascade_generator.py`)
 
-**Purpose:** Automated OKR hierarchy (company → product → team)
+Automated OKR hierarchy (company → product → team).
 
-**Features:**
-- Alignment scoring (vertical and horizontal)
-- Strategy templates (growth, retention, revenue, innovation)
-- Key result tracking
-- Progress visualization
+**Features:** alignment scoring (vertical + horizontal), strategy templates (growth, retention, revenue, innovation), key result tracking, progress visualization
 
-**Usage:**
 ```bash
 # Growth strategy OKRs
 python product-strategist/scripts/okr_cascade_generator.py growth
@@ -124,9 +100,8 @@ python product-strategist/scripts/okr_cascade_generator.py retention
 
 ### 5. Persona Generator (`ux-researcher-designer/scripts/persona_generator.py`)
 
-**Purpose:** Data-driven persona creation from user research
+Data-driven persona creation from user research.
 
-**Usage:**
 ```bash
 python ux-researcher-designer/scripts/persona_generator.py
 python ux-researcher-designer/scripts/persona_generator.py --output json
@@ -134,9 +109,8 @@ python ux-researcher-designer/scripts/persona_generator.py --output json
 
 ### 6. Design Token Generator (`ui-design-system/scripts/design_token_generator.py`)
 
-**Purpose:** Complete design token system from brand color
+Complete design token system from brand color.
 
-**Usage:**
 ```bash
 python ui-design-system/scripts/design_token_generator.py "#0066CC" modern css
 python ui-design-system/scripts/design_token_generator.py "#0066CC" modern scss
@@ -145,24 +119,18 @@ python ui-design-system/scripts/design_token_generator.py "#0066CC" modern json
 
 ### 7. Competitive Matrix Builder (`competitive-teardown/scripts/competitive_matrix_builder.py`)
 
-**Purpose:** Weighted competitive scoring with gap analysis
+Weighted competitive scoring with gap analysis.
 
-**Usage:**
 ```bash
 python competitive-teardown/scripts/competitive_matrix_builder.py competitors.json
 ```
 
 ### 8. Landing Page Scaffolder (`landing-page-generator/scripts/landing_page_scaffolder.py`)
 
-**Purpose:** Generate production-ready landing pages as Next.js/React TSX components with Tailwind CSS (default) or plain HTML.
+Production-ready landing pages as Next.js/React TSX components with Tailwind CSS (default) or plain HTML.
 
-**Features:**
-- TSX output (default): Next.js 14+ App Router components with Tailwind classes
-- 4 design styles: `dark-saas`, `clean-minimal`, `bold-startup`, `enterprise`
-- 7 section generators: nav, hero, features, testimonials, pricing, CTA, footer
-- Copy frameworks: PAS, AIDA, BAB
+**Features:** TSX default (Next.js 14+ App Router + Tailwind), 4 styles (`dark-saas`, `clean-minimal`, `bold-startup`, `enterprise`), 7 section generators, copy frameworks: PAS, AIDA, BAB
 
-**Usage:**
 ```bash
 python landing-page-generator/scripts/landing_page_scaffolder.py config.json --format tsx
 python landing-page-generator/scripts/landing_page_scaffolder.py config.json --format html
@@ -170,23 +138,18 @@ python landing-page-generator/scripts/landing_page_scaffolder.py config.json --f
 
 ### 9. Project Bootstrapper (`saas-scaffolder/scripts/project_bootstrapper.py`)
 
-**Purpose:** SaaS project scaffolding with auth, billing, and API setup
+SaaS project scaffolding with auth, billing, API setup.
 
-**Usage:**
 ```bash
 python saas-scaffolder/scripts/project_bootstrapper.py project_config.json
 ```
 
 ### 10. Metrics Calculator (`product-analytics/scripts/metrics_calculator.py`)
 
-**Purpose:** Product analytics — retention, cohort, and funnel analysis
+Product analytics — retention, cohort, funnel analysis.
 
-**Features:**
-- Retention curve analysis from event data
-- Funnel conversion tracking with stage-by-stage drop-off
-- Cohort grouping and comparison
+**Features:** retention curve from event data, funnel conversion with stage drop-off, cohort grouping + comparison
 
-**Usage:**
 ```bash
 # Retention analysis
 python product-analytics/scripts/metrics_calculator.py retention events.csv
@@ -200,14 +163,10 @@ python product-analytics/scripts/metrics_calculator.py kpi metrics.csv --json
 
 ### 11. Sample Size Calculator (`experiment-designer/scripts/sample_size_calculator.py`)
 
-**Purpose:** Statistical sample size planning for A/B tests and experiments
+Statistical sample size planning for A/B tests.
 
-**Features:**
-- Minimum detectable effect (MDE) calculation
-- Absolute and relative effect size modes
-- Power analysis with configurable alpha/beta
+**Features:** MDE calculation, absolute + relative effect size modes, power analysis with configurable alpha/beta
 
-**Usage:**
 ```bash
 # Absolute MDE
 python experiment-designer/scripts/sample_size_calculator.py --baseline-rate 0.12 --mde 0.02 --mde-type absolute
@@ -221,14 +180,10 @@ python experiment-designer/scripts/sample_size_calculator.py --baseline-rate 0.1
 
 ### 12. Assumption Mapper (`product-discovery/scripts/assumption_mapper.py`)
 
-**Purpose:** Map and prioritize product assumptions for discovery validation
+Map + prioritize product assumptions for discovery validation.
 
-**Features:**
-- Risk × uncertainty scoring for prioritization
-- CSV input with structured assumption fields
-- Categorization by assumption type (desirability, viability, feasibility, usability)
+**Features:** risk × uncertainty scoring, CSV input with structured fields, categorization by type (desirability, viability, feasibility, usability)
 
-**Usage:**
 ```bash
 python product-discovery/scripts/assumption_mapper.py assumptions.csv
 python product-discovery/scripts/assumption_mapper.py assumptions.csv --json
@@ -236,11 +191,10 @@ python product-discovery/scripts/assumption_mapper.py assumptions.csv --json
 
 ### 13. Changelog Generator (`roadmap-communicator/scripts/changelog_generator.py`)
 
-**Purpose:** Generate structured changelogs from git commit history
+Structured changelogs from git commit history.
 
-**Note:** Requires `git` on PATH — must be run inside a git repository.
+**Note:** Requires `git` on PATH — run inside git repo.
 
-**Usage:**
 ```bash
 python roadmap-communicator/scripts/changelog_generator.py --from v1.0.0 --to HEAD
 python roadmap-communicator/scripts/changelog_generator.py --from v1.0.0 --to v2.0.0 --json
@@ -298,12 +252,7 @@ python roadmap-communicator/scripts/changelog_generator.py --from v1.0.0 --to HE
 
 ## Quality Standards
 
-**All product Python tools must:**
-- CLI-first design for automation
-- Support both interactive and batch modes
-- JSON output for tool integration
-- Standard library only (minimal dependencies)
-- Actionable recommendations
+All product Python tools must: CLI-first for automation, interactive + batch modes, JSON output for integration, stdlib only, actionable recommendations.
 
 ## Additional Resources
 
@@ -312,7 +261,4 @@ python roadmap-communicator/scripts/changelog_generator.py --from v1.0.0 --to HE
 
 ---
 
-**Last Updated:** April 9, 2026
-**Skills Deployed:** 16/16 product skills production-ready
-**Total Tools:** 17 Python automation tools
-**Agents:** 5 | **Commands:** 8
+**Last Updated:** April 9, 2026 | **Skills:** 16/16 production-ready | **Tools:** 17 | **Agents:** 5 | **Commands:** 8

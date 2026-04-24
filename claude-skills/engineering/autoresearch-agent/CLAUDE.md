@@ -1,27 +1,27 @@
 # Autoresearch Agent — Claude Code Instructions
 
-This plugin runs autonomous experiment loops that optimize any file by a measurable metric.
+Plugin runs autonomous experiment loops that optimize any file by measurable metric.
 
 ## Commands
 
-Use the `/ar:` namespace for all commands:
+Use `/ar:` namespace for all commands:
 
-- `/ar:setup` — Set up a new experiment interactively
-- `/ar:run` — Run a single experiment iteration
-- `/ar:loop` — Start an autonomous loop with user-selected interval
+- `/ar:setup` — Set up new experiment interactively
+- `/ar:run` — Run single experiment iteration
+- `/ar:loop` — Start autonomous loop with user-selected interval
 - `/ar:status` — Show dashboard and results
-- `/ar:resume` — Resume a paused experiment
+- `/ar:resume` — Resume paused experiment
 
 ## How it works
 
-You (the AI agent) are the experiment loop. The scripts handle evaluation and git rollback.
+AI agent = experiment loop. Scripts handle evaluation and git rollback.
 
-1. You edit the target file with ONE change
-2. You commit it
-3. You call `run_experiment.py --single` — it evaluates and prints KEEP/DISCARD/CRASH
-4. You repeat
+1. Edit target file with ONE change
+2. Commit it
+3. Call `run_experiment.py --single` — evaluates, prints KEEP/DISCARD/CRASH
+4. Repeat
 
-Results persist in `results.tsv` and git log. Sessions can be resumed.
+Results persist in `results.tsv` and git log. Sessions resumable.
 
 ## When to use each command
 
@@ -29,7 +29,7 @@ Results persist in `results.tsv` and git log. Sessions can be resumed.
 ```
 /ar:setup
 ```
-Creates the experiment directory, config, program.md, results.tsv, and git branch.
+Creates experiment directory, config, program.md, results.tsv, git branch.
 
 ### Running one iteration at a time
 ```
@@ -41,26 +41,26 @@ Read history, make one change, evaluate, report result.
 ```
 /ar:loop engineering/api-speed
 ```
-Prompts for interval (10min, 1h, daily, weekly, monthly), then creates a recurring job.
+Prompts for interval (10min, 1h, daily, weekly, monthly), creates recurring job.
 
 ### Checking progress
 ```
 /ar:status
 ```
-Shows the dashboard across all experiments with metrics and trends.
+Dashboard across all experiments with metrics and trends.
 
 ### Resuming after context limit or break
 ```
 /ar:resume engineering/api-speed
 ```
-Reads results history, checks out the branch, and continues where you left off.
+Reads results history, checks out branch, continues where left off.
 
 ## Agents
 
-- **experiment-runner**: Spawned for each loop iteration. Reads config, results history, decides what to try, edits target, commits, evaluates.
+- **experiment-runner**: Spawned per loop iteration. Reads config, results history, decides what to try, edits target, commits, evaluates.
 
 ## Key principle
 
 **One change per experiment. Measure everything. Compound improvements.**
 
-The agent never modifies the evaluator. The evaluator is ground truth.
+Agent never modifies evaluator. Evaluator = ground truth.

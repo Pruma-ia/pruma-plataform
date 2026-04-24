@@ -2,34 +2,34 @@
 
 ## For All Agents (Claude Code, Codex CLI, OpenClaw)
 
-This directory contains 43 marketing skills organized into specialist pods.
+43 marketing skills, organized into specialist pods.
 
 ### How to Use
 
-1. **Start with routing:** Read `marketing-ops/SKILL.md` — it has a routing matrix that maps user requests to the right skill.
-2. **Check context:** If `marketing-context.md` exists, read it first. It has brand voice, personas, and competitive landscape.
-3. **Load ONE skill:** Read only the specialist SKILL.md you need. Never bulk-load.
+1. **Start with routing:** Read `marketing-ops/SKILL.md` — routing matrix maps requests to right skill.
+2. **Check context:** If `marketing-context.md` exists, read it first. Brand voice, personas, competitive landscape.
+3. **Load ONE skill:** Read only needed specialist SKILL.md. Never bulk-load.
 
 ### Skill Map
 
-- `marketing-context/` — Run first to capture brand context
-- `marketing-ops/` — Router (read this to know where to go)
+- `marketing-context/` — Run first, capture brand context
+- `marketing-ops/` — Router (read to know where to go)
 - `content-production/` — Write content (blog posts, articles, guides)
-- `content-strategy/` — Plan what content to create
-- `ai-seo/` — Optimize for AI search engines (ChatGPT, Perplexity, Google AI)
+- `content-strategy/` — Plan content
+- `ai-seo/` — Optimize for AI search (ChatGPT, Perplexity, Google AI)
 - `seo-audit/` — Traditional SEO audit
 - `page-cro/` — Conversion rate optimization
 - `pricing-strategy/` — Pricing and packaging
 - `content-humanizer/` — Fix AI-sounding content
-- `x-twitter-growth/` — X/Twitter audience growth, tweet composing, competitor analysis
+- `x-twitter-growth/` — X/Twitter growth, tweet composing, competitor analysis
 
 ### Python Tools
 
-32 scripts, all stdlib-only. Run directly:
+32 scripts, stdlib-only. Run directly:
 ```bash
 python3 <skill>/scripts/<tool>.py [args]
 ```
-No pip install needed. Scripts include embedded samples for demo mode (run with no args).
+No pip install. Scripts include embedded samples for demo mode (run with no args).
 
 ### Anti-Patterns
 

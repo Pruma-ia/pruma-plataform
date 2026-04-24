@@ -1,6 +1,6 @@
 # Business & Growth Skills - Claude Code Guidance
 
-This guide covers the 3 production-ready business and growth skills and their Python automation tools.
+3 production-ready skills + Python automation tools.
 
 ## Business & Growth Skills Overview
 
@@ -17,13 +17,13 @@ This guide covers the 3 production-ready business and growth skills and their Py
 
 #### 1. Health Score Calculator (`customer-success-manager/scripts/health_score_calculator.py`)
 
-**Purpose:** Multi-dimensional customer health scoring with trend analysis
+**Purpose:** Multi-dimensional health scoring + trend analysis
 
 **Features:**
-- Weighted scoring across 4 dimensions (usage, engagement, support, relationship)
-- Red/Yellow/Green classification with configurable thresholds
-- Trend analysis comparing current vs previous period
-- Segment-aware benchmarking (Enterprise/Mid-Market/SMB)
+- Weighted scoring: 4 dimensions (usage, engagement, support, relationship)
+- Red/Yellow/Green classification, configurable thresholds
+- Trend analysis: current vs previous period
+- Segment benchmarking (Enterprise/Mid-Market/SMB)
 
 **Usage:**
 ```bash
@@ -33,11 +33,11 @@ python customer-success-manager/scripts/health_score_calculator.py customer_data
 
 #### 2. Churn Risk Analyzer (`customer-success-manager/scripts/churn_risk_analyzer.py`)
 
-**Purpose:** Identify at-risk accounts with intervention recommendations
+**Purpose:** Identify at-risk accounts + intervention recommendations
 
 **Features:**
-- Risk scoring based on behavioral signals
-- Warning signal detection and categorization
+- Risk scoring from behavioral signals
+- Warning signal detection + categorization
 - Tier-appropriate intervention playbooks
 - Urgency-based prioritization
 
@@ -49,13 +49,13 @@ python customer-success-manager/scripts/churn_risk_analyzer.py customer_data.jso
 
 #### 3. Expansion Opportunity Scorer (`customer-success-manager/scripts/expansion_opportunity_scorer.py`)
 
-**Purpose:** Identify upsell and cross-sell opportunities
+**Purpose:** Identify upsell + cross-sell opportunities
 
 **Features:**
 - Adoption depth analysis across product modules
 - Whitespace mapping for unused features
 - Revenue opportunity estimation
-- Priority ranking by effort and impact
+- Priority ranking by effort + impact
 
 **Usage:**
 ```bash
@@ -67,12 +67,12 @@ python customer-success-manager/scripts/expansion_opportunity_scorer.py customer
 
 #### 4. RFP Response Analyzer (`sales-engineer/scripts/rfp_response_analyzer.py`)
 
-**Purpose:** Score RFP/RFI coverage and identify gaps
+**Purpose:** Score RFP/RFI coverage + identify gaps
 
 **Features:**
 - Requirement coverage scoring (Full/Partial/Planned/Gap)
 - Effort estimation per requirement
-- Gap identification with mitigation strategies
+- Gap identification + mitigation strategies
 - Overall bid/no-bid recommendation
 
 **Usage:**
@@ -83,11 +83,11 @@ python sales-engineer/scripts/rfp_response_analyzer.py rfp_data.json --format js
 
 #### 5. Competitive Matrix Builder (`sales-engineer/scripts/competitive_matrix_builder.py`)
 
-**Purpose:** Generate feature comparison matrices and competitive positioning
+**Purpose:** Feature comparison matrices + competitive positioning
 
 **Features:**
 - Feature-by-feature comparison matrix
-- Competitive scoring with weighted categories
+- Competitive scoring, weighted categories
 - Differentiator identification
 - Battlecard-ready output
 
@@ -102,7 +102,7 @@ python sales-engineer/scripts/competitive_matrix_builder.py competitive_data.jso
 **Purpose:** Plan proof-of-concept engagements
 
 **Features:**
-- Timeline estimation based on scope
+- Timeline estimation by scope
 - Resource allocation planning
 - Success criteria definition
 - Evaluation scorecard generation
@@ -117,10 +117,10 @@ python sales-engineer/scripts/poc_planner.py poc_data.json --format json
 
 #### 7. Pipeline Analyzer (`revenue-operations/scripts/pipeline_analyzer.py`)
 
-**Purpose:** Analyze sales pipeline health and velocity
+**Purpose:** Pipeline health + velocity analysis
 
 **Features:**
-- Coverage ratio calculation (pipeline/quota)
+- Coverage ratio (pipeline/quota)
 - Stage conversion rate analysis
 - Sales velocity metrics (4-lever model)
 - Deal aging analysis
@@ -133,7 +133,7 @@ python revenue-operations/scripts/pipeline_analyzer.py pipeline_data.json --form
 
 #### 8. Forecast Accuracy Tracker (`revenue-operations/scripts/forecast_accuracy_tracker.py`)
 
-**Purpose:** Measure and improve forecast accuracy
+**Purpose:** Measure + improve forecast accuracy
 
 **Features:**
 - MAPE (Mean Absolute Percentage Error) calculation
@@ -149,7 +149,7 @@ python revenue-operations/scripts/forecast_accuracy_tracker.py forecast_data.jso
 
 #### 9. GTM Efficiency Calculator (`revenue-operations/scripts/gtm_efficiency_calculator.py`)
 
-**Purpose:** Calculate go-to-market efficiency metrics
+**Purpose:** Go-to-market efficiency metrics
 
 **Features:**
 - Magic number calculation
@@ -167,12 +167,12 @@ python revenue-operations/scripts/gtm_efficiency_calculator.py gtm_data.json --f
 ## Quality Standards
 
 **All business & growth Python tools must:**
-- Use standard library only (no external dependencies)
-- Support both JSON and human-readable output via `--format` flag
-- Provide clear error messages for invalid input
-- Return appropriate exit codes
-- Process files locally (no API calls)
-- Include argparse CLI with `--help` support
+- Standard library only (no external dependencies)
+- JSON + human-readable output via `--format` flag
+- Clear error messages for invalid input
+- Appropriate exit codes
+- Local file processing (no API calls)
+- argparse CLI with `--help`
 
 ## Related Skills
 

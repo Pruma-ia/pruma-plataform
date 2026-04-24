@@ -1,12 +1,12 @@
 # Templates - Claude Code Guidance
 
-This guide explains the template system for agents, commands, and standardized workflows.
+Template system for agents, commands, standardized workflows.
 
 ## Template Purpose
 
 **Location:** `templates/`
 
-**Purpose:** Reusable templates for consistent agent development, slash command creation, and workflow automation across all domains.
+**Purpose:** Reusable templates for consistent agent dev, slash command creation, workflow automation across all domains.
 
 ## Available Templates
 
@@ -14,7 +14,7 @@ This guide explains the template system for agents, commands, and standardized w
 
 **Location:** `templates/agent-template.md` (when created)
 
-**Usage:** Starting point for creating new cs-* agents
+**Usage:** Starting point for new cs-* agents
 
 **Contains:**
 - YAML frontmatter structure
@@ -74,4 +74,4 @@ git commit -m "feat(agents): implement cs-new-agent from template"
 ---
 
 **Last Updated:** November 5, 2025
-**Purpose:** Consistent templates for rapid agent and workflow development
+**Purpose:** Consistent templates for rapid agent and workflow dev

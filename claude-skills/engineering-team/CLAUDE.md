@@ -1,6 +1,6 @@
 # Engineering Team Skills - Claude Code Guidance
 
-This guide covers the 36 production-ready engineering skills and their Python automation tools.
+36 production-ready engineering skills + Python automation tools.
 
 ## Engineering Skills Overview
 
@@ -9,18 +9,18 @@ This guide covers the 36 production-ready engineering skills and their Python au
 - senior-qa, senior-devops, senior-secops
 - code-reviewer, senior-security
 - aws-solution-architect, ms365-tenant-manager, google-workspace-cli, tdd-guide, tech-stack-evaluator, epic-design
-- **a11y-audit** — WCAG 2.2 accessibility audit and fix (a11y_scanner.py, contrast_checker.py)
-- **azure-cloud-architect** — Azure infrastructure design, ARM/Bicep templates, landing zones
-- **gcp-cloud-architect** — GCP infrastructure design, Terraform modules, cloud-native patterns
-- **security-pen-testing** — Penetration testing methodology, vulnerability assessment, exploit analysis
-- **snowflake-development** — Snowflake data warehouse development, SQL optimization, data pipeline patterns
+- **a11y-audit** — WCAG 2.2 accessibility audit + fix (a11y_scanner.py, contrast_checker.py)
+- **azure-cloud-architect** — Azure infra design, ARM/Bicep templates, landing zones
+- **gcp-cloud-architect** — GCP infra design, Terraform modules, cloud-native patterns
+- **security-pen-testing** — Pen testing methodology, vuln assessment, exploit analysis
+- **snowflake-development** — Snowflake DW dev, SQL optimization, data pipeline patterns
 
 **Security (5 skills):**
-- **adversarial-reviewer** — Adversarial code review with 3 hostile personas (Saboteur, New Hire, Security Auditor)
-- **threat-detection** — Hypothesis-driven threat hunting, IOC sweep generation, z-score anomaly detection
+- **adversarial-reviewer** — Adversarial code review, 3 hostile personas (Saboteur, New Hire, Security Auditor)
+- **threat-detection** — Hypothesis-driven threat hunting, IOC sweep, z-score anomaly detection
 - **incident-response** — SEV1-SEV4 triage, 14-type incident taxonomy, NIST SP 800-61 forensics
 - **cloud-security** — IAM privilege escalation paths, S3 public access checks, security group detection
-- **red-team** — MITRE ATT&CK kill-chain planning, effort scoring, choke point identification
+- **red-team** — MITRE ATT&CK kill-chain planning, effort scoring, choke point ID
 - **ai-security** — ATLAS-mapped prompt injection detection, model inversion & data poisoning risk scoring
 
 **AI/ML/Data (5 skills):**
@@ -42,11 +42,11 @@ This guide covers the 36 production-ready engineering skills and their Python au
 - Express + TypeScript + PostgreSQL
 
 **Features:**
-- Docker Compose configuration
+- Docker Compose config
 - CI/CD pipeline (GitHub Actions)
-- Testing infrastructure (Jest, Cypress)
+- Testing infra (Jest, Cypress)
 - TypeScript + ESLint + Prettier
-- Database migrations
+- DB migrations
 
 **Usage:**
 ```bash
@@ -59,13 +59,13 @@ cd my-project && docker-compose up -d
 
 ### 2. Code Quality Analyzer (`senior-fullstack/scripts/code_quality_analyzer.py`)
 
-**Purpose:** Comprehensive code quality analysis and metrics
+**Purpose:** Code quality analysis + metrics
 
 **Features:**
-- Security vulnerability scanning
+- Security vuln scanning
 - Performance issue detection
 - Test coverage assessment
-- Documentation quality
+- Docs quality
 - Dependency analysis
 - Actionable recommendations
 
@@ -95,7 +95,7 @@ Recommendations:
 
 ### 3. Fullstack Scaffolder (`senior-fullstack/scripts/fullstack_scaffolder.py`)
 
-**Purpose:** Rapid fullstack application generation
+**Purpose:** Rapid fullstack app generation
 
 **Usage:**
 ```bash
@@ -107,110 +107,72 @@ python senior-fullstack/scripts/fullstack_scaffolder.py my-app --stack nextjs-gr
 ### Data Science Tools
 
 **Experiment Designer** (`senior-data-scientist/scripts/experiment_designer.py`)
-- A/B test design
-- Statistical power analysis
-- Sample size calculation
+- A/B test design, statistical power analysis, sample size calc
 
 **Feature Engineering Pipeline** (`senior-data-scientist/scripts/feature_engineering_pipeline.py`)
-- Automated feature generation
-- Correlation analysis
-- Feature selection
+- Automated feature gen, correlation analysis, feature selection
 
 **Statistical Analyzer** (`senior-data-scientist/scripts/statistical_analyzer.py`)
-- Hypothesis testing
-- Causal inference
-- Regression analysis
+- Hypothesis testing, causal inference, regression analysis
 
 ### Data Engineering Tools
 
 **Pipeline Orchestrator** (`senior-data-engineer/scripts/pipeline_orchestrator.py`)
-- Airflow DAG generation
-- Spark job templates
-- Data quality checks
+- Airflow DAG gen, Spark job templates, data quality checks
 
 **Data Quality Validator** (`senior-data-engineer/scripts/data_quality_validator.py`)
-- Schema validation
-- Null check enforcement
-- Anomaly detection
+- Schema validation, null check enforcement, anomaly detection
 
 **ETL Generator** (`senior-data-engineer/scripts/etl_generator.py`)
-- Extract-Transform-Load workflows
-- CDC (Change Data Capture) patterns
-- Incremental loading
+- ETL workflows, CDC patterns, incremental loading
 
 ### ML Engineering Tools
 
 **Model Deployment Pipeline** (`senior-ml-engineer/scripts/model_deployment_pipeline.py`)
-- Containerized model serving
-- REST API generation
-- Load balancing config
+- Containerized model serving, REST API gen, load balancing config
 
 **MLOps Setup Tool** (`senior-ml-engineer/scripts/mlops_setup_tool.py`)
-- MLflow configuration
-- Model versioning
-- Drift monitoring
+- MLflow config, model versioning, drift monitoring
 
 **LLM Integration Builder** (`senior-ml-engineer/scripts/llm_integration_builder.py`)
-- OpenAI API integration
-- Prompt templates
-- Response parsing
+- OpenAI API integration, prompt templates, response parsing
 
 ### Prompt Engineering Tools
 
 **Prompt Optimizer** (`senior-prompt-engineer/scripts/prompt_optimizer.py`)
-- Prompt A/B testing
-- Token optimization
-- Few-shot example generation
+- Prompt A/B testing, token optimization, few-shot example gen
 
 **RAG System Builder** (`senior-prompt-engineer/scripts/rag_system_builder.py`)
-- Vector database setup
-- Embedding generation
-- Retrieval strategies
+- Vector DB setup, embedding gen, retrieval strategies
 
 **Agent Orchestrator** (`senior-prompt-engineer/scripts/agent_orchestrator.py`)
-- Multi-agent workflows
-- Tool calling patterns
-- State management
+- Multi-agent workflows, tool calling patterns, state management
 
 ### Computer Vision Tools
 
 **Vision Model Trainer** (`senior-computer-vision/scripts/vision_model_trainer.py`)
-- Object detection (YOLO, Faster R-CNN)
-- Semantic segmentation
-- Transfer learning
+- Object detection (YOLO, Faster R-CNN), semantic segmentation, transfer learning
 
 **Inference Optimizer** (`senior-computer-vision/scripts/inference_optimizer.py`)
-- Model quantization
-- TensorRT optimization
-- ONNX export
+- Model quantization, TensorRT optimization, ONNX export
 
 **Video Processor** (`senior-computer-vision/scripts/video_processor.py`)
-- Frame extraction
-- Object tracking
-- Scene detection
+- Frame extraction, object tracking, scene detection
 
 ## Tech Stack Patterns
 
 ### Frontend (React/Next.js)
-- TypeScript strict mode
-- Component-driven architecture
-- Atomic design patterns
-- State management (Zustand/Jotai)
-- Testing (Jest + React Testing Library)
+- TypeScript strict mode, component-driven architecture, atomic design
+- State: Zustand/Jotai
+- Testing: Jest + React Testing Library
 
 ### Backend (Node.js/Express)
-- Clean architecture
-- Dependency injection
-- Repository pattern
-- Domain-driven design
-- Testing (Jest + Supertest)
+- Clean architecture, dependency injection, repository pattern, DDD
+- Testing: Jest + Supertest
 
 ### Fullstack Integration
-- GraphQL for API layer
-- REST for external services
-- WebSocket for real-time
-- Redis for caching
-- PostgreSQL for persistence
+- GraphQL for API layer, REST for external services, WebSocket for real-time
+- Redis for caching, PostgreSQL for persistence
 
 ## Development Workflows
 
@@ -261,11 +223,11 @@ python senior-ml-engineer/scripts/model_deployment_pipeline.py model.pkl
 
 ## Quality Standards
 
-**All engineering tools must:**
-- Support modern tech stacks (Next.js, React, Vue, Express)
+All engineering tools must:
+- Support modern stacks (Next.js, React, Vue, Express)
 - Generate production-ready code
-- Include testing infrastructure
-- Provide Docker configurations
+- Include testing infra
+- Provide Docker configs
 - Support CI/CD integration
 
 ## Integration Patterns
@@ -282,7 +244,7 @@ All scaffolders generate GitHub Actions workflows:
 
 ### Docker Compose
 
-Multi-service development environment:
+Multi-service dev environment:
 ```yaml
 services:
   - app (Next.js)
@@ -296,7 +258,7 @@ services:
 - **Quick Start:** `START_HERE.md`
 - **Team Structure:** `TEAM_STRUCTURE_GUIDE.md`
 - **Engineering Roadmap:** `engineering_skills_roadmap.md` (if exists)
-- **Main Documentation:** `../CLAUDE.md`
+- **Main Docs:** `../CLAUDE.md`
 
 ---
 
@@ -308,10 +270,10 @@ services:
 
 ## epic-design
 
-Build cinematic 2.5D interactive websites with scroll storytelling, parallax depth, and premium animations. Includes asset inspection pipeline, 45+ techniques across 8 categories, and accessibility built-in.
+Cinematic 2.5D interactive websites with scroll storytelling, parallax depth, premium animations. Asset inspection pipeline, 45+ techniques across 8 categories, accessibility built-in.
 
 **Key features:**
-- 6-layer depth system with automatic parallax
+- 6-layer depth system, automatic parallax
 - 13 text animation techniques, 9 scroll patterns
 - Asset inspection with background judgment rules
 - Python tool for automated image analysis

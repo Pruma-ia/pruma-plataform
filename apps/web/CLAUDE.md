@@ -1,28 +1,32 @@
-@AGENTS.md
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+
+Breaking changes — APIs, conventions, file structure may differ from training data. Read relevant guide in `node_modules/next/dist/docs/` before writing code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
 
 # apps/web — Stack e Decisões Arquiteturais
 
 ## Next.js 16 — Breaking Changes
 
 ### proxy.ts (não middleware.ts)
-Interceptação de rotas usa `src/proxy.ts`. Exportar como `default` ou named `proxy`.
-O nome `middleware.ts` não é reconhecido nesta versão.
+Route interception uses `src/proxy.ts`. Export as `default` or named `proxy`.
+`middleware.ts` not recognized this version.
 
 ### Neon DB — placeholder obrigatório no build
-`neon()` valida a URL ao importar o módulo. Next.js executa isso durante o build.
-Sempre usar: `process.env.DATABASE_URL ?? "postgresql://user:pass@localhost/placeholder"`
+`neon()` validates URL on module import. Next.js runs this at build.
+Always use: `process.env.DATABASE_URL ?? "postgresql://user:pass@localhost/placeholder"`
 
 ### Zod v4
-`z.record()` exige dois argumentos: `z.record(z.string(), z.unknown())`.
-Forma de um argumento é erro de tipo.
+`z.record()` requires two args: `z.record(z.string(), z.unknown())`.
+One arg = type error.
 
 ---
 
 ## Processo de desenvolvimento
 
 ### Build antes de commitar (obrigatório)
-Sempre rodar `npm run build` em `apps/web` antes de qualquer commit.
-TypeScript e erros de tipo só aparecem no build — o Vercel falha se isso não for verificado localmente primeiro.
+Run `npm run build` in `apps/web` before any commit.
+TypeScript/type errors only surface at build — Vercel fails if not verified locally.
 
 ---
 
@@ -30,25 +34,25 @@ TypeScript e erros de tipo só aparecem no build — o Vercel falha se isso não
 
 - Next.js 16.2.4, App Router, TypeScript, Turbopack
 - NextAuth v5 — JWT strategy, DrizzleAdapter, Google + Credentials
-- Drizzle ORM + PostgreSQL (Neon em produção, Docker local `pruma_db`)
-- Tailwind CSS v4 com `@theme inline` e oklch, shadcn/ui
-- Asaas para pagamentos BR (PIX/boleto)
+- Drizzle ORM + PostgreSQL (Neon prod, Docker local `pruma_db`)
+- Tailwind CSS v4 with `@theme inline` and oklch, shadcn/ui
+- Asaas for BR payments (PIX/boleto)
 
 ---
 
 ## Autenticação
 
-- JWT carrega `organizationId`, `role`, `subscriptionStatus` via join em `organizationMembers`.
-- Superadmin (`isSuperAdmin: true`) retorna sem `organizationId` — acessa orgs por URL.
-- `session.user` tipado em `src/types/next-auth.d.ts`.
+- JWT carries `organizationId`, `role`, `subscriptionStatus` via join on `organizationMembers`.
+- Superadmin (`isSuperAdmin: true`) returns without `organizationId` — accesses orgs by URL.
+- `session.user` typed in `src/types/next-auth.d.ts`.
 
 ---
 
 ## Identidade Visual
 
-Cores Pruma IA (usar sempre por nome semântico, não inventar variações):
-- Azul Marinho `#0D1B4B` — fundos escuros, textos de destaque
-- Ciano Elétrico `#00AEEF` — ações primárias, status positivo
-- Ciano Pálido `#E0F6FE` — backgrounds de badges e chips
-- **Erros sempre em vermelho** — nunca substituir por brand color (semântica)
-- Fontes: Barlow (headings) + Inter (body)
+Pruma IA colors (use by semantic name, never invent variants):
+- Azul Marinho `#0D1B4B` — dark backgrounds, highlight text
+- Ciano Elétrico `#00AEEF` — primary actions, positive status
+- Ciano Pálido `#E0F6FE` — badge/chip backgrounds
+- **Errors always red** — never replace with brand color (semantics)
+- Fonts: Barlow (headings) + Inter (body)

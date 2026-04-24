@@ -1,6 +1,6 @@
 # Regulatory Affairs & Quality Management Skills - Claude Code Guidance
 
-This guide covers the 13 production-ready RA/QM compliance skills for HealthTech/MedTech companies.
+13 production-ready RA/QM compliance skills for HealthTech/MedTech.
 
 ## RA/QM Skills Overview
 
@@ -134,11 +134,11 @@ This guide covers the 13 production-ready RA/QM compliance skills for HealthTech
 
 ## Integration Patterns
 
-**RA/QM ↔ Engineering:** Regulatory requirements inform technical design decisions
+**RA/QM ↔ Engineering:** Regulatory requirements inform technical design
 
-**RA/QM ↔ Product:** Compliance requirements shape product features and roadmap
+**RA/QM ↔ Product:** Compliance shapes product features and roadmap
 
-**RA/QM ↔ Security:** ISO 27001 aligns with security engineering practices
+**RA/QM ↔ Security:** ISO 27001 aligns with security engineering
 
 ## Additional Resources
 

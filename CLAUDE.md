@@ -1,14 +1,14 @@
 # Pruma IA — Monorepo
 
 ## O que é este projeto
-SaaS multi-tenant que conecta fluxos de automação do n8n a um painel de aprovações humanas. Clientes gerenciam seus fluxos e tomam decisões de aprovação sem acessar o n8n diretamente.
+SaaS multi-tenant conecta fluxos n8n a painel de aprovações humanas. Clientes gerenciam fluxos e aprovam sem acessar n8n.
 
 ---
 
 ## Como manter esta documentação
 
 ### Estrutura em camadas
-Os arquivos CLAUDE.md são aninhados por contexto — cada um só é carregado quando você está trabalhando naquela área:
+CLAUDE.md aninhados por contexto — cada um carrega só quando trabalhando naquela área:
 
 ```
 CLAUDE.md                          ← você está aqui: visão geral + meta-regras
@@ -18,15 +18,15 @@ apps/web/src/app/CLAUDE.md         ← regras de negócio, multi-tenant, integra
 ```
 
 ### Regra de auto-documentação (obrigatória)
-Sempre que uma decisão de produto, negócio ou arquitetura for tomada:
-1. Documentar no CLAUDE.md da camada adequada (ver estrutura acima).
-2. Incluir o **rationale** — o *porquê*, não só o *o quê*.
-3. Não documentar o que o código já diz claramente.
+Toda decisão de produto, negócio ou arquitetura:
+1. Documentar no CLAUDE.md da camada adequada.
+2. Incluir **rationale** — *porquê*, não só *o quê*.
+3. Não documentar o que código já diz claramente.
 
 ### O que NÃO pertence a nenhum CLAUDE.md
-- Valores que estão no código (preços, cores, paths de arquivo, nomes de colunas)
-- Estrutura que qualquer dev encontra em 2 min de leitura
-- Histórico de mudanças (isso vai no commit)
+- Valores no código (preços, cores, paths, nomes de colunas)
+- Estrutura que dev encontra em 2 min de leitura
+- Histórico de mudanças (vai no commit)
 
 ### Onde cada tipo de contexto deve ficar
 | Tipo | Onde |
@@ -95,10 +95,10 @@ Sempre que uma decisão de produto, negócio ou arquitetura for tomada:
 
 ### Regra de atualização do diagrama
 
-Atualizar este diagrama **sempre que**:
-- Uma nova rota de API for adicionada (`/api/*`)
-- Uma nova integração externa for introduzida (novo serviço externo)
-- O comportamento do `proxy.ts` for alterado (novos guards ou rate limits)
-- Uma nova seção do painel (`(dashboard)`, `(admin)`) for criada
+Atualizar **sempre que**:
+- Nova rota `/api/*` adicionada
+- Nova integração externa introduzida
+- `proxy.ts` alterado (novos guards ou rate limits)
+- Nova seção do painel criada
 
-**Não** atualizar para: mudanças internas de implementação, novos componentes UI, ou ajustes de schema que não alteram o fluxo de dados entre serviços.
+**Não** atualizar: mudanças internas de implementação, novos componentes UI, ajustes de schema sem impacto no fluxo entre serviços.

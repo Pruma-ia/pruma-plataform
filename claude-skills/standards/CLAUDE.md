@@ -1,6 +1,6 @@
 # Standards Library - Claude Code Guidance
 
-This guide explains how to use the standards library for consistent quality across all skills and agents.
+Guide for using standards library for consistent quality across skills and agents.
 
 ## Standards Overview
 
@@ -150,7 +150,7 @@ cat standards/git/git-workflow-standards.md
 
 ### Before Committing Code
 
-- [ ] Communication: Documentation is clear and actionable
+- [ ] Communication: Docs clear and actionable
 - [ ] Quality: All tests passing, code reviewed
 - [ ] Git: Conventional commit message format
 - [ ] Documentation: Living docs updated if needed

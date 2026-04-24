@@ -1,6 +1,6 @@
 # C-Level Advisory Skills — Claude Code Guidance
 
-A complete virtual board of directors: 28 skills covering 10 executive roles, orchestration, cross-cutting capabilities, and culture & collaboration frameworks.
+Virtual board of directors: 28 skills, 10 executive roles, orchestration, cross-cutting capabilities, culture & collaboration.
 
 ## Architecture
 
@@ -71,7 +71,7 @@ A complete virtual board of directors: 28 skills covering 10 executive roles, or
 
 ## Executive Mentor Slash Commands
 
-The only skill with a `plugin.json` (namespace: `em`) because it has slash commands. Other skills are invoked by name through the Chief of Staff router or directly by the user. This is intentional — only add `plugin.json` when a skill has dedicated slash commands that need a namespace.
+Only skill with `plugin.json` (namespace: `em`) — has slash commands. Others invoked by name via Chief of Staff or directly. Only add `plugin.json` when skill needs dedicated slash command namespace.
 
 | Command | Purpose |
 |---------|---------|
@@ -84,14 +84,14 @@ The only skill with a `plugin.json` (namespace: `em`) because it has slash comma
 ## Key Design Decisions
 
 - **Two-layer memory:** Raw transcripts (reference) + approved decisions only (feeds future meetings). Prevents hallucinated consensus.
-- **Phase 2 isolation:** During board meetings, agents think independently before cross-examination.
-- **Internal Quality Loop:** Self-verify → peer-verify → critic pre-screen → present. No unverified output reaches the founder.
-- **Proactive triggers:** Every role has context-driven early warnings that surface issues without being asked.
+- **Phase 2 isolation:** Board meeting agents think independently before cross-examination.
+- **Internal Quality Loop:** Self-verify → peer-verify → critic pre-screen → present. No unverified output reaches founder.
+- **Proactive triggers:** Every role has context-driven early warnings, surfaces issues unprompted.
 - **User Communication Standard:** Bottom Line → What → Why → How to Act → Your Decision. Results only, no process narration.
 
 ## Python Tools (25 total)
 
-All scripts are stdlib-only, CLI-first, with JSON output and embedded sample data.
+All scripts stdlib-only, CLI-first, JSON output, embedded sample data.
 
 ```bash
 # Examples

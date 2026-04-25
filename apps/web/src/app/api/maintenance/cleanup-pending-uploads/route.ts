@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { approvalFileUploads } from "../../../../../db/schema"
-import { and, eq, lt } from "drizzle-orm"
+import { and, eq, lt, inArray } from "drizzle-orm"
 import { timingSafeEqual } from "crypto"
 import { deleteObject } from "@/lib/r2"
 
@@ -30,28 +30,26 @@ export async function GET(req: Request) {
     .from(approvalFileUploads)
     .where(and(eq(approvalFileUploads.status, "pending"), lt(approvalFileUploads.expiresAt, now)))
 
-  let deletedR2 = 0
+  const deletedIds: string[] = []
   let failedR2 = 0
 
   for (const upload of expired) {
     try {
       await deleteObject(upload.r2Key)
-      deletedR2++
+      deletedIds.push(upload.id)
     } catch {
       failedR2++
     }
   }
 
-  const ids = expired.map((u) => u.id)
   let deletedDb = 0
-  if (ids.length > 0) {
-    const { inArray } = await import("drizzle-orm")
+  if (deletedIds.length > 0) {
     const rows = await db
       .delete(approvalFileUploads)
-      .where(inArray(approvalFileUploads.id, ids))
+      .where(inArray(approvalFileUploads.id, deletedIds))
       .returning()
     deletedDb = rows.length
   }
 
-  return NextResponse.json({ ok: true, expired: expired.length, deletedR2, failedR2, deletedDb })
+  return NextResponse.json({ ok: true, expired: expired.length, deletedR2: deletedIds.length, failedR2, deletedDb })
 }

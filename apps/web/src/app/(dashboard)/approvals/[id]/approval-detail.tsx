@@ -13,7 +13,7 @@ import {
 } from "lucide-react"
 
 type DecisionOption = { id: string; label: string }
-type DecisionField = { id: string; type: "select"; label: string; options: DecisionOption[] }
+type DecisionField = { id: string; type: "select"; label: string; options: DecisionOption[]; required?: boolean }
 
 type Approval = {
   id: string
@@ -55,6 +55,7 @@ export function ApprovalDetail({
   const [comment, setComment] = useState("")
   const [decisionValues, setDecisionValues] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<string[]>([])
   const [resolved, setResolved] = useState(false)
   const [files, setFiles] = useState<FileItem[] | null>(null)
   const [loadingFiles, setLoadingFiles] = useState(false)
@@ -190,10 +191,21 @@ export function ApprovalDetail({
   }
 
   async function resolve(action: "approve" | "reject") {
+    const errors: string[] = []
+    for (const field of decisionFields) {
+      if (field.required && !decisionValues[field.id]) {
+        errors.push(field.id)
+      }
+    }
     if (action === "reject" && !comment.trim()) {
       alert("Informe o motivo da rejeição")
       return
     }
+    if (errors.length > 0) {
+      setFieldErrors(errors)
+      return
+    }
+    setFieldErrors([])
     setLoading(action)
     await fetch(`/api/approvals/${approval.id}/${action}`, {
       method: "POST",
@@ -281,27 +293,37 @@ export function ApprovalDetail({
           <p className="text-sm text-muted-foreground">Esta aprovação já foi resolvida.</p>
         ) : (
           <div className="space-y-4">
-            {decisionFields.map((field) => (
-              <div key={field.id}>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  {field.label}
-                </label>
-                <select
-                  value={decisionValues[field.id] ?? ""}
-                  onChange={(e) =>
-                    setDecisionValues((prev) => ({ ...prev, [field.id]: e.target.value }))
-                  }
-                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00AEEF]"
-                >
-                  <option value="">Selecione...</option>
-                  {field.options.map((opt) => (
-                    <option key={opt.id} value={opt.id}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
+            {decisionFields.map((field) => {
+              const hasError = fieldErrors.includes(field.id)
+              return (
+                <div key={field.id}>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {field.label}
+                    {field.required && <span className="ml-1 text-red-500">*</span>}
+                  </label>
+                  <select
+                    value={decisionValues[field.id] ?? ""}
+                    onChange={(e) => {
+                      setDecisionValues((prev) => ({ ...prev, [field.id]: e.target.value }))
+                      if (hasError) setFieldErrors((prev) => prev.filter((id) => id !== field.id))
+                    }}
+                    className={`w-full rounded-lg border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00AEEF] ${
+                      hasError ? "border-red-500" : "border-border"
+                    }`}
+                  >
+                    <option value="">Selecione...</option>
+                    {field.options.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  {hasError && (
+                    <p className="mt-1 text-xs text-red-500">Campo obrigatório</p>
+                  )}
+                </div>
+              )
+            })}
             <div>
               <label className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Comentário

@@ -152,6 +152,16 @@ describe("POST /api/n8n/approvals — validação de schema", () => {
     }))
     expect(res.status).toBe(200)
   })
+
+  it("retorna 409 quando n8nExecutionId duplicado (idempotência)", async () => {
+    mockOrgRows.mockReturnValue([{ id: "org-1", n8nBaseUrl: null }])
+    mockInsertApproval.mockRejectedValue(Object.assign(new Error("unique violation"), { code: "23505" }))
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest(validPayload))
+    expect(res.status).toBe(409)
+    const body = await res.json()
+    expect(body.error).toContain("execution ID")
+  })
 })
 
 describe("POST /api/n8n/approvals — decisionFields", () => {

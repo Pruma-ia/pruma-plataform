@@ -82,6 +82,34 @@ describe("POST /api/approvals/[id]/reject", () => {
     expect(callBody.comment).toBe("dados incorretos")
   })
 
+  it("retorna 422 quando campo required não preenchido ao rejeitar", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: null,
+      decisionFields: [{ id: "dept", type: "select", label: "Departamento", options: [], required: true }],
+    }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ comment: "motivo" }), makeParams())
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.fields).toContain("dept")
+  })
+
+  it("retorna 200 ao rejeitar com campo required preenchido", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "u@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: null,
+      decisionFields: [{ id: "dept", type: "select", label: "Departamento", options: [], required: true }],
+    }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ comment: "motivo", decisionValues: { dept: "ti" } }), makeParams())
+    expect(res.status).toBe(200)
+  })
+
   it("inclui decisionValues no payload do callback ao rejeitar", async () => {
     mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
     mockSelect.mockResolvedValue([{

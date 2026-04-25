@@ -33,7 +33,18 @@ const mockPresignUploadUrl = vi.fn()
 vi.mock("@/lib/r2", () => ({
   buildR2Key: mockBuildR2Key,
   presignUploadUrl: mockPresignUploadUrl,
-  ALLOWED_MIME_TYPES: new Set(["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif"]),
+  ALLOWED_MIME_TYPES: new Set([
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/xml",
+    "text/csv",
+    "application/zip",
+  ]),
   MAX_FILE_SIZE_BYTES: 10 * 1024 * 1024,
 }))
 
@@ -120,5 +131,26 @@ describe("POST /api/n8n/approvals/files/presign", () => {
     const { POST } = await import("./route")
     await POST(makeRequest(validPayload))
     expect(mockInsert).toHaveBeenCalled()
+  })
+
+  it("aceita organizationSlug via slug quando n8nSlug não bate", async () => {
+    mockVerify.mockReturnValue(true)
+    mockSelectRows
+      .mockReturnValueOnce([])           // n8nSlug lookup — não encontrado
+      .mockReturnValueOnce([{ id: "org-fallback" }]) // slug fallback — encontrado
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest(validPayload))
+    expect(res.status).toBe(200)
+  })
+
+  it("aceita mimeType DOCX (adicionado em faa370b)", async () => {
+    mockVerify.mockReturnValue(true)
+    mockSelectRows.mockReturnValue([{ id: "org-1" }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({
+      ...validPayload,
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }))
+    expect(res.status).toBe(200)
   })
 })

@@ -149,6 +149,47 @@ describe("POST /api/approvals/[id]/approve", () => {
     expect(mockUpdate).toHaveBeenCalled()
   })
 
+  it("retorna 422 quando campo required não preenchido", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: null,
+      decisionFields: [{ id: "dept", type: "select", label: "Departamento", options: [], required: true }],
+    }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({}), makeParams())
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.fields).toContain("dept")
+  })
+
+  it("retorna 200 quando campo required está preenchido", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "u@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: null,
+      decisionFields: [{ id: "dept", type: "select", label: "Departamento", options: [], required: true }],
+    }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ decisionValues: { dept: "ti" } }), makeParams())
+    expect(res.status).toBe(200)
+  })
+
+  it("ignora validação required quando decisionFields é null", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "u@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: null,
+      decisionFields: null,
+    }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({}), makeParams())
+    expect(res.status).toBe(200)
+  })
+
   it("marca callbackStatus='failed' quando callback n8n falha", async () => {
     mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
     mockSelect.mockResolvedValue([{
@@ -162,5 +203,19 @@ describe("POST /api/approvals/[id]/approve", () => {
     expect(res.status).toBe(200)
     const lastCall = (mockUpdate as ReturnType<typeof vi.fn>).mock.calls.at(-1)
     expect(lastCall).toBeDefined()
+  })
+
+  it("retorna 200 e marca callbackStatus='failed' quando fetch lança (timeout/rede)", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: "https://n8n.example.com/webhook/abc",
+    }])
+    global.fetch = vi.fn().mockRejectedValue(new DOMException("signal timed out", "AbortError"))
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest(), makeParams())
+    expect(res.status).toBe(200)
+    expect(mockUpdate).toHaveBeenCalled()
   })
 })

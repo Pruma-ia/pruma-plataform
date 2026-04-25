@@ -219,6 +219,7 @@ type DecisionField = {
   type: "select"
   label: string
   options: { id: string; label: string }[]
+  required?: boolean
 }
 
 type ApprovalSpec = {
@@ -350,6 +351,7 @@ function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
         id: "advogado",
         type: "select",
         label: "Advogado responsável",
+        required: true,
         options: [
           { id: "adv-1", label: "João Silva" },
           { id: "adv-2", label: "Maria Santos" },
@@ -380,6 +382,7 @@ function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
         id: "centro_custo",
         type: "select",
         label: "Centro de custo",
+        required: true,
         options: [
           { id: "cc-ti", label: "TI" },
           { id: "cc-rh", label: "RH" },
@@ -390,6 +393,7 @@ function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
         id: "categoria",
         type: "select",
         label: "Categoria",
+        required: true,
         options: [
           { id: "fornecedor", label: "Fornecedor" },
           { id: "despesa", label: "Despesa operacional" },
@@ -414,6 +418,7 @@ function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
         id: "departamento",
         type: "select",
         label: "Departamento",
+        required: true,
         options: [
           { id: "financeiro", label: "Financeiro" },
           { id: "operacoes", label: "Operações" },
@@ -424,6 +429,7 @@ function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
         id: "periodo",
         type: "select",
         label: "Período de referência",
+        required: true,
         options: [
           { id: "q1", label: "Q1 2026" },
           { id: "q2", label: "Q2 2026" },
@@ -446,6 +452,7 @@ function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
         id: "categoria",
         type: "select",
         label: "Categoria da viagem",
+        required: true,
         options: [
           { id: "cliente", label: "Visita a cliente" },
           { id: "evento", label: "Evento / Conferência" },
@@ -486,6 +493,7 @@ function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
         id: "centro_custo",
         type: "select",
         label: "Centro de custo",
+        required: true,
         options: [
           { id: "eng", label: "Engenharia" },
           { id: "produto", label: "Produto" },
@@ -512,6 +520,7 @@ function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
         id: "modalidade",
         type: "select",
         label: "Modalidade de contratação",
+        required: true,
         options: [
           { id: "freelancer", label: "Freelancer (PJ)" },
           { id: "clt", label: "CLT" },
@@ -541,6 +550,7 @@ function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
         id: "aprovador_financeiro",
         type: "select",
         label: "Aprovador financeiro",
+        required: true,
         options: [
           { id: "cfo", label: "CFO" },
           { id: "gerente", label: "Gerente Financeiro" },

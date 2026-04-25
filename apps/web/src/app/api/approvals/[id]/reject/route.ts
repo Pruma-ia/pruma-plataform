@@ -37,6 +37,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Already resolved" }, { status: 409 })
   }
 
+  if (Array.isArray(approval.decisionFields)) {
+    const fields = approval.decisionFields as { id: string; required?: boolean }[]
+    const missing = fields.filter((f) => f.required && !decisionValues?.[f.id])
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: "Campos obrigatórios não preenchidos", fields: missing.map((f) => f.id) },
+        { status: 422 }
+      )
+    }
+  }
+
   await db
     .update(approvals)
     .set({
@@ -47,7 +58,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       decisionValues: decisionValues ?? null,
       updatedAt: new Date(),
     })
-    .where(eq(approvals.id, id))
+    .where(and(eq(approvals.id, id), eq(approvals.organizationId, session.user.organizationId)))
 
   if (approval.callbackUrl) {
     if (!validateCallbackUrl(approval.callbackUrl)) {

@@ -15,6 +15,7 @@ const decisionFieldSchema = z.object({
   type: z.literal("select"),
   label: z.string(),
   options: z.array(decisionOptionSchema).min(1),
+  required: z.boolean().optional(),
 })
 
 const fileRefSchema = z.object({
@@ -118,7 +119,7 @@ export async function POST(req: Request) {
     }
   }
 
-  const [approval] = await db
+  const approvalResult = await db
     .insert(approvals)
     .values({
       organizationId: org.id,
@@ -132,6 +133,15 @@ export async function POST(req: Request) {
       decisionFields: decisionFields ?? null,
     })
     .returning()
+    .catch((err: unknown) => {
+      if (err && typeof err === "object" && "code" in err && err.code === "23505") return null
+      throw err
+    })
+
+  if (!approvalResult) {
+    return NextResponse.json({ error: "Aprovação já criada para este execution ID" }, { status: 409 })
+  }
+  const [approval] = approvalResult
 
   if (files && files.length > 0) {
     await db.insert(approvalFiles).values(

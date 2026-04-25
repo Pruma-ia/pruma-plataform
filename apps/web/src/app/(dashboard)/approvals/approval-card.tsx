@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { CheckCircle, XCircle, Clock, Paperclip, ExternalLink, Loader2 } from "lucide-react"
 
 type DecisionOption = { id: string; label: string }
@@ -27,10 +28,12 @@ export function ApprovalCard({
   approval,
   canResolve,
   fileCount,
+  href,
 }: {
   approval: Approval
   canResolve: boolean
   fileCount: number
+  href?: string
 }) {
   const [comment, setComment] = useState("")
   const [decisionValues, setDecisionValues] = useState<Record<string, string>>({})
@@ -93,7 +96,13 @@ export function ApprovalCard({
         <div className="flex-1">
           <div className="flex items-center gap-2">
             {statusIcons[status]}
-            <h3 className="font-semibold">{approval.title}</h3>
+            {href ? (
+              <Link href={href} className="font-semibold hover:underline">
+                {approval.title}
+              </Link>
+            ) : (
+              <h3 className="font-semibold">{approval.title}</h3>
+            )}
             {fileCount > 0 && (
               <span className="flex items-center gap-1 rounded-full bg-[#E0F6FE] px-2 py-0.5 text-xs text-[#00AEEF]">
                 <Paperclip className="h-3 w-3" />

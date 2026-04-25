@@ -56,7 +56,7 @@ export default async function ApprovalsPage() {
             </h2>
             <div className="space-y-3">
               {pendingList.map((a) => (
-                <ApprovalCard key={a.id} approval={a} canResolve fileCount={fileCountMap[a.id] ?? 0} />
+                <ApprovalCard key={a.id} approval={a} canResolve fileCount={fileCountMap[a.id] ?? 0} href={`/approvals/${a.id}`} />
               ))}
             </div>
           </section>
@@ -75,7 +75,7 @@ export default async function ApprovalsPage() {
             </h2>
             <div className="space-y-2">
               {resolvedList.map((a) => (
-                <ApprovalCard key={a.id} approval={a} canResolve={false} fileCount={fileCountMap[a.id] ?? 0} />
+                <ApprovalCard key={a.id} approval={a} canResolve={false} fileCount={fileCountMap[a.id] ?? 0} href={`/approvals/${a.id}`} />
               ))}
             </div>
           </section>

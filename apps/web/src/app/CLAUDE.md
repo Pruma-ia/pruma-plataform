@@ -66,8 +66,9 @@ Aprovações podem carregar arquivos e campos de decisão estruturados além do 
 
 **Callback n8n enriquecido:**
 ```json
-{ "approvalId", "status", "resolvedBy", "comment", "decisionValues", "resolvedAt" }
+{ "approvalId", "status", "resolvedBy", "comment", "decisionValues", "resolvedAt", "files": [{ "r2Key", "filename", "mimeType", "sizeBytes" }] }
 ```
+`files[]` incluído em approve, reject e retry — n8n pode baixar via R2 signed URL, mover no Drive, etc. após decisão.
 
 **Storage local dev:** MinIO via Docker (S3-compatible, mesmo SDK do R2). Vars: `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`. Em prod apontam para R2 real.
 

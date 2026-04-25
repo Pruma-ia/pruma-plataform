@@ -49,7 +49,8 @@ Dados persistem após os testes. Terminal imprime URLs diretas (`http://localhos
 **Convenções de testes unitários**:
 - `vi.hoisted(() => vi.fn())` para mocks que precisam estar disponíveis antes da factory do `vi.mock` (ex: `mockAuth`).
 - Mock de `db` via `vi.mock("@/lib/db", ...)` — retorna objetos chainable (`.select().from().where()`).
-- `selectCallCount` pattern quando uma rota faz múltiplos `SELECT` sequenciais — mock retorna resposta diferente por chamada.
+- `selectCallCount` pattern quando uma rota faz múltiplos `SELECT` sequenciais — usar `mockResolvedValueOnce` encadeado.
+- Mocks com estado mutável entre testes (ex: `validateCallbackUrl` virado `false` pelo teste SSRF) — usar `vi.hoisted(() => vi.fn())` + resetar no `beforeEach`.
 
 **Convenções de testes de integração**:
 - `tests/integration/env.ts` carregado primeiro no `setupFiles` → seta `DATABASE_URL` e `N8N_WEBHOOK_SECRET` antes de qualquer import.

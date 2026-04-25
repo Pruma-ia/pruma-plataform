@@ -12,9 +12,10 @@ vi.mock("@/lib/db", () => ({
   },
 }))
 
-vi.mock("drizzle-orm", () => ({ eq: vi.fn(), and: vi.fn() }))
-vi.mock("../../../../../../db/schema", () => ({ approvals: {} }))
-vi.mock("@/lib/n8n", () => ({ validateCallbackUrl: vi.fn(() => true) }))
+vi.mock("drizzle-orm", () => ({ eq: vi.fn(), and: vi.fn(), inArray: vi.fn() }))
+vi.mock("../../../../../../db/schema", () => ({ approvals: {}, approvalFiles: {} }))
+const mockValidateCallbackUrl = vi.hoisted(() => vi.fn(() => true))
+vi.mock("@/lib/n8n", () => ({ validateCallbackUrl: mockValidateCallbackUrl }))
 
 function makeRequest(body: object = {}) {
   return new Request("http://localhost/api/approvals/test-id/reject", {
@@ -33,6 +34,7 @@ describe("POST /api/approvals/[id]/reject", () => {
     vi.clearAllMocks()
     mockUpdate.mockResolvedValue([])
     global.fetch = vi.fn().mockResolvedValue({ ok: true })
+    mockValidateCallbackUrl.mockReturnValue(true)
   })
 
   it("retorna 401 sem sessão", async () => {
@@ -108,6 +110,19 @@ describe("POST /api/approvals/[id]/reject", () => {
     const { POST } = await import("./route")
     const res = await POST(makeRequest({ comment: "motivo", decisionValues: { dept: "ti" } }), makeParams())
     expect(res.status).toBe(200)
+  })
+
+  it("inclui files no payload do callback ao rejeitar", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
+    const file = { r2Key: "org/uuid/doc.pdf", filename: "doc.pdf", mimeType: "application/pdf", sizeBytes: 2048 }
+    mockSelect
+      .mockResolvedValueOnce([{ id: "test-id", status: "pending", callbackUrl: "https://n8n.example.com/webhook/abc" }])
+      .mockResolvedValueOnce([file])
+    const { POST } = await import("./route")
+    await POST(makeRequest({ comment: "reprovado" }), makeParams())
+    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
+    expect(callBody.files).toHaveLength(1)
+    expect(callBody.files[0]).toEqual(file)
   })
 
   it("inclui decisionValues no payload do callback ao rejeitar", async () => {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { approvals, users } from "../../../../../db/schema"
-import { eq, and, lt, isNotNull, sql } from "drizzle-orm"
+import { approvals, users, approvalFiles } from "../../../../../db/schema"
+import { eq, and, lt, isNotNull, sql, inArray } from "drizzle-orm"
 import { timingSafeEqual } from "crypto"
 import { validateCallbackUrl } from "@/lib/n8n"
 
@@ -37,6 +37,7 @@ export async function GET(req: Request) {
       callbackUrl: approvals.callbackUrl,
       callbackRetries: approvals.callbackRetries,
       comment: approvals.comment,
+      decisionValues: approvals.decisionValues,
       resolvedAt: approvals.resolvedAt,
       resolverEmail: users.email,
     })
@@ -54,6 +55,27 @@ export async function GET(req: Request) {
     )
     .limit(50)
 
+  const approvalIds = pending.map((a) => a.id)
+  const allFiles = approvalIds.length > 0
+    ? await db
+        .select({
+          approvalId: approvalFiles.approvalId,
+          r2Key: approvalFiles.r2Key,
+          filename: approvalFiles.filename,
+          mimeType: approvalFiles.mimeType,
+          sizeBytes: approvalFiles.sizeBytes,
+        })
+        .from(approvalFiles)
+        .where(inArray(approvalFiles.approvalId, approvalIds))
+    : []
+
+  const filesByApprovalId = new Map<string, typeof allFiles>()
+  for (const f of allFiles) {
+    const list = filesByApprovalId.get(f.approvalId) ?? []
+    list.push(f)
+    filesByApprovalId.set(f.approvalId, list)
+  }
+
   const results = { sent: 0, failed: 0, exhausted: 0, blocked: 0 }
 
   for (const approval of pending) {
@@ -68,6 +90,7 @@ export async function GET(req: Request) {
       continue
     }
 
+    const approvalFilesList = filesByApprovalId.get(approval.id) ?? []
     const ok = await fetch(approval.callbackUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -76,7 +99,9 @@ export async function GET(req: Request) {
         status: approval.status,
         resolvedBy: approval.resolverEmail ?? null,
         comment: approval.comment,
+        decisionValues: approval.decisionValues ?? null,
         resolvedAt: approval.resolvedAt?.toISOString(),
+        files: approvalFilesList.map(f => ({ r2Key: f.r2Key, filename: f.filename, mimeType: f.mimeType, sizeBytes: f.sizeBytes })),
         retried: true,
       }),
     })

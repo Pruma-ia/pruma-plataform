@@ -6,16 +6,22 @@ const mockValidateCallback = vi.fn()
 vi.mock("@/lib/n8n", () => ({ validateCallbackUrl: mockValidateCallback }))
 
 const mockSelectPending = vi.fn()
+const mockSelectFiles = vi.fn()
 const mockUpdate = vi.fn()
 vi.mock("@/lib/db", () => ({
   db: {
-    select: () => ({ from: () => ({ leftJoin: () => ({ where: () => ({ limit: mockSelectPending }) }) }) }),
+    select: () => ({
+      from: () => ({
+        leftJoin: () => ({ where: () => ({ limit: mockSelectPending }) }),
+        where: () => mockSelectFiles(),
+      }),
+    }),
     update: () => ({ set: () => ({ where: mockUpdate }) }),
   },
 }))
 
-vi.mock("drizzle-orm", () => ({ eq: vi.fn(), and: vi.fn(), lt: vi.fn(), isNotNull: vi.fn(), sql: vi.fn() }))
-vi.mock("../../../../../db/schema", () => ({ approvals: {}, users: {} }))
+vi.mock("drizzle-orm", () => ({ eq: vi.fn(), and: vi.fn(), lt: vi.fn(), isNotNull: vi.fn(), sql: vi.fn(), inArray: vi.fn() }))
+vi.mock("../../../../../db/schema", () => ({ approvals: {}, users: {}, approvalFiles: {} }))
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -34,6 +40,7 @@ function makeApproval(overrides: object = {}) {
     callbackRetries: 0,
     status: "approved",
     comment: null,
+    decisionValues: null,
     resolvedAt: new Date(),
     resolverEmail: "resolver@example.com",
     ...overrides,
@@ -49,6 +56,7 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
     mockValidateCallback.mockReturnValue(true)
     mockUpdate.mockResolvedValue([])
     mockSelectPending.mockResolvedValue([])
+    mockSelectFiles.mockResolvedValue([])
     global.fetch = vi.fn().mockResolvedValue({ ok: true })
   })
 
@@ -167,6 +175,20 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
     expect(callBody.status).toBe("approved")
     expect(callBody.comment).toBe("ok")
     expect(callBody.resolvedBy).toBe("resolver@example.com")
+  })
+
+  it("inclui files e decisionValues no payload do retry callback", async () => {
+    const decisionValues = { foro: "trt2", advogado: "adv_marcos" }
+    const file = { approvalId: "appr-1", r2Key: "org/uuid/doc.pdf", filename: "doc.pdf", mimeType: "application/pdf", sizeBytes: 1024 }
+    mockSelectPending.mockResolvedValue([makeApproval({ id: "appr-1", decisionValues })])
+    mockSelectFiles.mockResolvedValue([file])
+    const { GET } = await import("./route")
+    await GET(makeRequest(SECRET))
+    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
+    expect(callBody.decisionValues).toEqual(decisionValues)
+    expect(callBody.files).toHaveLength(1)
+    expect(callBody.files[0].r2Key).toBe("org/uuid/doc.pdf")
+    expect(callBody.files[0].filename).toBe("doc.pdf")
   })
 
   it("envia resolvedBy:null quando resolver não encontrado (LEFT JOIN miss)", async () => {

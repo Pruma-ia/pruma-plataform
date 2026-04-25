@@ -154,6 +154,42 @@ type ApprovalSpec = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+async function cleanup(orgId: string) {
+  const { db } = await import("../src/lib/db")
+  const { approvals, approvalFiles, approvalFileUploads } = await import("../db/schema")
+  const { deleteObject } = await import("../src/lib/r2")
+  const { eq, and, like, inArray } = await import("drizzle-orm")
+
+  const seedApprovals = await db
+    .select({ id: approvals.id })
+    .from(approvals)
+    .where(and(eq(approvals.organizationId, orgId), like(approvals.n8nExecutionId, "seed-%")))
+
+  if (seedApprovals.length === 0) {
+    console.log("[cleanup] Nenhuma aprovação seed anterior encontrada\n")
+    return
+  }
+
+  const approvalIds = seedApprovals.map((a) => a.id)
+  const files = await db
+    .select({ r2Key: approvalFiles.r2Key })
+    .from(approvalFiles)
+    .where(inArray(approvalFiles.approvalId, approvalIds))
+
+  for (const file of files) {
+    await deleteObject(file.r2Key).catch(() => {})
+  }
+
+  await db
+    .delete(approvals)
+    .where(and(eq(approvals.organizationId, orgId), like(approvals.n8nExecutionId, "seed-%")))
+
+  // Limpa uploads pendentes de runs anteriores abortados
+  await db.delete(approvalFileUploads).where(eq(approvalFileUploads.organizationId, orgId))
+
+  console.log(`[cleanup] ${seedApprovals.length} aprovação(ões), ${files.length} arquivo(s) R2 removidos\n`)
+}
+
 async function uploadFile(
   n8nSlug: string,
   file: FileSpec
@@ -322,26 +358,38 @@ const APPROVALS: ApprovalSpec[] = [
 async function main() {
   if (!N8N_SECRET) throw new Error("N8N_WEBHOOK_SECRET não definido em .env.local")
 
+  const { db } = await import("../src/lib/db")
+  const { organizations } = await import("../db/schema")
+  const { eq } = await import("drizzle-orm")
+
+  let orgId: string
   let n8nSlug: string
+
   if (ORG_ID) {
-    const { db } = await import("../src/lib/db")
-    const { organizations } = await import("../db/schema")
-    const { eq } = await import("drizzle-orm")
     const [org] = await db
-      .select({ n8nSlug: organizations.n8nSlug })
+      .select({ id: organizations.id, n8nSlug: organizations.n8nSlug })
       .from(organizations)
       .where(eq(organizations.id, ORG_ID))
     if (!org) throw new Error(`Org ${ORG_ID} não encontrada no banco`)
     if (!org.n8nSlug) throw new Error(`Org ${ORG_ID} sem n8nSlug configurado`)
+    orgId = org.id
     n8nSlug = org.n8nSlug
   } else {
     const slug = process.env.SEED_N8N_SLUG
     if (!slug) throw new Error("Defina INT_TEST_ORG_ID ou SEED_N8N_SLUG")
+    const [org] = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.n8nSlug, slug))
+    if (!org) throw new Error(`Org com slug "${slug}" não encontrada no banco`)
+    orgId = org.id
     n8nSlug = slug
   }
 
   console.log(`\nServidor : ${BASE_URL}`)
   console.log(`Org slug : ${n8nSlug}\n`)
+
+  await cleanup(orgId)
 
   const urls: string[] = []
 

@@ -6,7 +6,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { Header } from "@/components/dashboard/header"
-import { ApprovalCard } from "../approval-card"
+import { ApprovalDetail } from "./approval-detail"
 
 export default async function ApprovalDetailPage({
   params,
@@ -28,7 +28,6 @@ export default async function ApprovalDetailPage({
       createdAt: approvals.createdAt,
       resolvedAt: approvals.resolvedAt,
       resolvedByName: users.name,
-      flowId: approvals.flowId,
       decisionFields: approvals.decisionFields,
       decisionValues: approvals.decisionValues,
     })
@@ -46,7 +45,7 @@ export default async function ApprovalDetailPage({
   return (
     <div>
       <Header title="Detalhes da Aprovação" />
-      <div className="p-6 max-w-4xl">
+      <div className="p-6">
         <Link
           href="/approvals"
           className="mb-5 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
@@ -54,11 +53,10 @@ export default async function ApprovalDetailPage({
           <ChevronLeft className="h-4 w-4" />
           Voltar para aprovações
         </Link>
-        <ApprovalCard
+        <ApprovalDetail
           approval={row}
           canResolve={row.status === "pending"}
           fileCount={fileRows.length}
-          autoLoadFiles
         />
       </div>
     </div>

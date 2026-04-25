@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import "highlight.js/styles/github-dark.css"
 import {
   CheckCircle,
   XCircle,
@@ -59,6 +60,12 @@ export function ApprovalDetail({
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
   const [pdfStatus, setPdfStatus] = useState<Record<string, "checking" | "ok" | "error">>({})
   const [imgError, setImgError] = useState<Record<string, boolean>>({})
+  const [textContent, setTextContent] = useState<Record<string, string>>({})
+  const [xmlHighlighted, setXmlHighlighted] = useState<Record<string, string>>({})
+  const [csvRows, setCsvRows] = useState<Record<string, string[][]>>({})
+  const [xlsxRows, setXlsxRows] = useState<Record<string, string[][]>>({})
+  const [docxContainer, setDocxContainer] = useState<Record<string, string>>({})
+  const [previewLoading, setPreviewLoading] = useState<Record<string, boolean>>({})
 
   const decisionFields = Array.isArray(approval.decisionFields)
     ? (approval.decisionFields as DecisionField[])
@@ -86,6 +93,88 @@ export function ApprovalDetail({
   function selectFile(f: FileItem) {
     setSelectedFile(f)
     if (f.mimeType === "application/pdf") checkPdf(f.id)
+    else if (f.mimeType === "application/xml") fetchXml(f)
+    else if (f.mimeType === "text/csv") fetchCsv(f)
+    else if (f.mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") fetchXlsx(f)
+    else if (f.mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") fetchDocx(f)
+  }
+
+  async function fetchXml(f: FileItem) {
+    if (xmlHighlighted[f.id] !== undefined) return
+    setPreviewLoading((p) => ({ ...p, [f.id]: true }))
+    try {
+      const [hljs, res] = await Promise.all([
+        import("highlight.js/lib/core").then(async (m) => {
+          const xml = await import("highlight.js/lib/languages/xml")
+          m.default.registerLanguage("xml", xml.default)
+          return m.default
+        }),
+        fetch(f.url),
+      ])
+      const text = await res.text()
+      setXmlHighlighted((p) => ({ ...p, [f.id]: hljs.highlight(text, { language: "xml" }).value }))
+    } catch {
+      setXmlHighlighted((p) => ({ ...p, [f.id]: "" }))
+    } finally {
+      setPreviewLoading((p) => ({ ...p, [f.id]: false }))
+    }
+  }
+
+  async function fetchCsv(f: FileItem) {
+    if (csvRows[f.id] !== undefined) return
+    setPreviewLoading((p) => ({ ...p, [f.id]: true }))
+    try {
+      const res = await fetch(f.url)
+      const text = await res.text()
+      const rows = text.trim().split("\n").map((line) => line.split(","))
+      setCsvRows((p) => ({ ...p, [f.id]: rows }))
+    } catch {
+      setCsvRows((p) => ({ ...p, [f.id]: [] }))
+    } finally {
+      setPreviewLoading((p) => ({ ...p, [f.id]: false }))
+    }
+  }
+
+  async function fetchXlsx(f: FileItem) {
+    if (xlsxRows[f.id] !== undefined) return
+    setPreviewLoading((p) => ({ ...p, [f.id]: true }))
+    try {
+      const [{ read, utils }, res] = await Promise.all([
+        import("xlsx"),
+        fetch(f.url),
+      ])
+      const buf = await res.arrayBuffer()
+      const wb = read(new Uint8Array(buf), { type: "array" })
+      const ws = wb.Sheets[wb.SheetNames[0]]
+      const rows = utils.sheet_to_json<string[]>(ws, { header: 1 }) as string[][]
+      setXlsxRows((p) => ({ ...p, [f.id]: rows }))
+    } catch {
+      setXlsxRows((p) => ({ ...p, [f.id]: [] }))
+    } finally {
+      setPreviewLoading((p) => ({ ...p, [f.id]: false }))
+    }
+  }
+
+  async function fetchDocx(f: FileItem) {
+    if (docxContainer[f.id] !== undefined) return
+    setPreviewLoading((p) => ({ ...p, [f.id]: true }))
+    try {
+      const [{ renderAsync }, res] = await Promise.all([
+        import("docx-preview"),
+        fetch(f.url),
+      ])
+      const buf = await res.arrayBuffer()
+      const div = document.createElement("div")
+      await renderAsync(buf, div, undefined, {
+        className: "docx-preview",
+        inWrapper: false,
+      })
+      setDocxContainer((p) => ({ ...p, [f.id]: div.innerHTML }))
+    } catch {
+      setDocxContainer((p) => ({ ...p, [f.id]: "" }))
+    } finally {
+      setPreviewLoading((p) => ({ ...p, [f.id]: false }))
+    }
   }
 
   async function checkPdf(fileId: string) {
@@ -117,13 +206,13 @@ export function ApprovalDetail({
   const statusIcon = {
     approved: <CheckCircle className="h-5 w-5 text-[#00AEEF]" />,
     rejected: <XCircle className="h-5 w-5 text-red-500" />,
-    pending: <Clock className="h-5 w-5 text-[#0D1B4B]" />,
-  }[status] ?? <Clock className="h-5 w-5 text-[#0D1B4B]" />
+    pending: <Clock className="h-5 w-5 text-amber-500" />,
+  }[status] ?? <Clock className="h-5 w-5 text-amber-500" />
 
   const statusBorderLeft: Record<string, string> = {
     approved: "border-l-[#00AEEF]",
     rejected: "border-l-red-500",
-    pending: "border-l-[#0D1B4B]",
+    pending: "border-l-amber-400",
   }
 
   const headerCard = (
@@ -171,75 +260,83 @@ export function ApprovalDetail({
   )
 
   const decisionPanel = (
-    <div className="rounded-xl border bg-[#0D1B4B]/[0.03] shadow-sm p-5">
-      <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Decisão
-      </h3>
-      {resolved ? (
-        <div className="flex items-center gap-2 rounded-lg bg-[#E0F6FE] px-4 py-3">
-          <CheckCircle className="h-4 w-4 text-[#00AEEF] shrink-0" />
-          <p className="text-sm font-medium text-[#00AEEF]">
-            Aprovação registrada com sucesso.
-          </p>
-        </div>
-      ) : !canResolve ? (
-        <p className="text-sm text-muted-foreground">Esta aprovação já foi resolvida.</p>
-      ) : (
-        <div className="space-y-4">
-          {decisionFields.map((field) => (
-            <div key={field.id}>
-              <label className="mb-1.5 block text-sm font-medium">{field.label}</label>
-              <select
-                value={decisionValues[field.id] ?? ""}
-                onChange={(e) =>
-                  setDecisionValues((prev) => ({ ...prev, [field.id]: e.target.value }))
-                }
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00AEEF]"
-              >
-                <option value="">Selecione...</option>
-                {field.options.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      {/* Panel header */}
+      <div className="border-b border-border px-5 py-3">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Decisão
+        </p>
+      </div>
+
+      <div className="p-5">
+        {resolved ? (
+          <div className="flex items-center gap-2 rounded-lg bg-[#E0F6FE] dark:bg-[#00AEEF]/15 px-4 py-3">
+            <CheckCircle className="h-4 w-4 text-[#00AEEF] shrink-0" />
+            <p className="text-sm font-medium text-[#00AEEF]">
+              Aprovação registrada com sucesso.
+            </p>
+          </div>
+        ) : !canResolve ? (
+          <p className="text-sm text-muted-foreground">Esta aprovação já foi resolvida.</p>
+        ) : (
+          <div className="space-y-4">
+            {decisionFields.map((field) => (
+              <div key={field.id}>
+                <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {field.label}
+                </label>
+                <select
+                  value={decisionValues[field.id] ?? ""}
+                  onChange={(e) =>
+                    setDecisionValues((prev) => ({ ...prev, [field.id]: e.target.value }))
+                  }
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00AEEF]"
+                >
+                  <option value="">Selecione...</option>
+                  {field.options.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Comentário
+                <span className="normal-case tracking-normal font-normal text-muted-foreground/70">
+                  (obrigatório para rejeição)
+                </span>
+              </label>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Adicione um comentário..."
+                rows={4}
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00AEEF]"
+              />
             </div>
-          ))}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">
-              Comentário
-              <span className="ml-1 text-xs font-normal text-muted-foreground">
-                (obrigatório para rejeição)
-              </span>
-            </label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Adicione um comentário..."
-              rows={5}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00AEEF]"
-            />
+            <div className="flex flex-col gap-2 pt-1">
+              <button
+                onClick={() => resolve("approve")}
+                disabled={!!loading}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#00AEEF] px-5 py-3 text-sm font-semibold text-white hover:bg-[#00AEEF]/90 disabled:opacity-50 transition-colors"
+              >
+                <CheckCircle className="h-4 w-4" />
+                {loading === "approve" ? "Aprovando..." : "Aprovar"}
+              </button>
+              <button
+                onClick={() => resolve("reject")}
+                disabled={!!loading}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 dark:border-red-500/30 px-5 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 transition-colors"
+              >
+                <XCircle className="h-4 w-4" />
+                {loading === "reject" ? "Rejeitando..." : "Rejeitar"}
+              </button>
+            </div>
           </div>
-          <div className="flex flex-col gap-2 pt-1">
-            <button
-              onClick={() => resolve("approve")}
-              disabled={!!loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#00AEEF] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#00AEEF]/90 disabled:opacity-50 transition-colors"
-            >
-              <CheckCircle className="h-4 w-4" />
-              {loading === "approve" ? "Aprovando..." : "Aprovar"}
-            </button>
-            <button
-              onClick={() => resolve("reject")}
-              disabled={!!loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
-            >
-              <XCircle className="h-4 w-4" />
-              {loading === "reject" ? "Rejeitando..." : "Rejeitar"}
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 
@@ -351,6 +448,98 @@ export function ApprovalDetail({
                         />
                       )}
                     </>
+                  ) : selectedFile.mimeType === "application/xml" ? (
+                    previewLoading[selectedFile.id] ? (
+                      <div className="flex items-center justify-center py-16">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : xmlHighlighted[selectedFile.id] ? (
+                      <pre className="hljs overflow-auto max-h-[640px] p-4 text-xs font-mono whitespace-pre-wrap">
+                        <code
+                          className="language-xml"
+                          dangerouslySetInnerHTML={{ __html: xmlHighlighted[selectedFile.id] }}
+                        />
+                      </pre>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 py-12 text-sm text-muted-foreground">
+                        <p>Não foi possível carregar o arquivo.</p>
+                        <a href={selectedFile.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#00AEEF] hover:underline">
+                          <ExternalLink className="h-3.5 w-3.5" />Baixar arquivo
+                        </a>
+                      </div>
+                    )
+                  ) : selectedFile.mimeType === "text/csv" ? (
+                    previewLoading[selectedFile.id] ? (
+                      <div className="flex items-center justify-center py-16">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : csvRows[selectedFile.id]?.length ? (
+                      <div className="overflow-auto max-h-[640px] p-4">
+                        <table className="text-xs border-collapse w-full">
+                          <tbody>
+                            {csvRows[selectedFile.id].map((row, ri) => (
+                              <tr key={ri} className={ri === 0 ? "bg-muted font-semibold" : "even:bg-muted/30"}>
+                                {row.map((cell, ci) => (
+                                  <td key={ci} className="border px-2 py-1 whitespace-nowrap">{cell.trim()}</td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 py-12 text-sm text-muted-foreground">
+                        <p>Não foi possível carregar o arquivo.</p>
+                        <a href={selectedFile.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#00AEEF] hover:underline">
+                          <ExternalLink className="h-3.5 w-3.5" />Baixar arquivo
+                        </a>
+                      </div>
+                    )
+                  ) : selectedFile.mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ? (
+                    previewLoading[selectedFile.id] ? (
+                      <div className="flex items-center justify-center py-16">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : xlsxRows[selectedFile.id]?.length ? (
+                      <div className="overflow-auto max-h-[640px] p-4">
+                        <table className="text-xs border-collapse w-full">
+                          <tbody>
+                            {xlsxRows[selectedFile.id].map((row, ri) => (
+                              <tr key={ri} className={ri === 0 ? "bg-muted font-semibold" : "even:bg-muted/30"}>
+                                {row.map((cell, ci) => (
+                                  <td key={ci} className="border px-2 py-1 whitespace-nowrap">{String(cell ?? "")}</td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 py-12 text-sm text-muted-foreground">
+                        <p>Não foi possível carregar o arquivo.</p>
+                        <a href={selectedFile.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#00AEEF] hover:underline">
+                          <ExternalLink className="h-3.5 w-3.5" />Baixar arquivo
+                        </a>
+                      </div>
+                    )
+                  ) : selectedFile.mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ? (
+                    previewLoading[selectedFile.id] ? (
+                      <div className="flex items-center justify-center py-16">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : docxContainer[selectedFile.id] ? (
+                      <div
+                        className="overflow-auto max-h-[640px] p-4 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: docxContainer[selectedFile.id] }}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 py-12 text-sm text-muted-foreground">
+                        <p>Não foi possível carregar o arquivo.</p>
+                        <a href={selectedFile.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#00AEEF] hover:underline">
+                          <ExternalLink className="h-3.5 w-3.5" />Baixar arquivo
+                        </a>
+                      </div>
+                    )
                   ) : (
                     <div className="flex flex-col items-center gap-2 py-12 text-sm text-muted-foreground">
                       <p>Preview não disponível.</p>

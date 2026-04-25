@@ -119,16 +119,92 @@ const CSV_CONTENT = Buffer.from(
   ",,,Total,9300.00\n"
 )
 
-// DOCX/XLSX: ZIP magic bytes + padding — valid upload, not parseable as Office doc
-// Tests file type icon and download flow; not for content rendering
-const DOCX_CONTENT = Buffer.concat([
-  Buffer.from([0x50, 0x4b, 0x03, 0x04]), // PK\x03\x04 ZIP local file header
-  Buffer.alloc(64, 0),
-])
-const XLSX_CONTENT = Buffer.concat([
-  Buffer.from([0x50, 0x4b, 0x03, 0x04]),
-  Buffer.alloc(64, 0),
-])
+function buildXlsx(): Buffer {
+  const { utils, write } = require("xlsx") as typeof import("xlsx")
+  const rows = [
+    ["ID", "Descrição", "Quantidade", "Valor Unitário", "Total"],
+    [1, "Consultoria Técnica", 10, 500.0, 5000.0],
+    [2, "Licença de Software", 1, 1200.0, 1200.0],
+    [3, "Suporte Mensal", 5, 300.0, 1500.0],
+    [4, "Treinamento", 2, 800.0, 1600.0],
+    ["", "", "", "Total", 9300.0],
+  ]
+  const ws = utils.aoa_to_sheet(rows)
+  const wb = utils.book_new()
+  utils.book_append_sheet(wb, ws, "Relatório Q1")
+  return Buffer.from(write(wb, { type: "buffer", bookType: "xlsx" }))
+}
+
+function buildDocx(): Promise<Buffer> {
+  const {
+    Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell,
+    WidthType,
+  } = require("docx") as typeof import("docx")
+
+  const doc = new Document({
+    sections: [
+      {
+        children: [
+          new Paragraph({
+            text: "Proposta Comercial — SEED CO",
+            heading: HeadingLevel.HEADING_1,
+          }),
+          new Paragraph({ text: "" }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Cliente: ", bold: true }),
+              new TextRun("Empresa Exemplo Ltda"),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Data: ", bold: true }),
+              new TextRun("25/04/2026"),
+            ],
+          }),
+          new Paragraph({ text: "" }),
+          new Paragraph({ text: "Escopo dos serviços", heading: HeadingLevel.HEADING_2 }),
+          new Paragraph("Este documento descreve a proposta de prestação de serviços entre SEED CO e Empresa Exemplo Ltda."),
+          new Paragraph({ text: "" }),
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Serviço", bold: true })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Valor", bold: true })] })] }),
+                ],
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph("Consultoria Técnica")] }),
+                  new TableCell({ children: [new Paragraph("R$ 5.000,00")] }),
+                ],
+              }),
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph("Licença de Software")] }),
+                  new TableCell({ children: [new Paragraph("R$ 1.200,00")] }),
+                ],
+              }),
+            ],
+          }),
+          new Paragraph({ text: "" }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Total: ", bold: true }),
+              new TextRun("R$ 6.200,00"),
+            ],
+          }),
+        ],
+      },
+    ],
+  })
+
+  return Packer.toBuffer(doc)
+}
+
+const XLSX_CONTENT = buildXlsx()
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -150,6 +226,11 @@ type ApprovalSpec = {
   description: string
   files: FileSpec[]
   decisionFields: DecisionField[]
+  resolveAs?: {
+    status: "approved" | "rejected"
+    comment: string
+    decisionValues?: Record<string, string>
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -251,7 +332,8 @@ async function createApproval(n8nSlug: string, spec: ApprovalSpec): Promise<stri
 
 // ── Aprovações ────────────────────────────────────────────────────────────────
 
-const APPROVALS: ApprovalSpec[] = [
+function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
+  return [
   {
     title: "Aprovação de Contrato (seed)",
     description: "Contrato de prestação de serviços — validação visual PDF + DOCX",
@@ -260,7 +342,7 @@ const APPROVALS: ApprovalSpec[] = [
       {
         filename: "proposta-comercial.docx",
         mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        content: DOCX_CONTENT,
+        content: docxContent,
       },
     ],
     decisionFields: [
@@ -351,7 +433,128 @@ const APPROVALS: ApprovalSpec[] = [
       },
     ],
   },
-]
+
+  // ── Sem arquivos — pending ──────────────────────────────────────────────────
+  {
+    title: "Solicitação de Viagem Corporativa (seed)",
+    description:
+      "João Silva solicita viagem a São Paulo nos dias 12–14/05/2026 para reunião com cliente estratégico. " +
+      "Estimativa de despesas: passagem R$ 650, hospedagem R$ 420, alimentação R$ 150.",
+    files: [],
+    decisionFields: [
+      {
+        id: "categoria",
+        type: "select",
+        label: "Categoria da viagem",
+        options: [
+          { id: "cliente", label: "Visita a cliente" },
+          { id: "evento", label: "Evento / Conferência" },
+          { id: "treinamento", label: "Treinamento" },
+        ],
+      },
+      {
+        id: "urgencia",
+        type: "select",
+        label: "Urgência",
+        options: [
+          { id: "normal", label: "Normal" },
+          { id: "urgente", label: "Urgente" },
+        ],
+      },
+    ],
+  },
+
+  // ── Sem arquivos — aprovada ─────────────────────────────────────────────────
+  {
+    title: "Compra de Equipamento TI (seed)",
+    description:
+      "Requisição de 2 notebooks Dell Latitude 5540 para novos colaboradores do time de engenharia. " +
+      "Fornecedor: InfoTech Distribuidora. Valor total: R$ 11.400,00.",
+    files: [],
+    decisionFields: [
+      {
+        id: "fornecedor",
+        type: "select",
+        label: "Fornecedor preferencial",
+        options: [
+          { id: "infotech", label: "InfoTech Distribuidora" },
+          { id: "tekmais", label: "TekMais" },
+          { id: "outra", label: "Outra cotação" },
+        ],
+      },
+      {
+        id: "centro_custo",
+        type: "select",
+        label: "Centro de custo",
+        options: [
+          { id: "eng", label: "Engenharia" },
+          { id: "produto", label: "Produto" },
+          { id: "ops", label: "Operações" },
+        ],
+      },
+    ],
+    resolveAs: {
+      status: "approved",
+      comment: "Orçamento aprovado. Dentro do limite anual de TI.",
+      decisionValues: { fornecedor: "infotech", centro_custo: "eng" },
+    },
+  },
+
+  // ── Sem arquivos — rejeitada ────────────────────────────────────────────────
+  {
+    title: "Contratação de Freelancer (seed)",
+    description:
+      "Solicitação de contratação de designer freelancer para redesign da landing page. " +
+      "Proposta: 3 semanas, R$ 8.500,00. Portfólio enviado por e-mail.",
+    files: [],
+    decisionFields: [
+      {
+        id: "modalidade",
+        type: "select",
+        label: "Modalidade de contratação",
+        options: [
+          { id: "freelancer", label: "Freelancer (PJ)" },
+          { id: "clt", label: "CLT" },
+          { id: "estagio", label: "Estágio" },
+        ],
+      },
+    ],
+    resolveAs: {
+      status: "rejected",
+      comment:
+        "Budget de marketing já comprometido para Q2. Rever na próxima janela orçamentária (Q3/2026).",
+      decisionValues: { modalidade: "freelancer" },
+    },
+  },
+
+  // ── Com arquivo — aprovada ──────────────────────────────────────────────────
+  {
+    title: "Autorização de Despesa — Fornecedor (seed)",
+    description:
+      "NF-e referente à prestação de serviços de limpeza industrial no período de março/2026. " +
+      "Fornecedor: CleanPro Ltda. Valor: R$ 2.300,00.",
+    files: [
+      { filename: "nfe-cleanpro-marco.pdf", mimeType: "application/pdf", content: PDF_CONTENT },
+    ],
+    decisionFields: [
+      {
+        id: "aprovador_financeiro",
+        type: "select",
+        label: "Aprovador financeiro",
+        options: [
+          { id: "cfo", label: "CFO" },
+          { id: "gerente", label: "Gerente Financeiro" },
+        ],
+      },
+    ],
+    resolveAs: {
+      status: "approved",
+      comment: "NF conferida e dentro do contrato vigente.",
+      decisionValues: { aprovador_financeiro: "gerente" },
+    },
+  },
+  ]
+}
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
@@ -359,7 +562,7 @@ async function main() {
   if (!N8N_SECRET) throw new Error("N8N_WEBHOOK_SECRET não definido em .env.local")
 
   const { db } = await import("../src/lib/db")
-  const { organizations } = await import("../db/schema")
+  const { organizations, organizationMembers, approvals: approvalsTable } = await import("../db/schema")
   const { eq } = await import("drizzle-orm")
 
   let orgId: string
@@ -386,19 +589,45 @@ async function main() {
     n8nSlug = slug
   }
 
+  // Busca um userId real da org para resolvedBy nas aprovações pré-resolvidas
+  const [firstMember] = await db
+    .select({ userId: organizationMembers.userId })
+    .from(organizationMembers)
+    .where(eq(organizationMembers.organizationId, orgId))
+  const resolvedByUserId = firstMember?.userId ?? null
+
   console.log(`\nServidor : ${BASE_URL}`)
   console.log(`Org slug : ${n8nSlug}\n`)
 
   await cleanup(orgId)
 
+  const docxContent = await buildDocx()
+  const approvals = buildApprovals(docxContent)
   const urls: string[] = []
 
-  for (const [i, spec] of APPROVALS.entries()) {
-    console.log(`[${i + 1}/${APPROVALS.length}] ${spec.title}`)
+  for (const [i, spec] of approvals.entries()) {
+    console.log(`[${i + 1}/${approvals.length}] ${spec.title}`)
     const approvalId = await createApproval(n8nSlug, spec)
+
+    if (spec.resolveAs && resolvedByUserId) {
+      await db
+        .update(approvalsTable)
+        .set({
+          status: spec.resolveAs.status,
+          resolvedBy: resolvedByUserId,
+          resolvedAt: new Date(),
+          comment: spec.resolveAs.comment,
+          decisionValues: spec.resolveAs.decisionValues ?? null,
+          updatedAt: new Date(),
+        })
+        .where(eq(approvalsTable.id, approvalId))
+      console.log(`    ✓ ${spec.resolveAs.status}\n`)
+    } else {
+      console.log(`    ✓ criada\n`)
+    }
+
     const url = `${BASE_URL}/approvals/${approvalId}`
-    urls.push(url)
-    console.log(`    ✓ criada\n`)
+    urls.push(`[${spec.resolveAs?.status ?? "pending"}] ${url}`)
   }
 
   console.log("─────────────────────────────────────────────")

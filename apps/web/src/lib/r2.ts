@@ -11,6 +11,11 @@ export const ALLOWED_MIME_TYPES = new Set([
   "image/png",
   "image/webp",
   "image/gif",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // DOCX
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",       // XLSX
+  "application/xml",
+  "text/csv",
+  "application/zip",
 ])
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB

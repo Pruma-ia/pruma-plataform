@@ -20,16 +20,21 @@ export const ALLOWED_MIME_TYPES = new Set([
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
+let _client: S3Client | undefined
+
 function getClient() {
-  return new S3Client({
-    region: "auto",
-    endpoint: process.env.R2_ENDPOINT ?? "http://localhost:9000",
-    credentials: {
-      accessKeyId: process.env.R2_ACCESS_KEY_ID ?? "minioadmin",
-      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? "minioadmin",
-    },
-    forcePathStyle: true, // obrigatório para MinIO e R2 com endpoint customizado
-  })
+  if (!_client) {
+    _client = new S3Client({
+      region: "auto",
+      endpoint: process.env.R2_ENDPOINT ?? "http://localhost:9000",
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID ?? "minioadmin",
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? "minioadmin",
+      },
+      forcePathStyle: true, // obrigatório para MinIO e R2 com endpoint customizado
+    })
+  }
+  return _client
 }
 
 export function buildR2Key(orgId: string, filename: string): string {

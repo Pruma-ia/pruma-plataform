@@ -130,6 +130,28 @@ describe("POST /api/n8n/approvals — validação de schema", () => {
     const res = await POST(makeRequest(validPayload))
     expect(res.status).toBe(422)
   })
+
+  it("retorna 422 quando callbackUrl não pertence ao domínio n8n registrado na org", async () => {
+    mockOrgRows.mockReturnValue([{ id: "org-1", n8nBaseUrl: "https://n8n.acme.com" }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({
+      ...validPayload,
+      callbackUrl: "https://n8n.other-company.com/webhook/abc",
+    }))
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.error).toContain("n8n.acme.com")
+  })
+
+  it("aceita callbackUrl quando domínio corresponde ao n8nBaseUrl da org", async () => {
+    mockOrgRows.mockReturnValue([{ id: "org-1", n8nBaseUrl: "https://n8n.acme.com" }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({
+      ...validPayload,
+      callbackUrl: "https://n8n.acme.com/webhook/abc",
+    }))
+    expect(res.status).toBe(200)
+  })
 })
 
 describe("POST /api/n8n/approvals — decisionFields", () => {

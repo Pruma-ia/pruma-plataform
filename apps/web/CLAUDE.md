@@ -38,9 +38,13 @@ Isso substitui curl manual. Nunca shipar feature sem rodar as duas suites.
 
 **Comandos**:
 ```bash
-npm test              # unit — sem infra (CI)
-npm run test:int      # integration — requer docker-compose up postgres
+npm test                  # unit — sem infra (CI)
+npm run test:int          # integration — roda e limpa DB ao final
+npm run test:int:keep     # integration — KEEP_DATA=1: mantém dados no DB para validar no frontend
 ```
+
+**Modo copiloto (`test:int:keep`)**:
+Dados persistem após os testes. Terminal imprime URLs diretas (`http://localhost:3000/approvals/{id}`) em cada step chave. Rodar `npm run dev` em paralelo → abrir URLs no browser → validar visual. Limpar depois com `npm run test:int` (sem KEEP_DATA).
 
 **Convenções de testes unitários**:
 - `vi.hoisted(() => vi.fn())` para mocks que precisam estar disponíveis antes da factory do `vi.mock` (ex: `mockAuth`).

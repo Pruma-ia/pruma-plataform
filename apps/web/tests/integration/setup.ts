@@ -27,6 +27,15 @@ beforeAll(async () => {
 }, 15_000)
 
 afterAll(async () => {
+  if (process.env.KEEP_DATA === "1") {
+    console.log("\n─────────────────────────────────────────────")
+    console.log("KEEP_DATA=1 → dados preservados no DB local")
+    console.log(`  Org ID   : ${ctx.orgId}`)
+    console.log(`  User ID  : ${ctx.userId}`)
+    console.log(`  n8nSlug  : ${ctx.n8nSlug}`)
+    console.log("─────────────────────────────────────────────\n")
+    return
+  }
   // Org delete cascades: approvals, approvalFiles, approvalFileUploads, flows, members
   if (ctx.orgId) await db.delete(organizations).where(eq(organizations.id, ctx.orgId))
   if (ctx.userId) await db.delete(users).where(eq(users.id, ctx.userId))

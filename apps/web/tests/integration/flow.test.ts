@@ -119,6 +119,10 @@ describe("Full rich approval flow", () => {
     expect(upload.status).toBe("pending")
     expect(upload.organizationId).toBe(ctx.orgId)
     expect(upload.filename).toBe("contrato.pdf")
+
+    if (process.env.KEEP_DATA === "1") {
+      console.log(`\n[step 1] Upload pendente criado — r2Key: ${r2Key}`)
+    }
   })
 
   it("step 2 — criar aprovação com arquivo e decisionFields salva tudo no DB", async () => {
@@ -162,6 +166,12 @@ describe("Full rich approval flow", () => {
       .from(approvalFileUploads)
       .where(eq(approvalFileUploads.r2Key, r2Key))
     expect(upload.status).toBe("confirmed")
+
+    if (process.env.KEEP_DATA === "1") {
+      console.log(`[step 2] Aprovação criada — status: pending`)
+      console.log(`         → http://localhost:3000/approvals/${approvalId}`)
+      console.log(`         (abra agora pra ver estado pendente antes do próximo step)`)
+    }
   })
 
   it("step 3 — GET arquivos retorna signed URLs sem vazar r2Key", async () => {
@@ -216,6 +226,11 @@ describe("Full rich approval flow", () => {
     expect(callBody.comment).toBe("Contrato aprovado após revisão")
     expect(callBody.approvalId).toBe(approvalId)
     expect(callBody.resolvedAt).toBeDefined()
+
+    if (process.env.KEEP_DATA === "1") {
+      console.log(`[step 4] Aprovação resolvida — status: approved`)
+      console.log(`         → http://localhost:3000/approvals/${approvalId}`)
+    }
   })
 
   it("step 5 — segunda tentativa de aprovar retorna 409", async () => {

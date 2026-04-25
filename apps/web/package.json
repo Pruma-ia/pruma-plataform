@@ -15,7 +15,8 @@
     "db:baseline": "npx tsx scripts/baseline-db.ts",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
-    "test:int": "vitest --config vitest.integration.config.ts"
+    "test:int": "vitest --config vitest.integration.config.ts",
+    "test:int:keep": "KEEP_DATA=1 vitest --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

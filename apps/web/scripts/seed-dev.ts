@@ -1,11 +1,16 @@
 /**
  * Seed script para debug visual do fluxo de aprovações ricas.
  *
+ * Cria 3 aprovações com diferentes tipos de arquivo:
+ *   1. "Aprovação de Contrato"    → [PDF, DOCX]
+ *   2. "Aprovação de NF / Recibo" → [XML, JPEG]
+ *   3. "Aprovação de Relatório"   → [XLSX, CSV]
+ *
  * Faz o que o n8n faria:
  *   1. Presign → obtém uploadUrl + r2Key do servidor local
  *   2. PUT real no MinIO com arquivo de exemplo
  *   3. Cria aprovação com arquivo e decisionFields
- *   4. Imprime URL para abrir no browser
+ *   4. Imprime URLs para abrir no browser
  *
  * Requer: npm run dev rodando + MinIO rodando (docker compose up -d minio minio-init)
  *
@@ -16,12 +21,13 @@
 import { config } from "dotenv"
 import path from "path"
 
-// Carrega .env.local antes de qualquer acesso a process.env
 config({ path: path.resolve(process.cwd(), ".env.local") })
 
 const BASE_URL = process.env.SEED_BASE_URL ?? "http://localhost:3000"
 const N8N_SECRET = process.env.N8N_WEBHOOK_SECRET ?? ""
 const ORG_ID = process.env.INT_TEST_ORG_ID
+
+// ── File buffers ──────────────────────────────────────────────────────────────
 
 // Minimal valid PDF — offsets computed to match xref table exactly
 // obj1@9, obj2@56, obj3@111, xref@180
@@ -49,10 +55,272 @@ const PDF_CONTENT = Buffer.from(
   "%%EOF\n"
 )
 
+// 1×1 pixel PNG — valid image, renders in preview
+const PNG_CONTENT = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  "base64"
+)
+
+// Minimal JFIF JPEG (SOI + APP0 header + EOI) — valid MIME, not renderable as image
+const JPEG_CONTENT = Buffer.from([
+  0xff, 0xd8,                                           // SOI
+  0xff, 0xe0, 0x00, 0x10,                               // APP0 marker + length
+  0x4a, 0x46, 0x49, 0x46, 0x00,                         // "JFIF\0"
+  0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, // version, density
+  0xff, 0xd9,                                           // EOI
+])
+
+// NF-e XML stub — realistic structure, valid XML
+const XML_CONTENT = Buffer.from(
+  `<?xml version="1.0" encoding="UTF-8"?>\n` +
+  `<nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">\n` +
+  `  <NFe>\n` +
+  `    <infNFe Id="NFe35260400000000000155550010000000011000000011" versao="4.00">\n` +
+  `      <ide>\n` +
+  `        <cUF>35</cUF>\n` +
+  `        <natOp>VENDA DE PRODUTO</natOp>\n` +
+  `        <mod>55</mod>\n` +
+  `        <serie>1</serie>\n` +
+  `        <nNF>1</nNF>\n` +
+  `        <dhEmi>2026-04-25T10:00:00-03:00</dhEmi>\n` +
+  `      </ide>\n` +
+  `      <emit>\n` +
+  `        <CNPJ>00000000000155</CNPJ>\n` +
+  `        <xNome>EMPRESA SEED LTDA</xNome>\n` +
+  `        <xFant>SEED CO</xFant>\n` +
+  `      </emit>\n` +
+  `      <det nItem="1">\n` +
+  `        <prod>\n` +
+  `          <cProd>001</cProd>\n` +
+  `          <xProd>PRODUTO EXEMPLO</xProd>\n` +
+  `          <NCM>84713012</NCM>\n` +
+  `          <CFOP>5102</CFOP>\n` +
+  `          <uCom>UN</uCom>\n` +
+  `          <qCom>2.0000</qCom>\n` +
+  `          <vUnCom>750.00</vUnCom>\n` +
+  `          <vProd>1500.00</vProd>\n` +
+  `        </prod>\n` +
+  `      </det>\n` +
+  `      <total>\n` +
+  `        <ICMSTot><vNF>1500.00</vNF></ICMSTot>\n` +
+  `      </total>\n` +
+  `    </infNFe>\n` +
+  `  </NFe>\n` +
+  `</nfeProc>\n`
+)
+
+const CSV_CONTENT = Buffer.from(
+  "ID,Descricao,Quantidade,Valor Unitario,Total\n" +
+  "1,Consultoria Tecnica,10,500.00,5000.00\n" +
+  "2,Licenca de Software,1,1200.00,1200.00\n" +
+  "3,Suporte Mensal,5,300.00,1500.00\n" +
+  "4,Treinamento,2,800.00,1600.00\n" +
+  ",,,Total,9300.00\n"
+)
+
+// DOCX/XLSX: ZIP magic bytes + padding — valid upload, not parseable as Office doc
+// Tests file type icon and download flow; not for content rendering
+const DOCX_CONTENT = Buffer.concat([
+  Buffer.from([0x50, 0x4b, 0x03, 0x04]), // PK\x03\x04 ZIP local file header
+  Buffer.alloc(64, 0),
+])
+const XLSX_CONTENT = Buffer.concat([
+  Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+  Buffer.alloc(64, 0),
+])
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type FileSpec = {
+  filename: string
+  mimeType: string
+  content: Buffer
+}
+
+type DecisionField = {
+  id: string
+  type: "select"
+  label: string
+  options: { id: string; label: string }[]
+}
+
+type ApprovalSpec = {
+  title: string
+  description: string
+  files: FileSpec[]
+  decisionFields: DecisionField[]
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+async function uploadFile(
+  n8nSlug: string,
+  file: FileSpec
+): Promise<{ r2Key: string; filename: string; mimeType: string; sizeBytes: number }> {
+  const presignRes = await fetch(`${BASE_URL}/api/n8n/approvals/files/presign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-n8n-secret": N8N_SECRET },
+    body: JSON.stringify({
+      organizationSlug: n8nSlug,
+      filename: file.filename,
+      mimeType: file.mimeType,
+      sizeBytes: file.content.byteLength,
+    }),
+  })
+  if (!presignRes.ok) {
+    throw new Error(`Presign ${file.filename} falhou (${presignRes.status}): ${await presignRes.text()}`)
+  }
+  const { uploadUrl, r2Key } = await presignRes.json()
+
+  const putRes = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.mimeType, "Content-Length": String(file.content.byteLength) },
+    body: new Uint8Array(file.content),
+  })
+  if (!putRes.ok) {
+    throw new Error(`PUT MinIO ${file.filename} falhou (${putRes.status}): ${await putRes.text()}`)
+  }
+
+  return { r2Key, filename: file.filename, mimeType: file.mimeType, sizeBytes: file.content.byteLength }
+}
+
+async function createApproval(n8nSlug: string, spec: ApprovalSpec): Promise<string> {
+  const uploadedFiles = []
+  for (const file of spec.files) {
+    const result = await uploadFile(n8nSlug, file)
+    uploadedFiles.push(result)
+    console.log(`    ↑ ${file.filename} (${file.mimeType}) — ${result.r2Key}`)
+  }
+
+  const approvalRes = await fetch(`${BASE_URL}/api/n8n/approvals`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-n8n-secret": N8N_SECRET },
+    body: JSON.stringify({
+      organizationSlug: n8nSlug,
+      n8nExecutionId: `seed-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      callbackUrl: "https://n8n.callback.test/webhook/seed",
+      title: spec.title,
+      description: spec.description,
+      decisionFields: spec.decisionFields,
+      files: uploadedFiles,
+    }),
+  })
+  if (!approvalRes.ok) {
+    throw new Error(`Criar aprovação "${spec.title}" falhou (${approvalRes.status}): ${await approvalRes.text()}`)
+  }
+  const { approvalId } = await approvalRes.json()
+  return approvalId
+}
+
+// ── Aprovações ────────────────────────────────────────────────────────────────
+
+const APPROVALS: ApprovalSpec[] = [
+  {
+    title: "Aprovação de Contrato (seed)",
+    description: "Contrato de prestação de serviços — validação visual PDF + DOCX",
+    files: [
+      { filename: "contrato-servicos.pdf", mimeType: "application/pdf", content: PDF_CONTENT },
+      {
+        filename: "proposta-comercial.docx",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        content: DOCX_CONTENT,
+      },
+    ],
+    decisionFields: [
+      {
+        id: "advogado",
+        type: "select",
+        label: "Advogado responsável",
+        options: [
+          { id: "adv-1", label: "João Silva" },
+          { id: "adv-2", label: "Maria Santos" },
+        ],
+      },
+      {
+        id: "tipo_contrato",
+        type: "select",
+        label: "Tipo de contrato",
+        options: [
+          { id: "prestacao", label: "Prestação de serviço" },
+          { id: "compra", label: "Compra e venda" },
+          { id: "parceria", label: "Parceria comercial" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Aprovação de NF / Recibo (seed)",
+    description: "Nota fiscal eletrônica + foto do recibo — validação visual XML + JPEG",
+    files: [
+      { filename: "nfe-001.xml", mimeType: "application/xml", content: XML_CONTENT },
+      { filename: "foto-recibo.jpg", mimeType: "image/jpeg", content: JPEG_CONTENT },
+      { filename: "screenshot-sistema.png", mimeType: "image/png", content: PNG_CONTENT },
+    ],
+    decisionFields: [
+      {
+        id: "centro_custo",
+        type: "select",
+        label: "Centro de custo",
+        options: [
+          { id: "cc-ti", label: "TI" },
+          { id: "cc-rh", label: "RH" },
+          { id: "cc-mkt", label: "Marketing" },
+        ],
+      },
+      {
+        id: "categoria",
+        type: "select",
+        label: "Categoria",
+        options: [
+          { id: "fornecedor", label: "Fornecedor" },
+          { id: "despesa", label: "Despesa operacional" },
+          { id: "investimento", label: "Investimento" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Aprovação de Relatório Financeiro (seed)",
+    description: "Relatório trimestral + dados brutos — validação visual XLSX + CSV",
+    files: [
+      {
+        filename: "relatorio-q1-2026.xlsx",
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        content: XLSX_CONTENT,
+      },
+      { filename: "dados-exportados.csv", mimeType: "text/csv", content: CSV_CONTENT },
+    ],
+    decisionFields: [
+      {
+        id: "departamento",
+        type: "select",
+        label: "Departamento",
+        options: [
+          { id: "financeiro", label: "Financeiro" },
+          { id: "operacoes", label: "Operações" },
+          { id: "diretoria", label: "Diretoria" },
+        ],
+      },
+      {
+        id: "periodo",
+        type: "select",
+        label: "Período de referência",
+        options: [
+          { id: "q1", label: "Q1 2026" },
+          { id: "q2", label: "Q2 2026" },
+          { id: "q3", label: "Q3 2026" },
+          { id: "q4", label: "Q4 2026" },
+        ],
+      },
+    ],
+  },
+]
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+
 async function main() {
   if (!N8N_SECRET) throw new Error("N8N_WEBHOOK_SECRET não definido em .env.local")
 
-  // Imports dinâmicos dentro de main() — após dotenv ter carregado DATABASE_URL
   let n8nSlug: string
   if (ORG_ID) {
     const { db } = await import("../src/lib/db")
@@ -74,69 +342,19 @@ async function main() {
   console.log(`\nServidor : ${BASE_URL}`)
   console.log(`Org slug : ${n8nSlug}\n`)
 
-  // 1. Presign
-  const presignRes = await fetch(`${BASE_URL}/api/n8n/approvals/files/presign`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-n8n-secret": N8N_SECRET },
-    body: JSON.stringify({
-      organizationSlug: n8nSlug,
-      filename: "contrato-exemplo.pdf",
-      mimeType: "application/pdf",
-      sizeBytes: PDF_CONTENT.byteLength,
-    }),
-  })
-  if (!presignRes.ok) throw new Error(`Presign falhou (${presignRes.status}): ${await presignRes.text()}`)
-  const { uploadUrl, r2Key } = await presignRes.json()
-  console.log(`[1] Presign OK`)
-  console.log(`    r2Key: ${r2Key}`)
+  const urls: string[] = []
 
-  // 2. PUT real no MinIO
-  const putRes = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: { "Content-Type": "application/pdf", "Content-Length": String(PDF_CONTENT.byteLength) },
-    body: PDF_CONTENT,
-  })
-  if (!putRes.ok) throw new Error(`PUT MinIO falhou (${putRes.status}): ${await putRes.text()}`)
-  console.log(`[2] Upload MinIO OK`)
+  for (const [i, spec] of APPROVALS.entries()) {
+    console.log(`[${i + 1}/${APPROVALS.length}] ${spec.title}`)
+    const approvalId = await createApproval(n8nSlug, spec)
+    const url = `${BASE_URL}/approvals/${approvalId}`
+    urls.push(url)
+    console.log(`    ✓ criada\n`)
+  }
 
-  // 3. Criar aprovação
-  const approvalRes = await fetch(`${BASE_URL}/api/n8n/approvals`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-n8n-secret": N8N_SECRET },
-    body: JSON.stringify({
-      organizationSlug: n8nSlug,
-      n8nExecutionId: `seed-${Date.now()}`,
-      callbackUrl: "https://n8n.callback.test/webhook/seed",
-      title: "Aprovação de Contrato (seed)",
-      description: "Criado pelo script seed-dev para validação visual",
-      decisionFields: [
-        {
-          id: "advogado",
-          type: "select",
-          label: "Advogado responsável",
-          options: [
-            { id: "adv-1", label: "João Silva" },
-            { id: "adv-2", label: "Maria Santos" },
-          ],
-        },
-      ],
-      files: [
-        {
-          r2Key,
-          filename: "contrato-exemplo.pdf",
-          mimeType: "application/pdf",
-          sizeBytes: PDF_CONTENT.byteLength,
-        },
-      ],
-    }),
-  })
-  if (!approvalRes.ok) throw new Error(`Criar aprovação falhou (${approvalRes.status}): ${await approvalRes.text()}`)
-  const { approvalId } = await approvalRes.json()
-  console.log(`[3] Aprovação criada`)
-
-  console.log(`\n─────────────────────────────────────────────`)
-  console.log(`  ${BASE_URL}/approvals/${approvalId}`)
-  console.log(`─────────────────────────────────────────────\n`)
+  console.log("─────────────────────────────────────────────")
+  for (const url of urls) console.log(`  ${url}`)
+  console.log("─────────────────────────────────────────────\n")
 }
 
 main()

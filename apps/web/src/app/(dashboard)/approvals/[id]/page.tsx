@@ -46,7 +46,7 @@ export default async function ApprovalDetailPage({
   return (
     <div>
       <Header title="Detalhes da Aprovação" />
-      <div className="p-6 max-w-2xl">
+      <div className="p-6 max-w-4xl">
         <Link
           href="/approvals"
           className="mb-5 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
@@ -58,6 +58,7 @@ export default async function ApprovalDetailPage({
           approval={row}
           canResolve={row.status === "pending"}
           fileCount={fileRows.length}
+          autoLoadFiles
         />
       </div>
     </div>

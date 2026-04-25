@@ -55,3 +55,13 @@ export async function deleteObject(r2Key: string) {
   const client = getClient()
   await client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: r2Key }))
 }
+
+export async function objectExists(r2Key: string): Promise<boolean> {
+  const { HeadObjectCommand } = await import("@aws-sdk/client-s3")
+  try {
+    await getClient().send(new HeadObjectCommand({ Bucket: BUCKET, Key: r2Key }))
+    return true
+  } catch {
+    return false
+  }
+}

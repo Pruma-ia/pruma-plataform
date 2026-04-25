@@ -315,7 +315,7 @@ describe("Security — r2Key pertencente a outra org é rejeitada", () => {
 
   it("r2Key confirmed (já vinculada a outra aprovação) retorna 422", async () => {
     // Create a presign record but mark it confirmed (simulates already-used key)
-    const usedKey = `${ctx.orgId}/uuid-used/doc.pdf`
+    const usedKey = `${ctx.orgId}/${crypto.randomUUID()}/doc.pdf`
     await db.insert(approvalFileUploads).values({
       organizationId: ctx.orgId,
       r2Key: usedKey,

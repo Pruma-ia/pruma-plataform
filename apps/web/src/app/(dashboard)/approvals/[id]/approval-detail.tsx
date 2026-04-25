@@ -57,6 +57,7 @@ export function ApprovalDetail({
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null)
   const [fieldErrors, setFieldErrors] = useState<string[]>([])
   const [resolved, setResolved] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
   const [files, setFiles] = useState<FileItem[] | null>(null)
   const [loadingFiles, setLoadingFiles] = useState(false)
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
@@ -146,7 +147,7 @@ export function ApprovalDetail({
         fetch(f.url),
       ])
       const buf = await res.arrayBuffer()
-      const wb = read(new Uint8Array(buf), { type: "array" })
+      const wb = read(new Uint8Array(buf), { type: "array", cellFormula: false, cellHTML: false })
       const ws = wb.Sheets[wb.SheetNames[0]]
       const rows = utils.sheet_to_json<string[]>(ws, { header: 1 }) as string[][]
       setXlsxRows((p) => ({ ...p, [f.id]: rows }))
@@ -206,14 +207,19 @@ export function ApprovalDetail({
       return
     }
     setFieldErrors([])
+    setServerError(null)
     setLoading(action)
-    await fetch(`/api/approvals/${approval.id}/${action}`, {
+    const res = await fetch(`/api/approvals/${approval.id}/${action}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ comment, decisionValues }),
     })
     setLoading(null)
-    setResolved(true)
+    if (res.ok) {
+      setResolved(true)
+    } else {
+      setServerError("Erro ao registrar decisão. Tente novamente.")
+    }
   }
 
   const statusIcon = {
@@ -339,6 +345,9 @@ export function ApprovalDetail({
                 className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00AEEF]"
               />
             </div>
+            {serverError && (
+              <p className="text-sm text-red-500">{serverError}</p>
+            )}
             <div className="flex flex-col gap-2 pt-1">
               <button
                 onClick={() => resolve("approve")}

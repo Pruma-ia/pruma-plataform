@@ -61,14 +61,15 @@ const PNG_CONTENT = Buffer.from(
   "base64"
 )
 
-// Minimal JFIF JPEG (SOI + APP0 header + EOI) — valid MIME, not renderable as image
-const JPEG_CONTENT = Buffer.from([
-  0xff, 0xd8,                                           // SOI
-  0xff, 0xe0, 0x00, 0x10,                               // APP0 marker + length
-  0x4a, 0x46, 0x49, 0x46, 0x00,                         // "JFIF\0"
-  0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, // version, density
-  0xff, 0xd9,                                           // EOI
-])
+// 1×1 pixel white JPEG — valid and renderable in browser image preview
+const JPEG_CONTENT = Buffer.from(
+  "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkS" +
+  "Ew8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAARC" +
+  "AABAAEDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABAMC/8QAFhABAQEA" +
+  "AAAAAAAAAAAAAAAAAREh/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMR" +
+  "AD8Az1gQEBMB/9k=",
+  "base64"
+)
 
 // NF-e XML stub — realistic structure, valid XML
 const XML_CONTENT = Buffer.from(

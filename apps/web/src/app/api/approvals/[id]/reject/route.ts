@@ -63,6 +63,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const callbackOk = await fetch(approval.callbackUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(5000),
         body: JSON.stringify({
           approvalId: approval.id,
           status: "rejected",

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import "highlight.js/styles/github-dark.css"
+import DOMPurify from "dompurify"
 import {
   CheckCircle,
   XCircle,
@@ -169,7 +170,7 @@ export function ApprovalDetail({
         className: "docx-preview",
         inWrapper: false,
       })
-      setDocxContainer((p) => ({ ...p, [f.id]: div.innerHTML }))
+      setDocxContainer((p) => ({ ...p, [f.id]: DOMPurify.sanitize(div.innerHTML) }))
     } catch {
       setDocxContainer((p) => ({ ...p, [f.id]: "" }))
     } finally {

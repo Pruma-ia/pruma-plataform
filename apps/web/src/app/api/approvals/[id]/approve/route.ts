@@ -19,7 +19,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const { id } = await params
   const body = await req.json()
-  const { comment, decisionValues } = schema.parse(body)
+  const parsed = schema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues }, { status: 422 })
+  }
+  const { comment, decisionValues } = parsed.data
 
   const [approval] = await db
     .select()
@@ -59,6 +63,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const callbackOk = await fetch(approval.callbackUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(5000),
         body: JSON.stringify({
           approvalId: approval.id,
           status: "approved",

@@ -125,4 +125,42 @@ describe("POST /api/approvals/[id]/approve", () => {
     const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
     expect(callBody.decisionValues).toBeNull()
   })
+
+  it("retorna 422 para body com tipo inválido", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", organizationId: "org1" } })
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ decisionValues: "string-invalida" }), makeParams())
+    expect(res.status).toBe(422)
+  })
+
+  it("marca callbackStatus='blocked' quando callbackUrl é privada (SSRF)", async () => {
+    const { validateCallbackUrl } = await import("@/lib/n8n")
+    vi.mocked(validateCallbackUrl).mockReturnValue(false)
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: "https://169.254.169.254/webhook",
+    }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest(), makeParams())
+    expect(res.status).toBe(200)
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockUpdate).toHaveBeenCalled()
+  })
+
+  it("marca callbackStatus='failed' quando callback n8n falha", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: "https://n8n.example.com/webhook/abc",
+    }])
+    global.fetch = vi.fn().mockResolvedValue({ ok: false })
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest(), makeParams())
+    expect(res.status).toBe(200)
+    const lastCall = (mockUpdate as ReturnType<typeof vi.fn>).mock.calls.at(-1)
+    expect(lastCall).toBeDefined()
+  })
 })

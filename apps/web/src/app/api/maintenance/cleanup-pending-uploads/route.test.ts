@@ -112,6 +112,18 @@ describe("GET /api/maintenance/cleanup-pending-uploads", () => {
     expect(mockDelete).not.toHaveBeenCalled()
   })
 
+  it("não deleta uploads com expiresAt no futuro (query retorna vazio — lt filtra corretamente)", async () => {
+    // DB WHERE: and(status='pending', expiresAt < now) — mock simula 0 rows para uploads futuros
+    mockSelect.mockResolvedValue([])
+    const { GET } = await import("./route")
+    const res = await GET(makeRequest(SECRET))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.expired).toBe(0)
+    expect(mockDeleteObject).not.toHaveBeenCalled()
+    expect(mockDelete).not.toHaveBeenCalled()
+  })
+
   it("deleta só IDs com R2 bem-sucedido quando há falha parcial", async () => {
     const uploads = [
       makeUpload({ id: "up-ok", r2Key: "org/ok.pdf" }),

@@ -94,6 +94,7 @@ export async function GET(req: Request) {
     const ok = await fetch(approval.callbackUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(5000),
       body: JSON.stringify({
         approvalId: approval.id,
         status: approval.status,

@@ -263,4 +263,22 @@ describe("POST /api/n8n/approvals — validação de files (r2Keys)", () => {
     const res = await POST(makeRequest(validPayload))
     expect(res.status).toBe(200)
   })
+
+  it("retorna 422 quando r2Key tem status 'confirmed' (já consumido por outra aprovação)", async () => {
+    // Query filtra status='pending' — r2Key confirmado não retorna na consulta
+    mockUploadRows.mockReturnValue([]) // confirmed key ausente no resultado (filtrado pelo SQL)
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({
+      ...validPayload,
+      files: [{
+        r2Key: "org-1/uuid-already-used/doc.pdf",
+        filename: "doc.pdf",
+        mimeType: "application/pdf",
+        sizeBytes: 1024,
+      }],
+    }))
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.invalid).toContain("org-1/uuid-already-used/doc.pdf")
+  })
 })

@@ -205,4 +205,15 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
     await GET(makeRequest(SECRET))
     expect(global.fetch).not.toHaveBeenCalled()
   })
+
+  it("não processa approvals fora da janela de 48h (query retorna vazio)", async () => {
+    // SQL WHERE filtra resolvedAt > cutoff — DB mock simula query já filtrada
+    mockSelectPending.mockResolvedValue([])
+    const { GET } = await import("./route")
+    const res = await GET(makeRequest(SECRET))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.processed).toBe(0)
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
 })

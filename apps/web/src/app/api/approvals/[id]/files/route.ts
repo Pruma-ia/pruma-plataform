@@ -35,15 +35,20 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     .from(approvalFiles)
     .where(eq(approvalFiles.approvalId, id))
 
-  const filesWithUrls = await Promise.all(
-    files.map(async (f) => ({
-      id: f.id,
-      filename: f.filename,
-      mimeType: f.mimeType,
-      sizeBytes: f.sizeBytes,
-      url: await presignReadUrl(f.r2Key),
-    }))
-  )
+  let filesWithUrls: { id: string; filename: string; mimeType: string; sizeBytes: number; url: string }[]
+  try {
+    filesWithUrls = await Promise.all(
+      files.map(async (f) => ({
+        id: f.id,
+        filename: f.filename,
+        mimeType: f.mimeType,
+        sizeBytes: f.sizeBytes,
+        url: await presignReadUrl(f.r2Key),
+      }))
+    )
+  } catch {
+    return NextResponse.json({ error: "Erro ao gerar URLs de acesso aos arquivos" }, { status: 502 })
+  }
 
   return NextResponse.json({ files: filesWithUrls })
 }

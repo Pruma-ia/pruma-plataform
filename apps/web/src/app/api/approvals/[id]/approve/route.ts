@@ -74,7 +74,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       await db
         .update(approvals)
         .set({ callbackStatus: "blocked", updatedAt: new Date() })
-        .where(eq(approvals.id, id))
+        .where(and(eq(approvals.id, id), eq(approvals.organizationId, session.user.organizationId)))
     } else {
       const callbackOk = await fetch(approval.callbackUrl, {
         method: "POST",
@@ -102,7 +102,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       await db
         .update(approvals)
         .set({ callbackStatus: callbackOk ? "sent" : "failed", updatedAt: new Date() })
-        .where(eq(approvals.id, id))
+        .where(and(eq(approvals.id, id), eq(approvals.organizationId, session.user.organizationId)))
     }
   }
 

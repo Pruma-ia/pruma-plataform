@@ -15,6 +15,7 @@ export const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",       // XLSX
   "application/xml",
   "text/csv",
+  "text/plain",
   "application/zip",
 ])
 

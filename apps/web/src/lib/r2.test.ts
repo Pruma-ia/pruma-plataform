@@ -54,7 +54,7 @@ describe("ALLOWED_MIME_TYPES", () => {
   it("allows CSV", () => expect(ALLOWED_MIME_TYPES.has("text/csv")).toBe(true))
   it("allows ZIP", () => expect(ALLOWED_MIME_TYPES.has("application/zip")).toBe(true))
   it("rejects MP4", () => expect(ALLOWED_MIME_TYPES.has("video/mp4")).toBe(false))
-  it("rejects plain text", () => expect(ALLOWED_MIME_TYPES.has("text/plain")).toBe(false))
+  it("allows plain text", () => expect(ALLOWED_MIME_TYPES.has("text/plain")).toBe(true))
   it("rejects executable", () => expect(ALLOWED_MIME_TYPES.has("application/octet-stream")).toBe(false))
 })
 

@@ -81,4 +81,19 @@ describe("POST /api/approvals/[id]/reject", () => {
     expect(callBody.status).toBe("rejected")
     expect(callBody.comment).toBe("dados incorretos")
   })
+
+  it("inclui decisionValues no payload do callback ao rejeitar", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: "https://n8n.example.com/webhook/abc",
+    }])
+    const { POST } = await import("./route")
+    const decisionValues = { advogado: "adv-2" }
+    await POST(makeRequest({ comment: "não aprovado", decisionValues }), makeParams())
+    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
+    expect(callBody.decisionValues).toEqual(decisionValues)
+    expect(callBody.status).toBe("rejected")
+  })
 })

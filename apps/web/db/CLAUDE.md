@@ -9,6 +9,16 @@
 
 **Não rodar `drizzle-kit push` em produção.** `push` não rastreia histórico, pode descartar colunas sem aviso. Produção usa sempre `scripts/migrate.ts`.
 
+## Aplicar migration no Docker local
+
+`npm run db:migrate` usa driver Neon HTTP — não funciona com Docker local. Aplicar diretamente:
+
+```bash
+sed 's/-->.*//' db/migrations/<arquivo>.sql | docker exec -i pruma_db psql -U pruma -d pruma_dev
+```
+
+Isso filtra os marcadores `-->` do Drizzle e passa o SQL puro para o psql.
+
 ## Setup único — bancos criados com drizzle-kit push (já existentes)
 
 Drizzle Migrate usa `__drizzle_migrations` pra rastrear aplicadas. Bancos criados com `push` não têm essa tabela. Antes do primeiro deploy com CI, rodar:

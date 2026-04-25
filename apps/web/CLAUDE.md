@@ -28,6 +28,37 @@ One arg = type error.
 Run `npm run build` in `apps/web` before any commit.
 TypeScript/type errors only surface at build — Vercel fails if not verified locally.
 
+### Testes — obrigatório a cada nova feature/rota
+
+**Regra**: toda nova rota de API ou lógica de negócio exige:
+1. **Testes unitários** (`src/**/*.test.ts`) — mocks de DB, auth, serviços externos; sem infra real.
+2. **Testes de integração** (`tests/integration/`) — banco real (Docker `pruma_db`), só mocka auth session + S3 presign + `global.fetch` de callback.
+
+Isso substitui curl manual. Nunca shipar feature sem rodar as duas suites.
+
+**Comandos**:
+```bash
+npm test              # unit — sem infra (CI)
+npm run test:int      # integration — requer docker-compose up postgres
+```
+
+**Convenções de testes unitários**:
+- `vi.hoisted(() => vi.fn())` para mocks que precisam estar disponíveis antes da factory do `vi.mock` (ex: `mockAuth`).
+- Mock de `db` via `vi.mock("@/lib/db", ...)` — retorna objetos chainable (`.select().from().where()`).
+- `selectCallCount` pattern quando uma rota faz múltiplos `SELECT` sequenciais — mock retorna resposta diferente por chamada.
+
+**Convenções de testes de integração**:
+- `tests/integration/env.ts` carregado primeiro no `setupFiles` → seta `DATABASE_URL` e `N8N_WEBHOOK_SECRET` antes de qualquer import.
+- `tests/integration/state.ts` — ctx compartilhado entre setup e testes (orgId, userId, n8nSlug).
+- `tests/integration/setup.ts` — `beforeAll` cria org + user únicos por run (`test-int-{Date.now()}`); `afterAll` deleta org (cascade limpa tudo).
+- `callbackUrl` usa `.test` TLD (ex: `https://n8n.callback.test/webhook`) — passa `validateCallbackUrl` sem mock.
+- `pool: "forks"` + `singleFork: true` + `sequence: { concurrent: false }` — testes sequenciais no mesmo processo para evitar conflito de estado no DB.
+
+**Quando Docker não roda migration** (`scripts/migrate.ts` usa driver Neon HTTP):
+```bash
+sed 's/-->.*//' db/migrations/<arquivo>.sql | docker exec -i pruma_db psql -U pruma -d pruma_dev
+```
+
 ---
 
 ## Stack

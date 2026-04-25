@@ -97,4 +97,32 @@ describe("POST /api/approvals/[id]/approve", () => {
     await POST(makeRequest(), makeParams())
     expect(global.fetch).not.toHaveBeenCalled()
   })
+
+  it("inclui decisionValues no payload do callback", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: "https://n8n.example.com/webhook/abc",
+    }])
+    const { POST } = await import("./route")
+    const decisionValues = { advogado: "adv-1", prioridade: "alta" }
+    await POST(makeRequest({ comment: "ok", decisionValues }), makeParams())
+    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
+    expect(callBody.decisionValues).toEqual(decisionValues)
+    expect(callBody.status).toBe("approved")
+  })
+
+  it("inclui decisionValues null no callback quando não enviado", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: "https://n8n.example.com/webhook/abc",
+    }])
+    const { POST } = await import("./route")
+    await POST(makeRequest({ comment: "ok" }), makeParams())
+    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
+    expect(callBody.decisionValues).toBeNull()
+  })
 })

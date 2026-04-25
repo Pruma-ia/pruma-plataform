@@ -6,7 +6,10 @@ import { eq, and } from "drizzle-orm"
 import { z } from "zod"
 import { validateCallbackUrl } from "@/lib/n8n"
 
-const schema = z.object({ comment: z.string().optional() })
+const schema = z.object({
+  comment: z.string().optional(),
+  decisionValues: z.record(z.string(), z.string()).optional(),
+})
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -16,7 +19,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const { id } = await params
   const body = await req.json()
-  const { comment } = schema.parse(body)
+  const { comment, decisionValues } = schema.parse(body)
 
   const [approval] = await db
     .select()
@@ -37,6 +40,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       resolvedBy: session.user.id,
       resolvedAt: new Date(),
       comment,
+      decisionValues: decisionValues ?? null,
       updatedAt: new Date(),
     })
     .where(eq(approvals.id, id))
@@ -60,6 +64,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           status: "approved",
           resolvedBy: session.user.email,
           comment,
+          decisionValues: decisionValues ?? null,
           resolvedAt: new Date().toISOString(),
         }),
       })

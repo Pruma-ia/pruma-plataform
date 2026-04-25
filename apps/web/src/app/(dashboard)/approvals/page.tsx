@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { approvals, users } from "../../../../db/schema"
+import { approvals, approvalFiles, users } from "../../../../db/schema"
 import { eq, desc } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
 import { ApprovalCard } from "./approval-card"
@@ -21,11 +21,26 @@ export default async function ApprovalsPage() {
       resolvedAt: approvals.resolvedAt,
       resolvedByName: users.name,
       flowId: approvals.flowId,
+      decisionFields: approvals.decisionFields,
+      decisionValues: approvals.decisionValues,
     })
     .from(approvals)
     .leftJoin(users, eq(approvals.resolvedBy, users.id))
     .where(eq(approvals.organizationId, orgId))
     .orderBy(desc(approvals.createdAt))
+
+  // Busca contagem de arquivos por aprovação para indicador na UI
+  const allIds = rows.map((r) => r.id)
+  const fileRows = allIds.length > 0
+    ? await db
+        .select({ approvalId: approvalFiles.approvalId, id: approvalFiles.id })
+        .from(approvalFiles)
+        .where(eq(approvalFiles.organizationId, orgId))
+    : []
+  const fileCountMap = fileRows.reduce<Record<string, number>>((acc, f) => {
+    acc[f.approvalId] = (acc[f.approvalId] ?? 0) + 1
+    return acc
+  }, {})
 
   const pendingList = rows.filter((a) => a.status === "pending")
   const resolvedList = rows.filter((a) => a.status !== "pending")
@@ -41,7 +56,7 @@ export default async function ApprovalsPage() {
             </h2>
             <div className="space-y-3">
               {pendingList.map((a) => (
-                <ApprovalCard key={a.id} approval={a} canResolve />
+                <ApprovalCard key={a.id} approval={a} canResolve fileCount={fileCountMap[a.id] ?? 0} />
               ))}
             </div>
           </section>
@@ -60,7 +75,7 @@ export default async function ApprovalsPage() {
             </h2>
             <div className="space-y-2">
               {resolvedList.map((a) => (
-                <ApprovalCard key={a.id} approval={a} canResolve={false} />
+                <ApprovalCard key={a.id} approval={a} canResolve={false} fileCount={fileCountMap[a.id] ?? 0} />
               ))}
             </div>
           </section>

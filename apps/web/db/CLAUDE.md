@@ -40,3 +40,18 @@ Cria tabela de controle, marca `0000` e `0001` como aplicadas — sem recriar na
 - IDs são `text` com `crypto.randomUUID()` como default (não serial/integer).
 - Timestamps: `created_at` e `updated_at` com `defaultNow()`.
 - Enums como `pgEnum` no topo do arquivo, antes das tabelas que os usam.
+
+## Tabelas de aprovações ricas
+
+`approvals` tem duas colunas JSON adicionais:
+- `decision_fields jsonb` — definido pelo n8n ao criar: `[{id, type:"select", label, options:[{id,label}]}]`
+- `decision_values jsonb` — preenchido pelo aprovador: `{fieldId: optionId}`
+
+`approval_files` — arquivos anexados a aprovações (armazenados no R2):
+- `r2_key` = path no bucket: `{orgId}/{uuid}/{filename}` — construído pelo Pruma, nunca pelo caller.
+- `organization_id` presente para queries multi-tenant e cascade delete.
+- Sem coluna `updated_at` — arquivos são imutáveis após upload.
+
+`approval_file_uploads` — controle de uploads pendentes (presigned URL):
+- Status `"pending"` → `"confirmed"`. Pendentes expirados removidos por cron diário.
+- Evita arquivos órfãos no R2 se n8n chama presign mas nunca cria a aprovação.

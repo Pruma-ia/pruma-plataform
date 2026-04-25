@@ -9,13 +9,13 @@ const mockSelectPending = vi.fn()
 const mockUpdate = vi.fn()
 vi.mock("@/lib/db", () => ({
   db: {
-    select: () => ({ from: () => ({ where: () => ({ limit: mockSelectPending }) }) }),
+    select: () => ({ from: () => ({ leftJoin: () => ({ where: () => ({ limit: mockSelectPending }) }) }) }),
     update: () => ({ set: () => ({ where: mockUpdate }) }),
   },
 }))
 
 vi.mock("drizzle-orm", () => ({ eq: vi.fn(), and: vi.fn(), lt: vi.fn(), isNotNull: vi.fn(), sql: vi.fn() }))
-vi.mock("../../../../../db/schema", () => ({ approvals: {} }))
+vi.mock("../../../../../db/schema", () => ({ approvals: {}, users: {} }))
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -35,6 +35,7 @@ function makeApproval(overrides: object = {}) {
     status: "approved",
     comment: null,
     resolvedAt: new Date(),
+    resolverEmail: "resolver@example.com",
     ...overrides,
   }
 }
@@ -165,6 +166,15 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
     expect(callBody.approvalId).toBe("appr-1")
     expect(callBody.status).toBe("approved")
     expect(callBody.comment).toBe("ok")
+    expect(callBody.resolvedBy).toBe("resolver@example.com")
+  })
+
+  it("envia resolvedBy:null quando resolver não encontrado (LEFT JOIN miss)", async () => {
+    mockSelectPending.mockResolvedValue([makeApproval({ resolverEmail: null })])
+    const { GET } = await import("./route")
+    await GET(makeRequest(SECRET))
+    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
+    expect(callBody.resolvedBy).toBeNull()
   })
 
   it("não dispara callback quando callbackUrl é nula (guard interno)", async () => {

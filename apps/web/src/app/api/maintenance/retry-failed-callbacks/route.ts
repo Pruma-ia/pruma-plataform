@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { approvals } from "../../../../../db/schema"
+import { approvals, users } from "../../../../../db/schema"
 import { eq, and, lt, isNotNull, sql } from "drizzle-orm"
 import { timingSafeEqual } from "crypto"
 import { validateCallbackUrl } from "@/lib/n8n"
@@ -31,8 +31,17 @@ export async function GET(req: Request) {
   cutoff.setHours(cutoff.getHours() - MAX_AGE_HOURS)
 
   const pending = await db
-    .select()
+    .select({
+      id: approvals.id,
+      status: approvals.status,
+      callbackUrl: approvals.callbackUrl,
+      callbackRetries: approvals.callbackRetries,
+      comment: approvals.comment,
+      resolvedAt: approvals.resolvedAt,
+      resolverEmail: users.email,
+    })
     .from(approvals)
+    .leftJoin(users, eq(approvals.resolvedBy, users.id))
     .where(
       and(
         eq(approvals.callbackStatus, "failed"),
@@ -65,7 +74,7 @@ export async function GET(req: Request) {
       body: JSON.stringify({
         approvalId: approval.id,
         status: approval.status,
-        resolvedBy: null,
+        resolvedBy: approval.resolverEmail ?? null,
         comment: approval.comment,
         resolvedAt: approval.resolvedAt?.toISOString(),
         retried: true,

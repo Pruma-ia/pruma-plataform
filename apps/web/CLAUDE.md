@@ -24,6 +24,60 @@ One arg = type error.
 
 ## Processo de desenvolvimento
 
+### Fluxo completo — nova feature até prod
+
+```bash
+# 1. Branch
+git checkout -b feat/nome master
+
+# 2. Infra local
+docker compose up -d                   # postgres + minio
+
+# 3. Migration (se houver — db:migrate usa Neon HTTP, não funciona com Docker)
+sed 's/-->.*//' db/migrations/<arquivo>.sql | docker exec -i pruma_db psql -U pruma -d pruma_dev
+
+# 4. Dev
+cd apps/web && npm run dev
+
+# 5. Copiloto visual — mantém dados no DB para validar no browser
+npm run test:int:keep                  # abre URLs impressas no terminal no browser
+
+# 6. Testes completos
+npm test                               # unit
+npm run test:int                       # integration, limpa dados ao final
+
+# 7. Build local (obrigatório antes de commitar)
+npm run build
+
+# 8. Review
+# /review-cycle no Claude Code — inclui SECURITY, QA, CODE, INFRA READINESS
+
+# 9. PR + merge
+gh pr create ...
+gh pr ready N && gh pr merge N --merge --delete-branch
+
+# 10. Acompanhar deploy
+gh run watch $(gh run list --limit 1 --json databaseId -q '.[0].databaseId')
+```
+
+### Diagnóstico de bugs — regra
+
+**Diagnosticar via CLI antes de assumir causa.** Nunca supor sem evidência.
+
+```bash
+# R2/MinIO: verificar endpoint, health, arquivo no bucket
+curl http://localhost:9000/minio/health/live
+curl -I "$(npx tsx -e "...")"          # testar presigned URL diretamente
+```
+
+### Footguns conhecidos
+
+**`objectExists` engole exceções** — se `R2_ENDPOINT` estiver errado, retorna `false` em vez de erro. UI mostra "Não foi possível carregar o arquivo" sem indicar a causa real. Checar endpoint primeiro.
+
+**Singleton R2 client** — `_client` é cached no módulo. Mudar `R2_ENDPOINT` em `.env.local` exige restart do servidor Next.js.
+
+**`R2_ENDPOINT` local vs externo** — `localhost:9000` funciona para dev normal. Quando n8n é externo e precisa fazer PUT direto no MinIO, usar URL pública (ngrok/cloudflare tunnel) — mas isso quebra leitura do browser se o túnel expirar. Usar R2 real em produção; MinIO só local.
+
 ### Build antes de commitar (obrigatório)
 Run `npm run build` in `apps/web` before any commit.
 TypeScript/type errors only surface at build — Vercel fails if not verified locally.

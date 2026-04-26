@@ -48,11 +48,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, profile }) {
       // Executa apenas no login inicial — carrega todos os claims no JWT
       if (user) {
         const userId = user.id as string
         token.id = userId
+
+        // Backfill: user.image é o valor do banco (null para usuários pré-existentes).
+        // profile.picture é a foto direta do Google — fonte correta para o backfill.
+        const googlePicture = account?.provider === "google"
+          ? (profile as { picture?: string } | undefined)?.picture
+          : undefined
+        if (googlePicture) {
+          await db.update(users).set({ image: googlePicture }).where(eq(users.id, userId))
+          token.picture = googlePicture
+        }
 
         const [dbUser, membership] = await Promise.all([
           db

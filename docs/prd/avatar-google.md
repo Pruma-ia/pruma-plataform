@@ -1,6 +1,6 @@
 # PRD — Avatar do Google no Perfil
 
-**Status:** 📋 Pronto para dev | **Prioridade:** P2 | **Esforço estimado:** XS (< 1 dia) | **RICE Score:** 500
+**Status:** ✅ Entregue | **Prioridade:** P2 | **Esforço estimado:** XS (< 1 dia) | **RICE Score:** 500
 
 ---
 

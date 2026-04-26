@@ -108,8 +108,12 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d "{\"branch\":{\"name\":\"ci-migrate-${{ github.run_id }}\"},\"endpoints\":[{\"type\":\"read_write\"}]}")
-          echo "branch_id=$(echo "$response" | jq -r '.branch.id')" >> $GITHUB_OUTPUT
-          echo "db_url=$(echo "$response" | jq -r '.connection_uris[0].connection_uri')" >> $GITHUB_OUTPUT
+          branch_id=$(echo "$response" | jq -r '.branch.id')
+          echo "branch_id=$branch_id" >> $GITHUB_OUTPUT
+          conn=$(curl -sf \
+            "https://console.neon.tech/api/v2/projects/wild-shape-63460566/connection_uri?branch_id=$branch_id&database_name=neondb&role_name=neondb_owner" \
+            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}")
+          echo "db_url=$(echo "$conn" | jq -r '.uri')" >> $GITHUB_OUTPUT
 
       - name: Test migrations on Neon branch
         run: npx tsx scripts/migrate.ts

@@ -9,6 +9,8 @@
 
 **Não rodar `drizzle-kit push` em produção.** `push` não rastreia histórico, pode descartar colunas sem aviso. Produção usa sempre `scripts/migrate.ts`.
 
+**Nunca criar SQL de migration manualmente.** `drizzle-kit generate` é obrigatório — ele escreve o SQL e registra o entry em `db/migrations/meta/_journal.json`. Arquivo SQL sem entry no journal é invisível para `migrate()`: não aplica em produção, sem erro, sem aviso. Foi assim que `0002` e `0003` ficaram fora de prod por semanas. CI tem check automático que bloqueia deploy se journal estiver dessincronizado.
+
 ## Aplicar migration no Docker local
 
 `npm run db:migrate` usa driver Neon HTTP — não funciona com Docker local. Aplicar diretamente:

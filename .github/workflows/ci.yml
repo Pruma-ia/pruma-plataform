@@ -73,6 +73,18 @@ jobs:
 
       - run: npm ci
 
+      - name: Validate migration journal
+        run: |
+          missing=0
+          for f in db/migrations/*.sql; do
+            tag=$(basename "$f" .sql)
+            if ! grep -q "\"$tag\"" db/migrations/meta/_journal.json; then
+              echo "ERROR: $tag exists as SQL but is not registered in _journal.json"
+              missing=1
+            fi
+          done
+          [ $missing -eq 0 ] || exit 1
+
       - name: Run Drizzle migrations
         run: npx tsx scripts/migrate.ts
         env:

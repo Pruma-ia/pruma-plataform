@@ -1,6 +1,22 @@
-name,reach,impact,confidence,effort,description
-Integracao Asaas,800,massive,high,l,Integrar cobranca nativa Asaas PIX/boleto para planos e assinaturas dos clientes Pruma
-Login Google OAuth,1000,high,high,s,Adicionar login via Google para reduzir fricao no onboarding e aumentar conversao
-Perfil do Usuario,600,medium,high,m,Pagina de configuracoes pessoais: nome, telefone, contas conectadas
-Avatar Google,500,low,high,xs,Exibir foto do Google na sidebar — dado ja capturado pelo DrizzleAdapter
-Refactor Fluxos em Execucao,500,high,medium,l,Refatorar modulo de flow runs para melhorar performance e manutenibilidade do codigo
+name,reach,impact,confidence,effort,description,priority
+Login Google OAuth,1000,high,high,s,Adicionar login via Google para reduzir fricao no onboarding e aumentar conversao,entregue
+Avatar Google,500,low,high,xs,Exibir foto do Google na sidebar — dado ja capturado pelo DrizzleAdapter,entregue
+Email Aprovacao Pendente,900,massive,high,m,Notificar aprovadores por email quando nova aprovacao chega — sem isso o produto nao funciona standalone,p0
+Compliance LGPD Termos Privacidade DPA,1000,massive,high,m,Politica de privacidade + termos de uso + DPA para clientes B2B — obrigatorio por lei (LGPD),p0
+Gestao Senha Recuperacao Troca,800,high,high,s,Recuperacao de senha via email + troca de senha para usuarios com credentials,p0
+Verificacao Email Telefone,700,high,high,m,OTP por email no cadastro e OTP por SMS ao adicionar telefone — prerequisito para notificacoes e WhatsApp,p0
+Integracao Asaas,800,massive,high,l,Integrar cobranca nativa Asaas PIX/boleto para planos e assinaturas dos clientes Pruma,p1
+Migracao Dominio Custom,600,high,high,s,Migrar de dominio Vercel temp para dominio proprio — prerequisito para LGPD e branding B2B,p1
+Dashboard Metricas Reais,900,high,high,m,KPIs reais no dashboard: aprovacoes pendentes, resolvidas hoje, fluxos ativos, tempo medio de resolucao,p1
+Configuracoes Org,800,high,high,s,Tela para owner editar nome, logo e dados cadastrais da organizacao,p1
+Onboarding Org Dados Cadastrais,700,high,high,l,Coletar CNPJ/endereco/telefone da org no onboarding e pre-preencher billing Asaas automaticamente,p1
+Gestao Aprovacoes Filtros Busca Export,700,high,high,m,Filtros por status/fluxo/periodo + busca + exportacao CSV para auditoria,p1
+Onboarding Checklist,600,high,high,s,Checklist de primeiros passos no dashboard para orgs novas,p1
+Perfil do Usuario,600,medium,high,m,Pagina de configuracoes pessoais: nome, telefone, contas conectadas,p1
+Audit Log Aprovacoes,700,high,high,m,Historico de decisoes de aprovacao com responsavel, timestamp, comentario e campos de decisao,p1
+Self Service Billing,600,high,high,m,Troca de plano e cancelamento de assinatura sem acionar suporte,p1
+SLA Deadline Aprovacao,600,high,medium,m,Campo expiresAt nas aprovacoes + auto-rejeicao + lembrete por email 1h antes,p2
+Notificacao InApp,700,medium,high,m,Bell icon com contador de nao-lidas e dropdown de notificacoes recentes,p2
+WhatsApp Notificacao Aprovacao,800,massive,medium,l,Notificacao e aprovacao via WhatsApp com numero verificado Pruma + link assinado JWT,p2
+Refactor Fluxos em Execucao,500,high,medium,l,Refatorar modulo de flow runs para melhorar performance e manutenibilidade do codigo,p2
+2FA Autenticacao Dois Fatores,400,high,medium,l,TOTP via Google Authenticator para usuarios credentials — obrigatorio configuravel por org,p3

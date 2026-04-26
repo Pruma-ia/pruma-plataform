@@ -78,3 +78,10 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+      - name: Deploy to Vercel (após migration)
+        working-directory: ${{ github.workspace }}
+        run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: team_CisLLmpWltH87v1CVgGNdqSc
+          VERCEL_PROJECT_ID: prj_uipbuzcH6Hse0BE2hIpzlRuAwPlY
+

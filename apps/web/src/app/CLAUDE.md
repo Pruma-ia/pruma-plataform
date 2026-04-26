@@ -72,6 +72,21 @@ Aprovações podem carregar arquivos e campos de decisão estruturados além do 
 
 **Storage local dev:** MinIO via Docker (S3-compatible, mesmo SDK do R2). Vars: `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`. Em prod apontam para R2 real.
 
+**Setup R2 produção (já feito, documentado para referência):**
+- Bucket: `pruma-prod` na conta Cloudflare `df058a3fa8a2d159a2422196f9cc7666`
+- CORS configurado via `wrangler r2 bucket cors set pruma-prod` — permite `GET *` para presigned read URLs
+- Env vars setadas no Vercel production: `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`
+- `R2_ENDPOINT` prod = `https://df058a3fa8a2d159a2422196f9cc7666.r2.cloudflarestorage.com`
+- Token R2: "Object Read & Write" em **Manage R2 API Tokens** no dashboard Cloudflare — guardar em 1Password
+- MinIO local: `R2_ENDPOINT=http://localhost:9000` em `.env.local`. Usar URL pública (ngrok/cloudflare tunnel) só quando n8n for externo e precisar fazer upload diretamente no MinIO.
+
+**Checklist antes de shipar feature que usa novo serviço externo:**
+1. Bucket/recurso criado em prod
+2. CORS configurado (se browser faz fetch direto)
+3. Credenciais geradas com escopo mínimo
+4. Env vars setadas no Vercel production (`vercel env ls production`)
+5. Infra readiness verificada no `/review-cycle`
+
 ## Dívida técnica
 
 ### retry-failed-callbacks — cron removido (Vercel free tier)

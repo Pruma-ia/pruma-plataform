@@ -57,7 +57,7 @@ describe("POST /api/auth/reset-password", () => {
   it("retorna 400 para token inválido/expirado", async () => {
     mockSelect.mockReturnValue([])
     const { POST } = await import("./route")
-    const res = await POST(makeRequest({ token: "invalid-token", password: "newpassword123" }))
+    const res = await POST(makeRequest({ token: "invalid-token", password: "Secure!Pass1" }))
     expect(res.status).toBe(400)
     const data = await res.json()
     expect(data.error).toMatch(/inválido|expirado/)

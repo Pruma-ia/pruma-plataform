@@ -87,4 +87,19 @@ describe("POST /api/auth/forgot-password", () => {
     const data = await res.json()
     expect(data.ok).toBe(true)
   })
+
+  it("rate limit: retorna 200 após 3 requests do mesmo email (não vaza existência)", async () => {
+    mockSelect.mockReturnValue([])
+    const { POST } = await import("./route")
+    const email = "ratelimit-unique@test.com"
+    // Calls 1-3: below limit, count increments (covers L24-25)
+    await POST(makeRequest({ email }))
+    await POST(makeRequest({ email }))
+    await POST(makeRequest({ email }))
+    // Call 4: entry.count >= 3 → rate limited (covers L23, L39-40)
+    const res = await POST(makeRequest({ email }))
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.ok).toBe(true)
+  })
 })

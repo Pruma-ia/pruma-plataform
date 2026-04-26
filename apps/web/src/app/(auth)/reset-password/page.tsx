@@ -5,18 +5,12 @@ import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Check } from "lucide-react"
+import { PASSWORD_RULES, PASSWORD_STRENGTH_COLORS, PASSWORD_STRENGTH_TEXT, PASSWORD_STRENGTH_LABELS } from "@/lib/password-rules"
 
-const RULES = [
-  { id: "len", label: "Mínimo 8 caracteres", test: (p: string) => p.length >= 8 },
-  { id: "upper", label: "Uma letra maiúscula", test: (p: string) => /[A-Z]/.test(p) },
-  { id: "lower", label: "Uma letra minúscula", test: (p: string) => /[a-z]/.test(p) },
-  { id: "number", label: "Um número", test: (p: string) => /\d/.test(p) },
-  { id: "special", label: "Um caractere especial (!@#$%^&*)", test: (p: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
-]
-
-const STRENGTH_COLORS = ["", "bg-red-500", "bg-orange-500", "bg-yellow-400", "bg-blue-400", "bg-green-500"]
-const STRENGTH_TEXT = ["", "text-red-400", "text-orange-400", "text-yellow-400", "text-blue-400", "text-green-400"]
-const STRENGTH_LABELS = ["", "Muito fraca", "Fraca", "Razoável", "Boa", "Forte"]
+const RULES = PASSWORD_RULES
+const STRENGTH_COLORS = PASSWORD_STRENGTH_COLORS
+const STRENGTH_TEXT = PASSWORD_STRENGTH_TEXT
+const STRENGTH_LABELS = PASSWORD_STRENGTH_LABELS
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams()

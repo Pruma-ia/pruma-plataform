@@ -3,36 +3,12 @@
 import { useState, useMemo } from "react"
 import { Header } from "@/components/dashboard/header"
 import { Check } from "lucide-react"
+import { PASSWORD_RULES, PASSWORD_STRENGTH_COLORS, PASSWORD_STRENGTH_TEXT, PASSWORD_STRENGTH_LABELS } from "@/lib/password-rules"
 
-const RULES = [
-  { id: "len", label: "Mínimo 8 caracteres", test: (p: string) => p.length >= 8 },
-  { id: "upper", label: "Uma letra maiúscula", test: (p: string) => /[A-Z]/.test(p) },
-  { id: "lower", label: "Uma letra minúscula", test: (p: string) => /[a-z]/.test(p) },
-  { id: "number", label: "Um número", test: (p: string) => /\d/.test(p) },
-  { id: "special", label: "Um caractere especial (!@#$%^&*)", test: (p: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
-]
-
-function getStrength(password: string): number {
-  return RULES.filter((r) => r.test(password)).length
-}
-
-const STRENGTH_LABELS = ["", "Muito fraca", "Fraca", "Razoável", "Boa", "Forte"]
-const STRENGTH_COLORS = [
-  "",
-  "bg-red-500",
-  "bg-orange-500",
-  "bg-yellow-500",
-  "bg-blue-500",
-  "bg-green-500",
-]
-const STRENGTH_TEXT = [
-  "",
-  "text-red-500",
-  "text-orange-500",
-  "text-yellow-500",
-  "text-blue-500",
-  "text-green-500",
-]
+const RULES = PASSWORD_RULES
+const STRENGTH_LABELS = PASSWORD_STRENGTH_LABELS
+const STRENGTH_COLORS = PASSWORD_STRENGTH_COLORS
+const STRENGTH_TEXT = PASSWORD_STRENGTH_TEXT
 
 export default function ProfilePage() {
   const [currentPassword, setCurrentPassword] = useState("")
@@ -42,7 +18,7 @@ export default function ProfilePage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
 
-  const strength = useMemo(() => getStrength(newPassword), [newPassword])
+  const strength = useMemo(() => RULES.filter((r) => r.test(newPassword)).length, [newPassword])
   const ruleResults = useMemo(() => RULES.map((r) => ({ ...r, ok: r.test(newPassword) })), [newPassword])
   const allRulesPassed = strength === RULES.length
 

@@ -4,8 +4,9 @@
 
 -- Idempotência: permite deduplicar reentregas do n8n via executionId
 ALTER TABLE "flow_runs" ADD COLUMN "n8n_execution_id" text;
+--> statement-breakpoint
 CREATE UNIQUE INDEX "flow_run_n8n_exec_idx" ON "flow_runs" ("n8n_execution_id")
   WHERE "n8n_execution_id" IS NOT NULL;
-
+--> statement-breakpoint
 -- Observabilidade: rastreia se o callback de volta ao n8n foi entregue
 ALTER TABLE "approvals" ADD COLUMN "callback_status" text;

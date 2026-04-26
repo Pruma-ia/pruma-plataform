@@ -6,7 +6,7 @@ Documentos de requisitos ordenados por prioridade RICE.
 |---|---------|--------|-----------|---------|
 | 1 | [Login com Google](login-google.md) | ✅ Entregue | 666 | S |
 | 2 | [Integração Asaas](integracao-asaas.md) | 📝 PRD pendente | 300 | L |
-| 3 | [Avatar do Google](avatar-google.md) | 📋 Pronto para dev | 250 | XS |
+| 3 | [Avatar do Google](avatar-google.md) | ✅ Entregue | 250 | XS |
 | 4 | [Perfil do Usuário](perfil-usuario.md) | 📋 Pronto para dev | 120 | M |
 | 5 | [Refactor Fluxos em Execução](refactor-flow-runs.md) | 📝 PRD pendente | 100 | L |
 

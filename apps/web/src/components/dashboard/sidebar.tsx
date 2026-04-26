@@ -29,7 +29,15 @@ const adminNav = [
   { href: "/admin", label: "Clientes", icon: Building2 },
 ]
 
-export function Sidebar({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
+export function Sidebar({
+  isSuperAdmin = false,
+  userName = "",
+  userImage = null,
+}: {
+  isSuperAdmin?: boolean
+  userName?: string
+  userImage?: string | null
+}) {
   const pathname = usePathname()
 
   return (
@@ -86,7 +94,23 @@ export function Sidebar({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
         </div>
       )}
 
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-sidebar-border p-3 space-y-1">
+        <div className="flex items-center gap-3 px-3 py-2">
+          {userImage ? (
+            <Image
+              src={userImage}
+              alt={userName}
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-full object-cover shrink-0"
+            />
+          ) : (
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#00AEEF]/20 text-sm font-semibold text-[#00AEEF]">
+              {userName.charAt(0).toUpperCase()}
+            </span>
+          )}
+          <span className="truncate text-sm font-medium text-sidebar-foreground">{userName}</span>
+        </div>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"

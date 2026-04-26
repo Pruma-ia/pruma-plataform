@@ -66,7 +66,7 @@ describe("POST /api/auth/reset-password", () => {
   it("redefine senha com token válido", async () => {
     mockSelect.mockReturnValue([{ id: "token-1", userId: "user-123" }])
     const { POST } = await import("./route")
-    const res = await POST(makeRequest({ token: "valid-token", password: "newsecure123" }))
+    const res = await POST(makeRequest({ token: "valid-token", password: "Secure!Pass1" }))
     expect(res.status).toBe(200)
     const data = await res.json()
     expect(data.ok).toBe(true)

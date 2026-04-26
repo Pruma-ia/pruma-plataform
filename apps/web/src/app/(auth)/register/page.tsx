@@ -20,6 +20,8 @@ function GoogleIcon() {
 export default function RegisterPage() {
   const router = useRouter()
   const [form, setForm] = useState({ name: "", email: "", password: "", organizationName: "" })
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -30,13 +32,17 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!acceptedTerms) {
+      setError("Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.")
+      return
+    }
     setLoading(true)
     setError("")
 
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, acceptedTerms, marketingConsent }),
     })
 
     if (!res.ok) {
@@ -129,10 +135,42 @@ export default function RegisterPage() {
             className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/70"
           />
         </div>
+        <div className="space-y-3 pt-1">
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/30 bg-white/10 accent-[#00AEEF]"
+            />
+            <span className="text-xs text-white/70 leading-relaxed">
+              Li e aceito os{" "}
+              <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-[#5CCFF5] hover:text-white underline">
+                Termos de Uso
+              </a>{" "}
+              e a{" "}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[#5CCFF5] hover:text-white underline">
+                Política de Privacidade
+              </a>
+              . <span className="text-white/40">(obrigatório)</span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={marketingConsent}
+              onChange={(e) => setMarketingConsent(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/30 bg-white/10 accent-[#00AEEF]"
+            />
+            <span className="text-xs text-white/60 leading-relaxed">
+              Quero receber novidades, atualizações e dicas da Pruma IA. <span className="text-white/40">(opcional)</span>
+            </span>
+          </label>
+        </div>
         {error && <p className="text-sm text-red-400">{error}</p>}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !acceptedTerms}
           className="w-full rounded-lg bg-[#00AEEF] py-2.5 text-sm font-semibold text-white hover:bg-[#00AEEF]/90 disabled:opacity-60 transition-colors"
         >
           {loading ? "Criando conta..." : "Criar conta grátis"}

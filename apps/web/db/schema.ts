@@ -201,10 +201,57 @@ export const approvals = pgTable(
     callbackStatus: text("callback_status"),
     // Quantas vezes o retry automático tentou reenviar após falha inicial
     callbackRetries: integer("callback_retries").default(0).notNull(),
+    // Campos de decisão definidos pelo n8n ao criar: [{id, type:"select", label, options:[{id,label}]}]
+    decisionFields: jsonb("decision_fields"),
+    // Valores preenchidos pelo aprovador: {fieldId: optionId}
+    decisionValues: jsonb("decision_values"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [index("approval_org_idx").on(t.organizationId)]
+)
+
+// ─── Approval Files ───────────────────────────────────────────────────────────
+
+export const approvalFiles = pgTable(
+  "approval_files",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    approvalId: text("approval_id")
+      .notNull()
+      .references(() => approvals.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    // Path no bucket R2: {orgId}/{uuid}/{filename}
+    r2Key: text("r2_key").notNull(),
+    filename: text("filename").notNull(),
+    mimeType: text("mime_type").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("approval_files_approval_idx").on(t.approvalId)]
+)
+
+// ─── Approval File Uploads (presign tracking) ─────────────────────────────────
+
+export const approvalFileUploads = pgTable(
+  "approval_file_uploads",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    r2Key: text("r2_key").notNull().unique(),
+    filename: text("filename").notNull(),
+    mimeType: text("mime_type").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    // "pending" → presign gerado, aguardando upload + confirmação; "confirmed" → vinculado a uma aprovação
+    status: text("status").notNull().default("pending"),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("approval_file_uploads_org_idx").on(t.organizationId)]
 )
 
 // ─── Onboarding Tokens ───────────────────────────────────────────────────────
@@ -252,7 +299,7 @@ export const flowsRelations = relations(flows, ({ one, many }) => ({
   approvals: many(approvals),
 }))
 
-export const approvalsRelations = relations(approvals, ({ one }) => ({
+export const approvalsRelations = relations(approvals, ({ one, many }) => ({
   organization: one(organizations, {
     fields: [approvals.organizationId],
     references: [organizations.id],
@@ -264,5 +311,17 @@ export const approvalsRelations = relations(approvals, ({ one }) => ({
   assignedUser: one(users, {
     fields: [approvals.assignedTo],
     references: [users.id],
+  }),
+  files: many(approvalFiles),
+}))
+
+export const approvalFilesRelations = relations(approvalFiles, ({ one }) => ({
+  approval: one(approvals, {
+    fields: [approvalFiles.approvalId],
+    references: [approvals.id],
+  }),
+  organization: one(organizations, {
+    fields: [approvalFiles.organizationId],
+    references: [organizations.id],
   }),
 }))

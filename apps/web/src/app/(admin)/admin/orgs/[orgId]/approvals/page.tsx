@@ -43,7 +43,7 @@ export default async function AdminOrgApprovals({
             </h2>
             <div className="space-y-3">
               {pendingList.map((a) => (
-                <ApprovalCard key={a.id} approval={a} canResolve={false} />
+                <ApprovalCard key={a.id} approval={a} canResolve={false} fileCount={0} />
               ))}
             </div>
           </section>
@@ -62,7 +62,7 @@ export default async function AdminOrgApprovals({
             </h2>
             <div className="space-y-2">
               {resolvedList.map((a) => (
-                <ApprovalCard key={a.id} approval={a} canResolve={false} />
+                <ApprovalCard key={a.id} approval={a} canResolve={false} fileCount={0} />
               ))}
             </div>
           </section>

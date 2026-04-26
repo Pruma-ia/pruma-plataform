@@ -32,6 +32,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ orgId:
     return NextResponse.json({ error: "n8nBaseUrl inválida ou aponta para rede privada" }, { status: 422 })
   }
 
+  const [orgExists] = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.id, orgId))
+    .limit(1)
+
+  if (!orgExists) {
+    return NextResponse.json({ error: "Organization not found" }, { status: 404 })
+  }
+
   if (parsed.data.n8nSlug) {
     const [existing] = await db
       .select({ id: organizations.id })

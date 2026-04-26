@@ -25,3 +25,5 @@ yarn-error.log*
 *.pem
 .turbo/
 .vercel/
+.vercel
+.wrangler/

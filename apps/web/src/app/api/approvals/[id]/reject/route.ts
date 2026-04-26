@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { approvals } from "../../../../../../db/schema"
+import { approvals, approvalFiles } from "../../../../../../db/schema"
 import { eq, and } from "drizzle-orm"
 import { z } from "zod"
 import { validateCallbackUrl } from "@/lib/n8n"
 
-const schema = z.object({ comment: z.string().min(1, "Informe o motivo da rejeição") })
+const schema = z.object({
+  comment: z.string().min(1, "Informe o motivo da rejeição"),
+  decisionValues: z.record(z.string(), z.string()).optional(),
+})
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -20,7 +23,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues }, { status: 422 })
   }
-  const { comment } = parsed.data
+  const { comment, decisionValues } = parsed.data
 
   const [approval] = await db
     .select()
@@ -34,6 +37,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Already resolved" }, { status: 409 })
   }
 
+  if (Array.isArray(approval.decisionFields)) {
+    const fields = approval.decisionFields as { id: string; required?: boolean }[]
+    const missing = fields.filter((f) => f.required && !decisionValues?.[f.id])
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: "Campos obrigatórios não preenchidos", fields: missing.map((f) => f.id) },
+        { status: 422 }
+      )
+    }
+  }
+
   await db
     .update(approvals)
     .set({
@@ -41,11 +55,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       resolvedBy: session.user.id,
       resolvedAt: new Date(),
       comment,
+      decisionValues: decisionValues ?? null,
       updatedAt: new Date(),
     })
-    .where(eq(approvals.id, id))
+    .where(and(eq(approvals.id, id), eq(approvals.organizationId, session.user.organizationId)))
 
   if (approval.callbackUrl) {
+    const files = await db
+      .select()
+      .from(approvalFiles)
+      .where(eq(approvalFiles.approvalId, id))
+
     if (!validateCallbackUrl(approval.callbackUrl)) {
       console.error("[approval:reject] callbackUrl bloqueado por SSRF", {
         approvalId: approval.id,
@@ -54,17 +74,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       await db
         .update(approvals)
         .set({ callbackStatus: "blocked", updatedAt: new Date() })
-        .where(eq(approvals.id, id))
+        .where(and(eq(approvals.id, id), eq(approvals.organizationId, session.user.organizationId)))
     } else {
       const callbackOk = await fetch(approval.callbackUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(5000),
         body: JSON.stringify({
           approvalId: approval.id,
           status: "rejected",
           resolvedBy: session.user.email,
           comment,
+          decisionValues: decisionValues ?? null,
           resolvedAt: new Date().toISOString(),
+          files: files.map(f => ({ r2Key: f.r2Key, filename: f.filename, mimeType: f.mimeType, sizeBytes: f.sizeBytes })),
         }),
       })
         .then((r) => r.ok)
@@ -79,7 +102,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       await db
         .update(approvals)
         .set({ callbackStatus: callbackOk ? "sent" : "failed", updatedAt: new Date() })
-        .where(eq(approvals.id, id))
+        .where(and(eq(approvals.id, id), eq(approvals.organizationId, session.user.organizationId)))
     }
   }
 

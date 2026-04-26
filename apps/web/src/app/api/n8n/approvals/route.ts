@@ -1,9 +1,29 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { approvals, flows, organizations } from "../../../../../db/schema"
-import { eq, and } from "drizzle-orm"
+import { approvals, approvalFiles, approvalFileUploads, flows, organizations, users } from "../../../../../db/schema"
+import { eq, and, inArray } from "drizzle-orm"
 import { verifyN8nSecret, validateCallbackUrl } from "@/lib/n8n"
 import { z } from "zod"
+
+const decisionOptionSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+})
+
+const decisionFieldSchema = z.object({
+  id: z.string(),
+  type: z.literal("select"),
+  label: z.string(),
+  options: z.array(decisionOptionSchema).min(1),
+  required: z.boolean().optional(),
+})
+
+const fileRefSchema = z.object({
+  r2Key: z.string(),
+  filename: z.string(),
+  mimeType: z.string(),
+  sizeBytes: z.number().int().positive(),
+})
 
 const approvalRequestSchema = z.object({
   organizationSlug: z.string(),
@@ -15,6 +35,8 @@ const approvalRequestSchema = z.object({
   context: z.record(z.string(), z.unknown()).optional(),
   assignedToEmail: z.string().email().optional(),
   expiresAt: z.string().datetime().optional(),
+  decisionFields: z.array(decisionFieldSchema).optional(),
+  files: z.array(fileRefSchema).optional(),
 })
 
 // POST /api/n8n/approvals
@@ -30,8 +52,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { organizationSlug, prumaFlowId, n8nExecutionId, callbackUrl, title, description, context, expiresAt } =
-    parsed.data
+  const {
+    organizationSlug, prumaFlowId, n8nExecutionId, callbackUrl,
+    title, description, context, expiresAt, decisionFields, files,
+  } = parsed.data
 
   // Busca org pelo n8nSlug com fallback para slug de URL
   const [org] = await db
@@ -75,7 +99,27 @@ export async function POST(req: Request) {
     flowId = flow?.id
   }
 
-  const [approval] = await db
+  // Valida r2Keys: devem pertencer à mesma org e estar com status "pending"
+  if (files && files.length > 0) {
+    const r2Keys = files.map((f) => f.r2Key)
+    const uploads = await db
+      .select({ r2Key: approvalFileUploads.r2Key })
+      .from(approvalFileUploads)
+      .where(
+        and(
+          eq(approvalFileUploads.organizationId, org.id),
+          eq(approvalFileUploads.status, "pending"),
+          inArray(approvalFileUploads.r2Key, r2Keys)
+        )
+      )
+    const validKeys = new Set(uploads.map((u) => u.r2Key))
+    const invalid = r2Keys.filter((k) => !validKeys.has(k))
+    if (invalid.length > 0) {
+      return NextResponse.json({ error: "r2Keys inválidas ou expiradas", invalid }, { status: 422 })
+    }
+  }
+
+  const approvalResult = await db
     .insert(approvals)
     .values({
       organizationId: org.id,
@@ -86,8 +130,36 @@ export async function POST(req: Request) {
       description,
       context,
       expiresAt: expiresAt ? new Date(expiresAt) : undefined,
+      decisionFields: decisionFields ?? null,
     })
     .returning()
+    .catch((err: unknown) => {
+      if (err && typeof err === "object" && "code" in err && err.code === "23505") return null
+      throw err
+    })
+
+  if (!approvalResult) {
+    return NextResponse.json({ error: "Aprovação já criada para este execution ID" }, { status: 409 })
+  }
+  const [approval] = approvalResult
+
+  if (files && files.length > 0) {
+    await db.insert(approvalFiles).values(
+      files.map((f) => ({
+        approvalId: approval.id,
+        organizationId: org.id,
+        r2Key: f.r2Key,
+        filename: f.filename,
+        mimeType: f.mimeType,
+        sizeBytes: f.sizeBytes,
+      }))
+    )
+    // Marca uploads como confirmados
+    await db
+      .update(approvalFileUploads)
+      .set({ status: "confirmed" })
+      .where(and(eq(approvalFileUploads.organizationId, org.id), inArray(approvalFileUploads.r2Key, files.map((f) => f.r2Key))))
+  }
 
   return NextResponse.json({ ok: true, approvalId: approval.id })
 }

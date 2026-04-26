@@ -1,9 +1,9 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { approvals, users } from "../../../../db/schema"
+import { approvals, approvalFiles, users } from "../../../../db/schema"
 import { eq, desc } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
-import { ApprovalCard } from "./approval-card"
+import { ApprovalsList } from "./approvals-list"
 
 export default async function ApprovalsPage() {
   const session = await auth()
@@ -14,58 +14,32 @@ export default async function ApprovalsPage() {
       id: approvals.id,
       title: approvals.title,
       description: approvals.description,
-      context: approvals.context,
       status: approvals.status,
       expiresAt: approvals.expiresAt,
       createdAt: approvals.createdAt,
       resolvedAt: approvals.resolvedAt,
       resolvedByName: users.name,
-      flowId: approvals.flowId,
     })
     .from(approvals)
     .leftJoin(users, eq(approvals.resolvedBy, users.id))
     .where(eq(approvals.organizationId, orgId))
     .orderBy(desc(approvals.createdAt))
 
-  const pendingList = rows.filter((a) => a.status === "pending")
-  const resolvedList = rows.filter((a) => a.status !== "pending")
+  const fileRows = rows.length > 0
+    ? await db
+        .select({ approvalId: approvalFiles.approvalId, id: approvalFiles.id })
+        .from(approvalFiles)
+        .where(eq(approvalFiles.organizationId, orgId))
+    : []
+  const fileCountMap = fileRows.reduce<Record<string, number>>((acc, f) => {
+    acc[f.approvalId] = (acc[f.approvalId] ?? 0) + 1
+    return acc
+  }, {})
 
   return (
     <div>
       <Header title="Aprovações" />
-      <div className="p-6 space-y-6">
-        {pendingList.length > 0 && (
-          <section>
-            <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Pendentes ({pendingList.length})
-            </h2>
-            <div className="space-y-3">
-              {pendingList.map((a) => (
-                <ApprovalCard key={a.id} approval={a} canResolve />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {pendingList.length === 0 && (
-          <div className="rounded-xl border bg-card p-12 text-center shadow-sm">
-            <p className="text-muted-foreground">Nenhuma aprovação pendente.</p>
-          </div>
-        )}
-
-        {resolvedList.length > 0 && (
-          <section>
-            <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Histórico
-            </h2>
-            <div className="space-y-2">
-              {resolvedList.map((a) => (
-                <ApprovalCard key={a.id} approval={a} canResolve={false} />
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
+      <ApprovalsList approvals={rows} fileCounts={fileCountMap} />
     </div>
   )
 }

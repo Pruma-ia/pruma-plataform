@@ -23,6 +23,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       credentials: {
@@ -85,6 +86,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         token.refreshedAt = Date.now()
+        return token
+      }
+
+      // Usuário Google sem org: busca membership criado no onboarding pós-OAuth
+      if (!token.isSuperAdmin && !token.organizationId && token.id) {
+        const [membership] = await db
+          .select({
+            orgId: organizations.id,
+            orgName: organizations.name,
+            orgSlug: organizations.slug,
+            role: organizationMembers.role,
+            subscriptionStatus: organizations.subscriptionStatus,
+          })
+          .from(organizationMembers)
+          .innerJoin(organizations, eq(organizationMembers.organizationId, organizations.id))
+          .where(eq(organizationMembers.userId, token.id as string))
+          .limit(1)
+
+        if (membership) {
+          token.organizationId = membership.orgId
+          token.organizationSlug = membership.orgSlug
+          token.role = membership.role
+          token.subscriptionStatus = membership.subscriptionStatus
+          token.refreshedAt = Date.now()
+        }
+
         return token
       }
 

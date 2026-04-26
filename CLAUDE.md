@@ -39,6 +39,18 @@ Toda decisão de produto, negócio ou arquitetura:
 
 ---
 
+## Fluxo de desenvolvimento (obrigatório)
+
+Nunca implementar features direto na `master`. Sequência:
+
+1. Commitar trabalho aberto na branch atual
+2. Criar branch `feat/<nome-da-feature>` antes de escrever qualquer código
+3. Mergar apenas via Pull Request
+
+**Rationale:** master deve refletir só código revisado. Feature branches isolam dev e permitem PR review antes de integrar.
+
+---
+
 ## Estrutura do monorepo
 - `apps/web/` — aplicação Next.js (produto principal)
 - `claude-skills/` — skills e agentes Claude (tooling interno)

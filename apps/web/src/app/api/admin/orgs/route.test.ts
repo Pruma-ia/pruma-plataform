@@ -151,4 +151,16 @@ describe("POST /api/admin/orgs", () => {
     // Token insert é a 2ª chamada de insert — verificamos que foi chamado
     expect(insertCallCount).toBe(2)
   })
+
+  it("incrementa sufixo quando slug base já existe (cobre branch while)", async () => {
+    mockAuth.mockResolvedValue({ user: { isSuperAdmin: true } })
+    // First slug check: taken; second: free; then n8nSlug check: free
+    mockSlugRows
+      .mockResolvedValueOnce([{ id: "org-taken" }]) // "acme-corp" exists
+      .mockResolvedValueOnce([])                     // "acme-corp-1" free
+    mockN8nSlugRows.mockResolvedValue([])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ name: "Acme Corp" }))
+    expect(res.status).toBe(201)
+  })
 })

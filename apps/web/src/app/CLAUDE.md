@@ -89,6 +89,11 @@ Aprovações podem carregar arquivos e campos de decisão estruturados além do 
 
 ## Dívida técnica
 
+### rate limiter in-memory — não escala em multi-instância
+- `proxy.ts` usa `Map` em memória: cada instância Vercel tem seu próprio contador.
+- Ataque de força bruta distribuído entre instâncias não é bloqueado corretamente.
+- Solução futura: migrar para `@upstash/ratelimit` + Upstash Redis (drop-in, edge-compatible).
+
 ### retry-failed-callbacks — cron removido (Vercel free tier)
 - Rota `/api/maintenance/retry-failed-callbacks` existe mas **não tem trigger automático**.
 - Vercel free só suporta cron com recorrência diária (`0 X * * *`). Retry a cada 15min é incompatível — causava erro no deploy.

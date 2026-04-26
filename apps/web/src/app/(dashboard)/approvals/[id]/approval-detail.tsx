@@ -142,14 +142,19 @@ export function ApprovalDetail({
     if (xlsxRows[f.id] !== undefined) return
     setPreviewLoading((p) => ({ ...p, [f.id]: true }))
     try {
-      const [{ read, utils }, res] = await Promise.all([
-        import("xlsx"),
+      const [{ default: ExcelJS }, res] = await Promise.all([
+        import("exceljs"),
         fetch(f.url),
       ])
       const buf = await res.arrayBuffer()
-      const wb = read(new Uint8Array(buf), { type: "array", cellFormula: false, cellHTML: false })
-      const ws = wb.Sheets[wb.SheetNames[0]]
-      const rows = utils.sheet_to_json<string[]>(ws, { header: 1 }) as string[][]
+      const wb = new ExcelJS.Workbook()
+      await wb.xlsx.load(buf)
+      const ws = wb.worksheets[0]
+      const rows: string[][] = []
+      ws.eachRow((row) => {
+        // row.values is 1-indexed; index 0 is always null in exceljs
+        rows.push((row.values as unknown[]).slice(1).map((v) => (v == null ? "" : String(v))))
+      })
       setXlsxRows((p) => ({ ...p, [f.id]: rows }))
     } catch {
       setXlsxRows((p) => ({ ...p, [f.id]: [] }))

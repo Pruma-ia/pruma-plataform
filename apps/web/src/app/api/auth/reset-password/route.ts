@@ -6,9 +6,17 @@ import { createHash } from "crypto"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
+const strongPassword = z
+  .string()
+  .min(8)
+  .regex(/[A-Z]/)
+  .regex(/[a-z]/)
+  .regex(/\d/)
+  .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/)
+
 const schema = z.object({
   token: z.string().min(1),
-  password: z.string().min(8),
+  password: strongPassword,
 })
 
 export async function POST(req: Request) {

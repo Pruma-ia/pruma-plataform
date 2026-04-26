@@ -1,9 +1,22 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, Suspense, useMemo } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
+import { Check } from "lucide-react"
+
+const RULES = [
+  { id: "len", label: "Mínimo 8 caracteres", test: (p: string) => p.length >= 8 },
+  { id: "upper", label: "Uma letra maiúscula", test: (p: string) => /[A-Z]/.test(p) },
+  { id: "lower", label: "Uma letra minúscula", test: (p: string) => /[a-z]/.test(p) },
+  { id: "number", label: "Um número", test: (p: string) => /\d/.test(p) },
+  { id: "special", label: "Um caractere especial (!@#$%^&*)", test: (p: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+]
+
+const STRENGTH_COLORS = ["", "bg-red-500", "bg-orange-500", "bg-yellow-400", "bg-blue-400", "bg-green-500"]
+const STRENGTH_TEXT = ["", "text-red-400", "text-orange-400", "text-yellow-400", "text-blue-400", "text-green-400"]
+const STRENGTH_LABELS = ["", "Muito fraca", "Fraca", "Razoável", "Boa", "Forte"]
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams()
@@ -16,8 +29,16 @@ function ResetPasswordForm() {
   const [error, setError] = useState("")
   const [done, setDone] = useState(false)
 
+  const strength = useMemo(() => RULES.filter((r) => r.test(password)).length, [password])
+  const ruleResults = useMemo(() => RULES.map((r) => ({ ...r, ok: r.test(password) })), [password])
+  const allRulesPassed = strength === RULES.length
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!allRulesPassed) {
+      setError("A senha não atende todos os requisitos")
+      return
+    }
     if (password !== confirm) {
       setError("As senhas não coincidem")
       return
@@ -63,10 +84,47 @@ function ResetPasswordForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          minLength={8}
           className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/70"
         />
+
+        {password.length > 0 && (
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50">Força da senha</span>
+              <span className={`text-xs font-medium ${STRENGTH_TEXT[strength]}`}>
+                {STRENGTH_LABELS[strength]}
+              </span>
+            </div>
+            <div className="flex gap-1">
+              {RULES.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                    i < strength ? STRENGTH_COLORS[strength] : "bg-white/15"
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="mt-2 space-y-1.5 rounded-lg bg-white/5 p-3">
+              {ruleResults.map((rule) => (
+                <div key={rule.id} className="flex items-center gap-2">
+                  <div
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full transition-colors ${
+                      rule.ok ? "bg-green-500" : "bg-white/10"
+                    }`}
+                  >
+                    {rule.ok && <Check className="h-2.5 w-2.5 text-white stroke-[3]" />}
+                  </div>
+                  <span className={`text-xs ${rule.ok ? "text-white/80" : "text-white/40"}`}>
+                    {rule.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
       <div>
         <label className="block text-xs font-medium text-white/70 mb-1.5">Confirmar nova senha</label>
         <input
@@ -74,15 +132,18 @@ function ResetPasswordForm() {
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           required
-          minLength={8}
           className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/70"
         />
+        {confirm.length > 0 && password !== confirm && (
+          <p className="mt-1.5 text-xs text-red-400">As senhas não coincidem</p>
+        )}
       </div>
+
       {error && <p className="text-sm text-red-400">{error}</p>}
       <button
         type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-[#00AEEF] py-2.5 text-sm font-semibold text-white hover:bg-[#00AEEF]/90 disabled:opacity-60 transition-colors"
+        disabled={loading || !allRulesPassed || password !== confirm}
+        className="w-full rounded-lg bg-[#00AEEF] py-2.5 text-sm font-semibold text-white hover:bg-[#00AEEF]/90 disabled:opacity-50 transition-colors"
       >
         {loading ? "Salvando..." : "Redefinir senha"}
       </button>

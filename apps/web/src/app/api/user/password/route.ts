@@ -6,9 +6,17 @@ import { eq } from "drizzle-orm"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
+const strongPassword = z
+  .string()
+  .min(8, "Mínimo 8 caracteres")
+  .regex(/[A-Z]/, "Uma letra maiúscula")
+  .regex(/[a-z]/, "Uma letra minúscula")
+  .regex(/\d/, "Um número")
+  .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, "Um caractere especial")
+
 const schema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(8),
+  newPassword: strongPassword,
 })
 
 export async function PATCH(req: Request) {

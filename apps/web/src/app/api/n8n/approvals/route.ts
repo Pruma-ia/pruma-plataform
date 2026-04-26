@@ -158,7 +158,7 @@ export async function POST(req: Request) {
     await db
       .update(approvalFileUploads)
       .set({ status: "confirmed" })
-      .where(inArray(approvalFileUploads.r2Key, files.map((f) => f.r2Key)))
+      .where(and(eq(approvalFileUploads.organizationId, org.id), inArray(approvalFileUploads.r2Key, files.map((f) => f.r2Key))))
   }
 
   return NextResponse.json({ ok: true, approvalId: approval.id })

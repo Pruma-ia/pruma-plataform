@@ -26,7 +26,7 @@ export async function GET(
   const [file] = await db
     .select({ r2Key: approvalFiles.r2Key })
     .from(approvalFiles)
-    .where(and(eq(approvalFiles.id, fileId), eq(approvalFiles.approvalId, id)))
+    .where(and(eq(approvalFiles.id, fileId), eq(approvalFiles.approvalId, id), eq(approvalFiles.organizationId, session.user.organizationId)))
 
   if (!file) return NextResponse.json({ error: "Not found" }, { status: 404 })
 

@@ -33,7 +33,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       r2Key: approvalFiles.r2Key,
     })
     .from(approvalFiles)
-    .where(eq(approvalFiles.approvalId, id))
+    .where(and(eq(approvalFiles.approvalId, id), eq(approvalFiles.organizationId, session.user.organizationId)))
 
   let filesWithUrls: { id: string; filename: string; mimeType: string; sizeBytes: number; url: string }[]
   try {

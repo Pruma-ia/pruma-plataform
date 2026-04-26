@@ -15,6 +15,20 @@
       "when": 1776798468081,
       "tag": "0001_idempotency_and_callback_status",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776884868081,
+      "tag": "0002_onboarding_and_n8n_base_url",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776971268081,
+      "tag": "0003_rich_approvals",
+      "breakpoints": true
     }
   ]
 }

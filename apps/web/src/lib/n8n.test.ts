@@ -64,4 +64,10 @@ describe("validateCallbackUrl", () => {
 
   it("rejects invalid URL", () =>
     expect(validateCallbackUrl("not-a-url")).toBe(false))
+
+  it("blocks IPv6 ULA fc prefix (fc00::/7)", () =>
+    expect(validateCallbackUrl("https://[fc00::1]/webhook")).toBe(false))
+
+  it("blocks IPv4-mapped IPv6 (::ffff:10.x)", () =>
+    expect(validateCallbackUrl("https://[::ffff:10.0.0.1]/webhook")).toBe(false))
 })

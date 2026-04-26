@@ -48,11 +48,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       // Executa apenas no login inicial — carrega todos os claims no JWT
       if (user) {
         const userId = user.id as string
         token.id = userId
+
+        // Backfill: DrizzleAdapter salva image só na criação; usuários pré-existentes
+        // que linkaram Google depois ficam com image=null. Upsert a cada login Google.
+        if (account?.provider === "google" && user.image) {
+          await db.update(users).set({ image: user.image }).where(eq(users.id, userId))
+        }
 
         const [dbUser, membership] = await Promise.all([
           db

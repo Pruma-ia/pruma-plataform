@@ -35,7 +35,7 @@ export default auth((req) => {
 
   // ── Onboarding guard — usuário Google sem org ─────────────────────────────
   if (session && !session.user.isSuperAdmin && !session.user.organizationId) {
-    if (!pathname.startsWith("/onboarding") && !pathname.startsWith("/api/")) {
+    if (!pathname.startsWith("/onboarding") && pathname !== "/api/auth/onboarding") {
       return NextResponse.redirect(new URL("/onboarding", req.url))
     }
   }

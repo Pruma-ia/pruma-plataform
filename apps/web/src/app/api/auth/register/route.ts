@@ -10,6 +10,8 @@ const schema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   organizationName: z.string().min(2),
+  acceptedTerms: z.literal(true, { error: "Aceite dos termos é obrigatório" }),
+  marketingConsent: z.boolean().default(false),
 })
 
 function slugify(str: string) {
@@ -28,7 +30,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { name, email, password, organizationName } = parsed.data
+  const { name, email, password, organizationName, marketingConsent } = parsed.data
 
   const [existing] = await db.select().from(users).where(eq(users.email, email))
   if (existing) {
@@ -36,7 +38,10 @@ export async function POST(req: Request) {
   }
 
   const hashed = await bcrypt.hash(password, 12)
-  const [user] = await db.insert(users).values({ name, email, password: hashed }).returning()
+  const [user] = await db
+    .insert(users)
+    .values({ name, email, password: hashed, acceptedTermsAt: new Date(), marketingConsent })
+    .returning()
 
   // Cria a organização com slug único
   let slug = slugify(organizationName)

@@ -43,6 +43,7 @@ const validBody = {
   email: "joao@test.com",
   password: "senha123",
   organizationName: "Acme Corp",
+  acceptedTerms: true as const,
 }
 
 describe("POST /api/auth/register", () => {

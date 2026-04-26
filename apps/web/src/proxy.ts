@@ -26,7 +26,11 @@ export default auth((req) => {
   const session = req.auth
 
   // ── Rate limiting em endpoints de autenticação ─────────────────────────────
-  if (pathname.startsWith("/api/auth/") || pathname.startsWith("/api/n8n/")) {
+  if (
+    pathname.startsWith("/api/auth/") ||
+    pathname.startsWith("/api/n8n/") ||
+    pathname === "/api/user/password"
+  ) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
     if (isRateLimited(ip, 20, 60_000)) {
       return new NextResponse("Too Many Requests", { status: 429 })
@@ -76,5 +80,6 @@ export const config = {
     "/settings/:path*",
     "/api/auth/:path*",
     "/api/n8n/:path*",
+    "/api/user/:path*",
   ],
 }

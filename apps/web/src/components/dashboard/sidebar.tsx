@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   Building2,
+  UserCircle,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 
@@ -23,6 +24,7 @@ const nav = [
   { href: "/settings/members", label: "Equipe", icon: Users },
   { href: "/billing", label: "Plano", icon: CreditCard },
   { href: "/settings", label: "Configurações", icon: Settings },
+  { href: "/settings/profile", label: "Meu perfil", icon: UserCircle },
 ]
 
 const adminNav = [

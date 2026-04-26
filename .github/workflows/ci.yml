@@ -85,6 +85,21 @@ jobs:
           done
           [ $missing -eq 0 ] || exit 1
 
+      - name: Validate migration statement-breakpoints
+        run: |
+          invalid=0
+          for f in db/migrations/*.sql; do
+            stmt_count=$(grep -cE '^(ALTER|CREATE|DROP|INSERT|UPDATE|DELETE|GRANT|REVOKE) ' "$f" || true)
+            bp_count=$(grep -c 'statement-breakpoint' "$f" || true)
+            if [ "$stmt_count" -gt 1 ] && [ "$bp_count" -lt $((stmt_count - 1)) ]; then
+              echo "ERROR: $(basename $f) has $stmt_count statements but only $bp_count --> statement-breakpoint markers"
+              echo "  Neon HTTP driver rejects multiple commands without breakpoints."
+              echo "  Use: npx drizzle-kit generate (never write migration SQL manually)"
+              invalid=1
+            fi
+          done
+          [ $invalid -eq 0 ] || exit 1
+
       - name: Run Drizzle migrations
         run: npx tsx scripts/migrate.ts
         env:

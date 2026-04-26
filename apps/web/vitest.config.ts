@@ -14,11 +14,13 @@ export default defineConfig({
         "src/**/*.test.ts",
         "src/types/**",
         "src/**/*.d.ts",
-        // Infrastructure files — NextAuth config, DB client init, proxy middleware
-        // cannot be meaningfully unit tested; covered by integration tests
+        // Infrastructure files — NextAuth config, DB client init, proxy middleware,
+        // email SDK wrapper — cannot be meaningfully unit tested; covered by integration tests
         "src/proxy.ts",
         "src/lib/auth.ts",
         "src/lib/db.ts",
+        "src/lib/email.ts",
+        "src/lib/password-rules.ts",
         "src/app/api/auth/\\[...nextauth\\]/route.ts",
       ],
       thresholds: {

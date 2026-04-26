@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   Building2,
+  UserCircle,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 
@@ -23,6 +24,7 @@ const nav = [
   { href: "/settings/members", label: "Equipe", icon: Users },
   { href: "/billing", label: "Plano", icon: CreditCard },
   { href: "/settings", label: "Configurações", icon: Settings },
+  { href: "/settings/profile", label: "Meu perfil", icon: UserCircle },
 ]
 
 const adminNav = [
@@ -60,7 +62,7 @@ export function Sidebar({
             href={href}
             className={cn(
               "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm font-medium transition-colors",
-              pathname === href || (href !== "/dashboard" && pathname.startsWith(href))
+              pathname === href || (href !== "/dashboard" && href !== "/settings" && pathname.startsWith(href))
                 ? "border-[#00AEEF] bg-white/10 text-white"
                 : "border-transparent text-sidebar-foreground/70 hover:bg-white/5 hover:text-white"
             )}

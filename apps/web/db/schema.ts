@@ -256,6 +256,17 @@ export const approvalFileUploads = pgTable(
   (t) => [index("approval_file_uploads_org_idx").on(t.organizationId)]
 )
 
+// ─── Password Reset Tokens ────────────────────────────────────────────────────
+
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
 // ─── Onboarding Tokens ───────────────────────────────────────────────────────
 
 export const onboardingTokens = pgTable("onboarding_tokens", {

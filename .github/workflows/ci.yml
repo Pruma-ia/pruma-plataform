@@ -100,6 +100,29 @@ jobs:
           done
           [ $invalid -eq 0 ] || exit 1
 
+      - name: Create Neon preview branch
+        id: neon-branch
+        run: |
+          response=$(curl -sf -X POST \
+            "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches" \
+            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"branch\":{\"name\":\"ci-migrate-${{ github.run_id }}\"},\"endpoints\":[{\"type\":\"read_write\"}]}")
+          echo "branch_id=$(echo "$response" | jq -r '.branch.id')" >> $GITHUB_OUTPUT
+          echo "db_url=$(echo "$response" | jq -r '.connection_uris[0].connection_uri')" >> $GITHUB_OUTPUT
+
+      - name: Test migrations on Neon branch
+        run: npx tsx scripts/migrate.ts
+        env:
+          DATABASE_URL: ${{ steps.neon-branch.outputs.db_url }}
+
+      - name: Delete Neon preview branch
+        if: always()
+        run: |
+          curl -sf -X DELETE \
+            "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches/${{ steps.neon-branch.outputs.branch_id }}" \
+            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}"
+
       - name: Run Drizzle migrations
         run: npx tsx scripts/migrate.ts
         env:

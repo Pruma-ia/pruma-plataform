@@ -1,6 +1,6 @@
 # PRD — Compliance LGPD: Termos, Privacidade e DPA
 
-**Status:** 📋 Pronto para dev | **Prioridade:** P0 | **Esforço estimado:** M (2 dias dev + redação jurídica externa) | **RICE Score:** 500
+**Status:** ✅ Entregue (pendências abaixo) | **Prioridade:** P0 | **Esforço estimado:** M (2 dias dev + redação jurídica externa) | **RICE Score:** 500
 
 ---
 
@@ -105,3 +105,17 @@ Publicar documentos legais, adicionar aceite no cadastro e criar fluxo de consen
 
 - Redação jurídica externa (não é dev — precisa de advogado LGPD)
 - Página pública acessível antes de solicitar WhatsApp Business API (Meta exige)
+
+---
+
+## Pendências pós-entrega
+
+Itens bloqueados por decisão externa — dev não pode resolver sozinho:
+
+| Item | Bloqueio | Ação |
+|---|---|---|
+| Substituir `[CNPJ]` nas páginas legais | CNPJ ainda não disponível | Preencher quando CNPJ sair |
+| Substituir `[ENDEREÇO COMPLETO]` nas páginas legais | Endereço legal da empresa | Preencher quando definido |
+| Substituir `[NOME DO DPO]` nas páginas legais | DPO não nomeado ainda | Preencher após nomeação |
+| Criar mailbox `privacidade@pruma.ia` | Infraestrutura de email | Criar antes de publicar política |
+| Remover disclaimer "RASCUNHO — pendente revisão jurídica" | Revisão por advogado LGPD | Remover após sign-off jurídico |

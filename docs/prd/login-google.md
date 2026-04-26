@@ -1,6 +1,6 @@
 # PRD — Login com Google
 
-**Status:** 🚧 Em desenvolvimento | **Prioridade:** P0 | **Esforço estimado:** S (2–3 dias) | **RICE Score:** 666
+**Status:** ✅ Entregue | **Prioridade:** P0 | **Esforço estimado:** S (2–3 dias) | **RICE Score:** 666
 
 ---
 

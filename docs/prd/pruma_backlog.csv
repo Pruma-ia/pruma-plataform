@@ -1,4 +1,6 @@
 name,reach,impact,confidence,effort,description
 Integracao Asaas,800,massive,high,l,Integrar cobranca nativa Asaas PIX/boleto para planos e assinaturas dos clientes Pruma
 Login Google OAuth,1000,high,high,s,Adicionar login via Google para reduzir fricao no onboarding e aumentar conversao
+Perfil do Usuario,600,medium,high,m,Pagina de configuracoes pessoais: nome, telefone, contas conectadas
+Avatar Google,500,low,high,xs,Exibir foto do Google na sidebar — dado ja capturado pelo DrizzleAdapter
 Refactor Fluxos em Execucao,500,high,medium,l,Refatorar modulo de flow runs para melhorar performance e manutenibilidade do codigo

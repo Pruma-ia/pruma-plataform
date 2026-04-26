@@ -19,9 +19,12 @@ const PRIVATE_PATTERNS = [
   /^172\.(1[6-9]|2\d|3[01])\./,
   /^192\.168\./,
   /^::1$/,
-  /^fd[\da-f]{2}:/i,
+  // ULA fc00::/7 — cobre prefixos fc e fd (IPv6 privado)
+  /^\[?f[cd][\da-f]{2}:/i,
   /^169\.254\./,
   /^0\.0\.0\.0$/,
+  // IPv4-mapped IPv6 (::ffff:10.x, ::ffff:192.168.x, etc.)
+  /^\[?::ffff:/i,
 ]
 
 export function validateCallbackUrl(url: string): boolean {

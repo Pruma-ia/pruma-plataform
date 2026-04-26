@@ -37,7 +37,7 @@ vi.mock("@/lib/db", () => ({
         }),
       }),
     }),
-    insert: (table: unknown) => ({
+    insert: (_table: unknown) => ({
       values: (vals: unknown) => {
         // Distinguish approval insert (returns) from files insert (no returning)
         if (Array.isArray(vals)) {
@@ -262,6 +262,40 @@ describe("POST /api/n8n/approvals — validação de files (r2Keys)", () => {
     const { POST } = await import("./route")
     const res = await POST(makeRequest(validPayload))
     expect(res.status).toBe(200)
+  })
+
+  it("resolve flowId quando prumaFlowId fornecido e flow encontrado", async () => {
+    selectCallCount = 0
+    mockOrgRows.mockReturnValue([{ id: "org-1", n8nBaseUrl: null }])
+    mockFlowRows.mockReturnValue([{ id: "flow-abc" }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ ...validPayload, prumaFlowId: "my-flow" }))
+    expect(res.status).toBe(200)
+  })
+
+  it("não resolve flowId quando prumaFlowId não fornecido", async () => {
+    selectCallCount = 0
+    mockOrgRows.mockReturnValue([{ id: "org-1", n8nBaseUrl: null }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest(validPayload))
+    expect(res.status).toBe(200)
+  })
+
+  it("passa expiresAt quando fornecido (cobre branch ternário line 132)", async () => {
+    selectCallCount = 0
+    mockOrgRows.mockReturnValue([{ id: "org-1", n8nBaseUrl: null }])
+    mockInsertApproval.mockResolvedValue([{ id: "appr-expires" }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ ...validPayload, expiresAt: "2026-12-31T23:59:59Z" }))
+    expect(res.status).toBe(200)
+  })
+
+  it("re-lança erro de insert que não seja constraint 23505", async () => {
+    selectCallCount = 0
+    mockOrgRows.mockReturnValue([{ id: "org-1", n8nBaseUrl: null }])
+    mockInsertApproval.mockRejectedValue(new Error("connection timeout"))
+    const { POST } = await import("./route")
+    await expect(POST(makeRequest(validPayload))).rejects.toThrow("connection timeout")
   })
 
   it("retorna 422 quando r2Key tem status 'confirmed' (já consumido por outra aprovação)", async () => {

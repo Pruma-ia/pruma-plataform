@@ -104,6 +104,18 @@ describe("GET /api/approvals/[id]/files", () => {
     expect(body.files[0].r2Key).toBeUndefined()
   })
 
+  it("retorna 502 quando presignReadUrl lança exceção", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", organizationId: "org1" } })
+    mockSelectApproval.mockReturnValue([{ id: "test-id" }])
+    mockSelectFiles.mockReturnValue([
+      { id: "f1", filename: "a.pdf", mimeType: "application/pdf", sizeBytes: 1000, r2Key: "org/1/a.pdf" },
+    ])
+    mockPresignReadUrl.mockRejectedValue(new Error("R2 unavailable"))
+    const { GET } = await import("./route")
+    const res = await GET(makeRequest(), makeParams())
+    expect(res.status).toBe(502)
+  })
+
   it("chama presignReadUrl uma vez por arquivo", async () => {
     mockAuth.mockResolvedValue({ user: { id: "u1", organizationId: "org1" } })
     mockSelectApproval.mockReturnValue([{ id: "test-id" }])

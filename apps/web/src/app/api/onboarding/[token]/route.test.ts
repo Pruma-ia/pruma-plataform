@@ -121,6 +121,16 @@ describe("GET /api/onboarding/[token]", () => {
     expect(body.organizationSlug).toBe("acme-corp")
   })
 
+  it("retorna string vazia para n8nSecret quando N8N_WEBHOOK_SECRET não configurado", async () => {
+    delete process.env.N8N_WEBHOOK_SECRET
+    mockTokenRows.mockResolvedValue([makeValidRecord()])
+    mockOrgRows.mockResolvedValue([{ n8nSlug: "acme", slug: "acme" }])
+    const { GET } = await import("./route")
+    const res = await GET(makeRequest("pruma_ot_abc123"), makeParams("pruma_ot_abc123"))
+    const body = await res.json()
+    expect(body.n8nSecret).toBe("")
+  })
+
   it("retorna apiUrl padrão quando NEXTAUTH_URL não configurado", async () => {
     delete process.env.NEXTAUTH_URL
     mockTokenRows.mockResolvedValue([makeValidRecord()])

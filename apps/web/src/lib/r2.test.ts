@@ -1,5 +1,20 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { buildR2Key, ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from "./r2"
+
+// ── S3 function mocks ─────────────────────────────────────────────────────────
+const mockSend = vi.hoisted(() => vi.fn())
+vi.mock("@aws-sdk/client-s3", () => ({
+  S3Client: vi.fn(() => ({ send: mockSend })),
+  PutObjectCommand: vi.fn((args: unknown) => ({ _type: "PutObject", ...args as object })),
+  DeleteObjectCommand: vi.fn((args: unknown) => ({ _type: "DeleteObject", ...args as object })),
+  GetObjectCommand: vi.fn((args: unknown) => ({ _type: "GetObject", ...args as object })),
+  HeadObjectCommand: vi.fn((args: unknown) => ({ _type: "HeadObject", ...args as object })),
+}))
+
+const mockGetSignedUrl = vi.hoisted(() => vi.fn())
+vi.mock("@aws-sdk/s3-request-presigner", () => ({
+  getSignedUrl: mockGetSignedUrl,
+}))
 
 describe("buildR2Key", () => {
   it("prefixes key with orgId", () => {
@@ -60,4 +75,81 @@ describe("ALLOWED_MIME_TYPES", () => {
 
 describe("MAX_FILE_SIZE_BYTES", () => {
   it("is 10MB", () => expect(MAX_FILE_SIZE_BYTES).toBe(10 * 1024 * 1024))
+})
+
+describe("presignUploadUrl", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockGetSignedUrl.mockResolvedValue("https://presigned.upload.url/object?sig=abc")
+  })
+
+  it("returns a presigned URL string", async () => {
+    const { presignUploadUrl } = await import("./r2")
+    const url = await presignUploadUrl("org-1/uuid/file.pdf", "application/pdf", 50000)
+    expect(url).toBe("https://presigned.upload.url/object?sig=abc")
+    expect(mockGetSignedUrl).toHaveBeenCalledOnce()
+  })
+
+  it("passes ContentType and ContentLength to PutObjectCommand", async () => {
+    const { PutObjectCommand } = await import("@aws-sdk/client-s3")
+    const { presignUploadUrl } = await import("./r2")
+    await presignUploadUrl("org/uuid/doc.pdf", "application/pdf", 1024)
+    expect(PutObjectCommand).toHaveBeenCalledWith(expect.objectContaining({
+      ContentType: "application/pdf",
+      ContentLength: 1024,
+      Key: "org/uuid/doc.pdf",
+    }))
+  })
+})
+
+describe("presignReadUrl", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockGetSignedUrl.mockResolvedValue("https://presigned.read.url/object?sig=xyz")
+  })
+
+  it("returns a presigned read URL string", async () => {
+    const { presignReadUrl } = await import("./r2")
+    const url = await presignReadUrl("org-1/uuid/file.pdf")
+    expect(url).toBe("https://presigned.read.url/object?sig=xyz")
+    expect(mockGetSignedUrl).toHaveBeenCalledOnce()
+  })
+
+  it("passes r2Key as Key to GetObjectCommand", async () => {
+    const { GetObjectCommand } = await import("@aws-sdk/client-s3")
+    const { presignReadUrl } = await import("./r2")
+    await presignReadUrl("org/uuid/photo.jpg")
+    expect(GetObjectCommand).toHaveBeenCalledWith(expect.objectContaining({ Key: "org/uuid/photo.jpg" }))
+  })
+})
+
+describe("deleteObject", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockSend.mockResolvedValue({})
+  })
+
+  it("calls client.send with DeleteObjectCommand", async () => {
+    const { deleteObject } = await import("./r2")
+    await deleteObject("org-1/uuid/file.pdf")
+    expect(mockSend).toHaveBeenCalledOnce()
+  })
+})
+
+describe("objectExists", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("returns true when HeadObjectCommand succeeds", async () => {
+    mockSend.mockResolvedValue({})
+    const { objectExists } = await import("./r2")
+    expect(await objectExists("org/uuid/exists.pdf")).toBe(true)
+  })
+
+  it("returns false when HeadObjectCommand throws (object not found or any error)", async () => {
+    mockSend.mockRejectedValue(new Error("NoSuchKey"))
+    const { objectExists } = await import("./r2")
+    expect(await objectExists("org/uuid/missing.pdf")).toBe(false)
+  })
 })

@@ -51,6 +51,9 @@ export async function GET() {
   if (!session?.user?.organizationId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+  if (!["owner", "admin"].includes(session.user.role ?? "")) {
+    return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
+  }
 
   const invites = await db
     .select()

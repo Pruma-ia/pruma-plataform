@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server"
+import { timingSafeEqual } from "crypto"
 import { db } from "@/lib/db"
 import { organizations } from "../../../../../db/schema"
 import { eq } from "drizzle-orm"
 
-// Verifica token de segurança do webhook Asaas
 function verifyWebhookToken(req: Request): boolean {
   const token = req.headers.get("asaas-access-token")
-  return token === process.env.ASAAS_WEBHOOK_TOKEN
+  const expected = process.env.ASAAS_WEBHOOK_TOKEN
+  if (!token || !expected) return false
+  try {
+    return timingSafeEqual(Buffer.from(token), Buffer.from(expected))
+  } catch {
+    return false
+  }
 }
 
 function mapAsaasStatus(event: string): "active" | "past_due" | "canceled" | "inactive" | null {

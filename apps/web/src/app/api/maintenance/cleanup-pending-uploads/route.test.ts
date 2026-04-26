@@ -52,9 +52,10 @@ describe("GET /api/maintenance/cleanup-pending-uploads", () => {
     expect(res.status).toBe(401)
   })
 
-  it("retorna 401 quando secret incorreto (mesmo tamanho)", async () => {
+  it("retorna 401 quando secret incorreto (mesmo tamanho — cobre branch timingSafeEqual)", async () => {
     const { GET } = await import("./route")
-    const res = await GET(makeRequest("maint-XXXXX"))
+    // "maint-secret" = 12 chars; "maint-XXXXXX" = 12 chars → same length, wrong value
+    const res = await GET(makeRequest("maint-XXXXXX"))
     expect(res.status).toBe(401)
   })
 

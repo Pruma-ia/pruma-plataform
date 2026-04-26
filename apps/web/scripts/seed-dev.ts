@@ -119,8 +119,10 @@ const CSV_CONTENT = Buffer.from(
   ",,,Total,9300.00\n"
 )
 
-function buildXlsx(): Buffer {
-  const { utils, write } = require("xlsx") as typeof import("xlsx")
+async function buildXlsx(): Promise<Buffer> {
+  const ExcelJS = require("exceljs") as typeof import("exceljs")
+  const wb = new ExcelJS.Workbook()
+  const ws = wb.addWorksheet("Relatório Q1")
   const rows = [
     ["ID", "Descrição", "Quantidade", "Valor Unitário", "Total"],
     [1, "Consultoria Técnica", 10, 500.0, 5000.0],
@@ -129,10 +131,8 @@ function buildXlsx(): Buffer {
     [4, "Treinamento", 2, 800.0, 1600.0],
     ["", "", "", "Total", 9300.0],
   ]
-  const ws = utils.aoa_to_sheet(rows)
-  const wb = utils.book_new()
-  utils.book_append_sheet(wb, ws, "Relatório Q1")
-  return Buffer.from(write(wb, { type: "buffer", bookType: "xlsx" }))
+  rows.forEach((row) => ws.addRow(row))
+  return Buffer.from(await wb.xlsx.writeBuffer())
 }
 
 function buildDocx(): Promise<Buffer> {
@@ -204,7 +204,7 @@ function buildDocx(): Promise<Buffer> {
   return Packer.toBuffer(doc)
 }
 
-const XLSX_CONTENT = buildXlsx()
+// XLSX_CONTENT initialized async in main() — passed to buildApprovals
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -333,7 +333,7 @@ async function createApproval(n8nSlug: string, spec: ApprovalSpec): Promise<stri
 
 // ── Aprovações ────────────────────────────────────────────────────────────────
 
-function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
+function buildApprovals(docxContent: Buffer, xlsxContent: Buffer): ApprovalSpec[] {
   return [
   {
     title: "Aprovação de Contrato (seed)",
@@ -409,7 +409,7 @@ function buildApprovals(docxContent: Buffer): ApprovalSpec[] {
       {
         filename: "relatorio-q1-2026.xlsx",
         mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        content: XLSX_CONTENT,
+        content: xlsxContent,
       },
       { filename: "dados-exportados.csv", mimeType: "text/csv", content: CSV_CONTENT },
     ],
@@ -611,8 +611,8 @@ async function main() {
 
   await cleanup(orgId)
 
-  const docxContent = await buildDocx()
-  const approvals = buildApprovals(docxContent)
+  const [docxContent, xlsxContent] = await Promise.all([buildDocx(), buildXlsx()])
+  const approvals = buildApprovals(docxContent, xlsxContent)
   const urls: string[] = []
 
   for (const [i, spec] of approvals.entries()) {

@@ -125,6 +125,35 @@ describe("POST /api/approvals/[id]/reject", () => {
     expect(callBody.files[0]).toEqual(file)
   })
 
+  it("marca callbackStatus='blocked' quando callbackUrl é privada (SSRF)", async () => {
+    mockValidateCallbackUrl.mockReturnValue(false)
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: "https://169.254.169.254/webhook",
+    }])
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ comment: "motivo" }), makeParams())
+    expect(res.status).toBe(200)
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockUpdate).toHaveBeenCalled()
+  })
+
+  it("marca callbackStatus='failed' quando fetch lança (timeout/rede)", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
+    mockSelect.mockResolvedValue([{
+      id: "test-id",
+      status: "pending",
+      callbackUrl: "https://n8n.example.com/webhook",
+    }])
+    global.fetch = vi.fn().mockRejectedValue(new Error("AbortError: signal timed out"))
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ comment: "motivo" }), makeParams())
+    expect(res.status).toBe(200)
+    expect(mockUpdate).toHaveBeenCalled()
+  })
+
   it("inclui decisionValues no payload do callback ao rejeitar", async () => {
     mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
     mockSelect.mockResolvedValue([{

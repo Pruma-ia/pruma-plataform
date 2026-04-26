@@ -33,6 +33,16 @@ export default auth((req) => {
     }
   }
 
+  // ── Onboarding guard — usuário Google sem org ─────────────────────────────
+  if (session && !session.user.isSuperAdmin && !session.user.organizationId) {
+    if (!pathname.startsWith("/onboarding") && !pathname.startsWith("/api/")) {
+      return NextResponse.redirect(new URL("/onboarding", req.url))
+    }
+  }
+  if (pathname.startsWith("/onboarding") && session?.user.organizationId) {
+    return NextResponse.redirect(new URL("/dashboard", req.url))
+  }
+
   // ── Proteção do painel admin ───────────────────────────────────────────────
   if (pathname.startsWith("/admin")) {
     if (!session) {
@@ -58,6 +68,8 @@ export default auth((req) => {
 export const config = {
   matcher: [
     "/admin/:path*",
+    "/onboarding/:path*",
+    "/onboarding",
     "/dashboard/:path*",
     "/flows/:path*",
     "/approvals/:path*",

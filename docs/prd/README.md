@@ -4,7 +4,7 @@ Documentos de requisitos ordenados por prioridade RICE.
 
 | # | Feature | Status | RICE Score | Esforço |
 |---|---------|--------|-----------|---------|
-| 1 | [Login com Google](login-google.md) | 📋 Pronto para dev | 666 | S |
+| 1 | [Login com Google](login-google.md) | 🚧 Em desenvolvimento | 666 | S |
 | 2 | [Integração Asaas](integracao-asaas.md) | 📝 PRD pendente | 300 | L |
 | 3 | [Refactor Fluxos em Execução](refactor-flow-runs.md) | 📝 PRD pendente | 100 | L |
 

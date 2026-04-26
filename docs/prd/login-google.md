@@ -1,6 +1,6 @@
 # PRD — Login com Google
 
-**Status:** 📋 Pronto para dev | **Prioridade:** P0 | **Esforço estimado:** S (2–3 dias) | **RICE Score:** 666
+**Status:** 🚧 Em desenvolvimento | **Prioridade:** P0 | **Esforço estimado:** S (2–3 dias) | **RICE Score:** 666
 
 ---
 
@@ -19,14 +19,14 @@ Habilitar o provider Google já configurado em `apps/web/src/lib/auth.ts`. Usuá
 ## Escopo
 
 **Dentro:**
-- Botão "Continuar com Google" na página `/login`
+- Botão "Continuar com Google" na página `/login` *(já existia no código, descoberto na impl.)*
 - Botão "Continuar com Google" na página `/register`
-- Criação automática de conta se email não existe
+- Criação automática de conta se email não existe (DrizzleAdapter)
 - Redirecionamento pós-login para `/dashboard`
 - Variáveis `AUTH_GOOGLE_ID` e `AUTH_GOOGLE_SECRET` configuradas no Vercel
+- **[Descoberto]** Fluxo de onboarding para usuário Google sem organização: página `/onboarding` onde usuário nomeia a empresa antes de acessar o dashboard
 
 **Fora:**
-- Vinculação de conta Google com conta credentials existente (mesmo email)
 - Login com Microsoft, GitHub ou outros providers
 - Avatar do Google sobrescrevendo foto de perfil customizada
 
@@ -43,7 +43,12 @@ Habilitar o provider Google já configurado em `apps/web/src/lib/auth.ts`. Usuá
        → redirect /dashboard
 ```
 
-**Caso especial:** usuário Google sem organização → redirect `/onboarding` (mesmo fluxo de registro normal).
+**Caso especial — usuário Google novo (sem organização):**
+```
+OAuth autoriza → sem org no JWT → proxy redireciona /onboarding
+              → usuário informa nome da empresa
+              → org criada → reload → JWT carrega membership → /dashboard
+```
 
 ---
 
@@ -53,11 +58,13 @@ Habilitar o provider Google já configurado em `apps/web/src/lib/auth.ts`. Usuá
 |---|---|
 | Provider Google em `auth.ts` (linha 23) | ✅ Pronto |
 | DrizzleAdapter com tabela `accounts` | ✅ Pronto |
-| Env vars `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | ❌ Falta |
-| Google Cloud Console — OAuth app configurado | ❌ Falta |
-| Botão Google no `/login` | ❌ Falta |
-| Botão Google no `/register` | ❌ Falta |
-| Redirect URI autorizado no Google Console | ❌ Falta |
+| Env vars `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | ✅ Pronto |
+| Google Cloud Console — OAuth app configurado | ✅ Pronto |
+| Botão Google no `/login` | ✅ Pronto |
+| Botão Google no `/register` | ✅ Pronto |
+| Redirect URI autorizado no Google Console | ✅ Pronto |
+| Página `/onboarding` para usuário Google sem org | ✅ Pronto |
+| Guard no proxy — auth sem org → `/onboarding` | ✅ Pronto |
 
 ---
 
@@ -73,7 +80,7 @@ Habilitar o provider Google já configurado em `apps/web/src/lib/auth.ts`. Usuá
 
 | Risco | Mitigação |
 |---|---|
-| Usuário com mesmo email no credentials + Google | Bloquear na UI: "Conta criada com senha. Use email/senha." |
+| Usuário com mesmo email no credentials + Google | `allowDangerousEmailAccountLinking` — link automático pelo email verificado pelo Google |
 | `AUTH_GOOGLE_SECRET` vazar em logs | Nunca logar — já tratado pelo NextAuth |
 | Redirect URI incorreto no Google Console | Testar local + staging antes de prod |
 

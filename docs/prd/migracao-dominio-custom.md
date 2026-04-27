@@ -1,6 +1,6 @@
 # PRD — Migração para Domínio Próprio
 
-**Status:** 📋 Pronto para dev | **Prioridade:** P1 | **Esforço estimado:** S (1–2 dias) | **RICE Score:** 240
+**Status:** ✅ Entregue | **Prioridade:** P1 | **Esforço estimado:** S (1–2 dias) | **RICE Score:** 240
 
 ---
 

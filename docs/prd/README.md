@@ -12,7 +12,7 @@ Documentos de requisitos ordenados por prioridade RICE.
 | 6 | [Verificação de Email e Telefone](verificacao-email-telefone.md) | 📋 Pronto para dev | 320 | M | P0 |
 | 7 | [Integração Asaas](integracao-asaas.md) | 📝 PRD pendente | 300 | L | P1 |
 | 8 | [Dashboard com Métricas Reais](dashboard-metricas.md) | 📋 Pronto para dev | 280 | M | P1 |
-| 9 | [Migração para Domínio Próprio](migracao-dominio-custom.md) | 📋 Pronto para dev | 240 | S | P1 |
+| 9 | [Migração para Domínio Próprio](migracao-dominio-custom.md) | ✅ Entregue | 240 | S | — |
 | 10 | [Onboarding + Dados Cadastrais da Org](onboarding-org-dados-cadastrais.md) | 📋 Pronto para dev | 220 | L | P1 |
 | 11 | [Configurações da Organização](configuracoes-org.md) | 📋 Pronto para dev | 250 | S | P1 |
 | 12 | [Gestão de Aprovações: Filtros, Busca e Exportação](gestao-aprovacoes-filtros.md) | 📋 Pronto para dev | 220 | M | P1 |

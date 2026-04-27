@@ -115,12 +115,26 @@ describe("POST /api/billing/checkout", () => {
     expect(mockAsaas.paymentLinks.create).toHaveBeenCalled()
   })
 
-  it("lê remoteIp do header x-forwarded-for quando presente", async () => {
+  it("lê remoteIp do último IP em x-forwarded-for (Vercel append)", async () => {
+    mockSelect.mockResolvedValue([{ ...org, asaasCustomerId: "cus_stored" }])
+    const creditCard = { holderName: "A", number: "1234567890123456", expiryMonth: "12", expiryYear: "2027", ccv: "123" }
+    const holderInfo = { name: "A", email: "a@test.com", cpfCnpj: "12345678900", postalCode: "01310-100", addressNumber: "1" }
     const { POST } = await import("./route")
-    const res = await POST(makeRequest(validBody, { "x-forwarded-for": "203.0.113.1, 10.0.0.1" }))
-    expect(res.status).toBe(200)
-    const body = await res.json()
-    expect(body.url).toContain("asaas.com")
+    await POST(makeRequest({ planId: "starter", billingType: "CREDIT_CARD", creditCard, holderInfo }, { "x-forwarded-for": "spoofed-ip, 203.0.113.42" }))
+    expect(mockAsaas.subscriptions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ remoteIp: "203.0.113.42" }),
+    )
+  })
+
+  it("usa x-real-ip quando x-forwarded-for ausente", async () => {
+    mockSelect.mockResolvedValue([{ ...org, asaasCustomerId: "cus_stored" }])
+    const creditCard = { holderName: "A", number: "1234567890123456", expiryMonth: "12", expiryYear: "2027", ccv: "123" }
+    const holderInfo = { name: "A", email: "a@test.com", cpfCnpj: "12345678900", postalCode: "01310-100", addressNumber: "1" }
+    const { POST } = await import("./route")
+    await POST(makeRequest({ planId: "starter", billingType: "CREDIT_CARD", creditCard, holderInfo }, { "x-real-ip": "198.51.100.7" }))
+    expect(mockAsaas.subscriptions.create).toHaveBeenCalledWith(
+      expect.objectContaining({ remoteIp: "198.51.100.7" }),
+    )
   })
 
   it("cria assinatura direta quando creditCard e holderInfo fornecidos", async () => {

@@ -46,7 +46,8 @@ export async function POST(req: Request) {
   }
 
   const { planId, billingType, creditCard, holderInfo } = parsed.data
-  const remoteIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+  const remoteIp = req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim()
+    ?? req.headers.get("x-real-ip") ?? undefined
   const plan = PLANS[planId]
 
   const [org] = await db

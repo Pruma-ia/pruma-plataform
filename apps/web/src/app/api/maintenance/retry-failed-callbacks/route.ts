@@ -87,7 +87,7 @@ export async function GET(req: Request) {
       status: approval.status,
       resolvedBy: approval.resolverEmail ?? null,
       comment: approval.comment,
-      decisionValues: approval.decisionValues ?? null,
+      decisionValues: approval.decisionValues as Record<string, string> | null ?? null,
       resolvedAt: approval.resolvedAt!.toISOString(),
       files: approvalFilesList.map(f => ({ r2Key: f.r2Key, filename: f.filename, mimeType: f.mimeType, sizeBytes: f.sizeBytes })),
       retried: true,

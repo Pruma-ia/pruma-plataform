@@ -70,6 +70,23 @@ curl http://localhost:9000/minio/health/live
 curl -I "$(npx tsx -e "...")"          # testar presigned URL diretamente
 ```
 
+### Email — transporte dev vs prod
+
+`src/lib/email.ts` usa dois transportes:
+- **Produção** (`NODE_ENV=production`): Resend — `RESEND_API_KEY` e `RESEND_FROM` no Vercel.
+- **Dev**: nodemailer → Mailpit SMTP em `localhost:1025`. UI em `http://localhost:8025`.
+
+**Por que Mailpit em vez de guard por env var:** Resend não tem sandbox/environments nativos. Qualquer guard por env var cria risco de vazamento se a var for esquecida. Mailpit captura 100% dos emails sem chegar a destinatários reais, independente de configuração.
+
+`SMTP_HOST` e `SMTP_PORT` são dev-only — **não setar no Vercel**. Em prod o branch `NODE_ENV=production` usa Resend e ignora essas vars.
+
+```bash
+docker compose up -d mailpit   # sobe junto com postgres + minio
+# UI: http://localhost:8025
+```
+
+**Footgun:** `_transporter` é singleton em `email.ts`. Mudar `SMTP_HOST`/`SMTP_PORT` em `.env.local` exige restart do servidor Next.js.
+
 ### Footguns conhecidos
 
 **`objectExists` engole exceções** — se `R2_ENDPOINT` estiver errado, retorna `false` em vez de erro. UI mostra "Não foi possível carregar o arquivo" sem indicar a causa real. Checar endpoint primeiro.

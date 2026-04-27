@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 import { organizationInvites, users } from "../../../../../db/schema"
 import { eq, and } from "drizzle-orm"
 import { z } from "zod"
-import crypto from "crypto"
+import crypto, { createHash } from "crypto"
 
 const schema = z.object({
   email: z.string().email(),
@@ -27,19 +27,20 @@ export async function POST(req: Request) {
   }
 
   const { email, role } = parsed.data
-  const token = crypto.randomBytes(32).toString("hex")
+  const rawToken = crypto.randomBytes(32).toString("hex")
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex")
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 dias
 
   await db.insert(organizationInvites).values({
     organizationId: session.user.organizationId,
     email,
     role,
-    token,
+    token: tokenHash,
     invitedBy: session.user.id,
     expiresAt,
   })
 
-  const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`
+  const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${rawToken}`
   // TODO: enviar email com inviteUrl
 
   return NextResponse.json({ ok: true, inviteUrl })
@@ -56,7 +57,14 @@ export async function GET() {
   }
 
   const invites = await db
-    .select()
+    .select({
+      id: organizationInvites.id,
+      email: organizationInvites.email,
+      role: organizationInvites.role,
+      invitedBy: organizationInvites.invitedBy,
+      expiresAt: organizationInvites.expiresAt,
+      createdAt: organizationInvites.createdAt,
+    })
     .from(organizationInvites)
     .where(
       and(

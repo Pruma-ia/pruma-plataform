@@ -79,7 +79,7 @@ export async function POST(req: Request) {
     const [dup] = await db
       .select({ id: flowRuns.id })
       .from(flowRuns)
-      .where(eq(flowRuns.n8nExecutionId, n8nExecutionId))
+      .where(and(eq(flowRuns.n8nExecutionId, n8nExecutionId), eq(flowRuns.organizationId, org.id)))
       .limit(1)
 
     if (dup) {

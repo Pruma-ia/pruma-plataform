@@ -8,7 +8,7 @@ import { z } from "zod"
 const schema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(8).regex(/[A-Z]/).regex(/[a-z]/).regex(/\d/).regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/),
   organizationName: z.string().min(2),
   acceptedTerms: z.literal(true, { error: "Aceite dos termos é obrigatório" }),
   marketingConsent: z.boolean().default(false),

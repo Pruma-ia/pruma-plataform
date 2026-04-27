@@ -11,6 +11,8 @@
 
 **Nunca criar SQL de migration manualmente.** `drizzle-kit generate` é obrigatório — ele escreve o SQL e registra o entry em `db/migrations/meta/_journal.json`. Arquivo SQL sem entry no journal é invisível para `migrate()`: não aplica em produção, sem erro, sem aviso. Foi assim que `0002` e `0003` ficaram fora de prod por semanas. CI tem check automático que bloqueia deploy se journal estiver dessincronizado.
 
+**`when` no journal deve ser cronologicamente crescente.** O migrator usa `ORDER BY created_at DESC LIMIT 1` como high watermark — aplica só migrations com `when > lastMigration.when`. Se `drizzle-kit generate` for rodado com clock errado ou o campo for editado manualmente para um valor menor que a migration anterior, a migration **é silenciosamente pulada** mesmo sem erro. Sempre verificar que `when` da nova entry é maior que a anterior antes de commitar o journal.
+
 ## Aplicar migration no Docker local
 
 `npm run db:migrate` usa driver Neon HTTP — não funciona com Docker local. Aplicar diretamente:

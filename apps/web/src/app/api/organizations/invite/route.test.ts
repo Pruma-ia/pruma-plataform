@@ -96,8 +96,8 @@ describe("GET /api/organizations/invite", () => {
     expect(res.status).toBe(401)
   })
 
-  it("retorna lista de convites pendentes", async () => {
-    const invite = { id: "inv-1", email: "guest@test.com", role: "member", token: "tok", expiresAt: new Date().toISOString() }
+  it("retorna lista de convites pendentes sem expor token", async () => {
+    const invite = { id: "inv-1", email: "guest@test.com", role: "member", invitedBy: "u1", expiresAt: new Date().toISOString(), createdAt: new Date().toISOString() }
     mockSelect.mockResolvedValue([invite])
     const { GET } = await import("./route")
     const res = await GET()
@@ -105,6 +105,7 @@ describe("GET /api/organizations/invite", () => {
     const body = await res.json()
     expect(body.invites).toHaveLength(1)
     expect(body.invites[0].email).toBe("guest@test.com")
+    expect(body.invites[0].token).toBeUndefined()
   })
 
   it("retorna lista vazia quando não há convites", async () => {

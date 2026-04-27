@@ -17,8 +17,8 @@ vi.mock("@/lib/db", () => ({
 vi.mock("drizzle-orm", () => ({ eq: vi.fn(), and: vi.fn(), inArray: vi.fn() }))
 vi.mock("../../../../../../db/schema", () => ({ approvals: {}, approvalFiles: {} }))
 
-const mockValidateCallbackUrl = vi.hoisted(() => vi.fn(() => true))
-vi.mock("@/lib/n8n", () => ({ validateCallbackUrl: mockValidateCallbackUrl }))
+const mockDispatchCallback = vi.hoisted(() => vi.fn().mockResolvedValue("sent"))
+vi.mock("@/lib/n8n", () => ({ dispatchCallback: mockDispatchCallback }))
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -40,8 +40,7 @@ describe("POST /api/approvals/[id]/approve", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUpdate.mockResolvedValue([])
-    global.fetch = vi.fn().mockResolvedValue({ ok: true })
-    mockValidateCallbackUrl.mockReturnValue(true)
+    mockDispatchCallback.mockResolvedValue("sent")
   })
 
   it("retorna 401 quando não há sessão", async () => {
@@ -84,9 +83,9 @@ describe("POST /api/approvals/[id]/approve", () => {
     const { POST } = await import("./route")
     const res = await POST(makeRequest({ comment: "ok" }), makeParams())
     expect(res.status).toBe(200)
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
       "https://n8n.example.com/webhook/abc",
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({ status: "approved" }),
     )
   })
 
@@ -95,7 +94,7 @@ describe("POST /api/approvals/[id]/approve", () => {
     mockSelect.mockResolvedValue([{ id: "test-id", status: "pending", callbackUrl: null }])
     const { POST } = await import("./route")
     await POST(makeRequest(), makeParams())
-    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockDispatchCallback).not.toHaveBeenCalled()
   })
 
   it("inclui decisionValues no payload do callback", async () => {
@@ -108,9 +107,10 @@ describe("POST /api/approvals/[id]/approve", () => {
     const { POST } = await import("./route")
     const decisionValues = { advogado: "adv-1", prioridade: "alta" }
     await POST(makeRequest({ comment: "ok", decisionValues }), makeParams())
-    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
-    expect(callBody.decisionValues).toEqual(decisionValues)
-    expect(callBody.status).toBe("approved")
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ decisionValues, status: "approved" }),
+    )
   })
 
   it("inclui decisionValues null no callback quando não enviado", async () => {
@@ -122,8 +122,10 @@ describe("POST /api/approvals/[id]/approve", () => {
     }])
     const { POST } = await import("./route")
     await POST(makeRequest({ comment: "ok" }), makeParams())
-    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
-    expect(callBody.decisionValues).toBeNull()
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ decisionValues: null }),
+    )
   })
 
   it("retorna 422 para body com tipo inválido", async () => {
@@ -133,8 +135,19 @@ describe("POST /api/approvals/[id]/approve", () => {
     expect(res.status).toBe(422)
   })
 
+  it("envia resolvedBy:null quando usuário não tem email", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", organizationId: "org1" } }) // sem email
+    mockSelect.mockResolvedValue([{ id: "test-id", status: "pending", callbackUrl: "https://n8n.example.com/webhook/abc" }])
+    const { POST } = await import("./route")
+    await POST(makeRequest(), makeParams())
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ resolvedBy: null }),
+    )
+  })
+
   it("marca callbackStatus='blocked' quando callbackUrl é privada (SSRF)", async () => {
-    mockValidateCallbackUrl.mockReturnValue(false)
+    mockDispatchCallback.mockResolvedValue("blocked")
     mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
     mockSelect.mockResolvedValue([{
       id: "test-id",
@@ -144,7 +157,7 @@ describe("POST /api/approvals/[id]/approve", () => {
     const { POST } = await import("./route")
     const res = await POST(makeRequest(), makeParams())
     expect(res.status).toBe(200)
-    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockDispatchCallback).toHaveBeenCalled()
     expect(mockUpdate).toHaveBeenCalled()
   })
 
@@ -190,13 +203,13 @@ describe("POST /api/approvals/[id]/approve", () => {
   })
 
   it("marca callbackStatus='failed' quando callback n8n falha", async () => {
+    mockDispatchCallback.mockResolvedValue("failed")
     mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
     mockSelect.mockResolvedValue([{
       id: "test-id",
       status: "pending",
       callbackUrl: "https://n8n.example.com/webhook/abc",
     }])
-    global.fetch = vi.fn().mockResolvedValue({ ok: false })
     const { POST } = await import("./route")
     const res = await POST(makeRequest(), makeParams())
     expect(res.status).toBe(200)
@@ -212,9 +225,10 @@ describe("POST /api/approvals/[id]/approve", () => {
       .mockResolvedValueOnce([file])
     const { POST } = await import("./route")
     await POST(makeRequest({ comment: "ok" }), makeParams())
-    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
-    expect(callBody.files).toHaveLength(1)
-    expect(callBody.files[0]).toEqual(file)
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ files: [file] }),
+    )
   })
 
   it("envia files:[] quando aprovação não tem arquivos", async () => {
@@ -224,18 +238,20 @@ describe("POST /api/approvals/[id]/approve", () => {
       .mockResolvedValueOnce([])
     const { POST } = await import("./route")
     await POST(makeRequest({ comment: "ok" }), makeParams())
-    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
-    expect(callBody.files).toEqual([])
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ files: [] }),
+    )
   })
 
   it("retorna 200 e marca callbackStatus='failed' quando fetch lança (timeout/rede)", async () => {
+    mockDispatchCallback.mockResolvedValue("failed")
     mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
     mockSelect.mockResolvedValue([{
       id: "test-id",
       status: "pending",
       callbackUrl: "https://n8n.example.com/webhook/abc",
     }])
-    global.fetch = vi.fn().mockRejectedValue(new DOMException("signal timed out", "AbortError"))
     const { POST } = await import("./route")
     const res = await POST(makeRequest(), makeParams())
     expect(res.status).toBe(200)

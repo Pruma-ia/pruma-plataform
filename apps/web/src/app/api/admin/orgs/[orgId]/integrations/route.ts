@@ -58,6 +58,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ orgId:
   if (parsed.data.n8nSlug) updates.n8nSlug = parsed.data.n8nSlug
   if (parsed.data.n8nBaseUrl) updates.n8nBaseUrl = parsed.data.n8nBaseUrl
 
+  console.log("[ADMIN AUDIT] integrations PATCH", {
+    actor: session.user.id,
+    orgId,
+    changes: { n8nSlug: parsed.data.n8nSlug, n8nBaseUrl: parsed.data.n8nBaseUrl },
+    at: new Date().toISOString(),
+  })
+
   await db
     .update(organizations)
     .set(updates)

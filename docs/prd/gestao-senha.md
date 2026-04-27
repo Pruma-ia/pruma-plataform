@@ -1,6 +1,6 @@
 # PRD — Gestão de Senha (Recuperação + Troca)
 
-**Status:** 📋 Pronto para dev | **Prioridade:** P0 | **Esforço estimado:** S (2–3 dias) | **RICE Score:** 450
+**Status:** ✅ Entregue | **Prioridade:** P0 | **Esforço estimado:** S (2–3 dias) | **RICE Score:** 450
 
 ---
 

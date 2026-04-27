@@ -2,11 +2,11 @@ name,reach,impact,confidence,effort,description,priority
 Login Google OAuth,1000,high,high,s,Adicionar login via Google para reduzir fricao no onboarding e aumentar conversao,entregue
 Avatar Google,500,low,high,xs,Exibir foto do Google na sidebar — dado ja capturado pelo DrizzleAdapter,entregue
 Email Aprovacao Pendente,900,massive,high,m,Notificar aprovadores por email quando nova aprovacao chega — sem isso o produto nao funciona standalone,p0
-Compliance LGPD Termos Privacidade DPA,1000,massive,high,m,Politica de privacidade + termos de uso + DPA para clientes B2B — obrigatorio por lei (LGPD),p0
-Gestao Senha Recuperacao Troca,800,high,high,s,Recuperacao de senha via email + troca de senha para usuarios com credentials,p0
+Compliance LGPD Termos Privacidade DPA,1000,massive,high,m,Politica de privacidade + termos de uso + DPA para clientes B2B — obrigatorio por lei (LGPD),entregue
+Gestao Senha Recuperacao Troca,800,high,high,s,Recuperacao de senha via email + troca de senha para usuarios com credentials,entregue
 Verificacao Email Telefone,700,high,high,m,OTP por email no cadastro e OTP por SMS ao adicionar telefone — prerequisito para notificacoes e WhatsApp,p0
 Integracao Asaas,800,massive,high,l,Integrar cobranca nativa Asaas PIX/boleto para planos e assinaturas dos clientes Pruma,p1
-Migracao Dominio Custom,600,high,high,s,Migrar de dominio Vercel temp para dominio proprio — prerequisito para LGPD e branding B2B,p1
+Migracao Dominio Custom,600,high,high,s,Migrar de dominio Vercel temp para dominio proprio — prerequisito para LGPD e branding B2B,entregue
 Dashboard Metricas Reais,900,high,high,m,KPIs reais no dashboard: aprovacoes pendentes, resolvidas hoje, fluxos ativos, tempo medio de resolucao,p1
 Configuracoes Org,800,high,high,s,Tela para owner editar nome, logo e dados cadastrais da organizacao,p1
 Onboarding Org Dados Cadastrais,700,high,high,l,Coletar CNPJ/endereco/telefone da org no onboarding e pre-preencher billing Asaas automaticamente,p1

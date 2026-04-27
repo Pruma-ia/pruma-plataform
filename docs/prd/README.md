@@ -8,7 +8,7 @@ Documentos de requisitos ordenados por prioridade RICE.
 | 2 | [Avatar do Google](avatar-google.md) | ✅ Entregue | 250 | XS | — |
 | 3 | [Email de Aprovação Pendente](email-aprovacao-pendente.md) | 📋 Pronto para dev | 550 | M | P0 |
 | 4 | [Compliance LGPD: Termos, Privacidade e DPA](compliance-lgpd-termos.md) | ✅ Entregue | 500 | M | — |
-| 5 | [Gestão de Senha (Recuperação + Troca)](gestao-senha.md) | 📋 Pronto para dev | 450 | S | P0 |
+| 5 | [Gestão de Senha (Recuperação + Troca)](gestao-senha.md) | ✅ Entregue | 450 | S | — |
 | 6 | [Verificação de Email e Telefone](verificacao-email-telefone.md) | 📋 Pronto para dev | 320 | M | P0 |
 | 7 | [Integração Asaas](integracao-asaas.md) | 📝 PRD pendente | 300 | L | P1 |
 | 8 | [Dashboard com Métricas Reais](dashboard-metricas.md) | 📋 Pronto para dev | 280 | M | P1 |

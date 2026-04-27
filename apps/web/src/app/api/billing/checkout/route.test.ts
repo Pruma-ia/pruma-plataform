@@ -29,10 +29,10 @@ const mockAsaas = {
 }
 vi.mock("@/lib/asaas", () => ({ asaas: mockAsaas }))
 
-function makeRequest(body: object) {
+function makeRequest(body: object, extraHeaders?: Record<string, string>) {
   return new Request("http://localhost/api/billing/checkout", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...extraHeaders },
     body: JSON.stringify(body),
   })
 }
@@ -113,6 +113,14 @@ describe("POST /api/billing/checkout", () => {
     const body = await res.json()
     expect(body.url).toContain("asaas.com")
     expect(mockAsaas.paymentLinks.create).toHaveBeenCalled()
+  })
+
+  it("lê remoteIp do header x-forwarded-for quando presente", async () => {
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest(validBody, { "x-forwarded-for": "203.0.113.1, 10.0.0.1" }))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.url).toContain("asaas.com")
   })
 
   it("cria assinatura direta quando creditCard e holderInfo fornecidos", async () => {

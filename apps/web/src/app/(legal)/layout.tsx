@@ -23,7 +23,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       <main className="mx-auto max-w-4xl px-6 py-12">{children}</main>
       <footer className="border-t border-border mt-16">
         <div className="mx-auto max-w-4xl px-6 py-6 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Pruma IA. Dúvidas: <a href="mailto:privacidade@pruma.ia" className="underline">privacidade@pruma.ia</a>
+          © {new Date().getFullYear()} Pruma IA. Dúvidas: <a href="mailto:privacidade@pruma.io" className="underline">privacidade@pruma.io</a>
         </div>
       </footer>
     </div>

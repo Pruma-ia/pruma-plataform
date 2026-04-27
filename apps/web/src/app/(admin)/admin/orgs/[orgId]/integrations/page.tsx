@@ -105,7 +105,7 @@ export default function IntegrationsPage() {
                 {JSON.stringify(
                   {
                     organizationSlug: n8nSlug,
-                    prumaApiUrl: "https://app.pruma.ia",
+                    prumaApiUrl: process.env.NEXT_PUBLIC_APP_URL,
                     workflows: [],
                   },
                   null,
@@ -116,7 +116,7 @@ export default function IntegrationsPage() {
                 onClick={() =>
                   copy(
                     JSON.stringify(
-                      { organizationSlug: n8nSlug, prumaApiUrl: "https://app.pruma.ia", workflows: [] },
+                      { organizationSlug: n8nSlug, prumaApiUrl: process.env.NEXT_PUBLIC_APP_URL, workflows: [] },
                       null,
                       2
                     )

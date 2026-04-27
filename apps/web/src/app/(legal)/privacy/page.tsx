@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 // [CNPJ] → CNPJ real da empresa
 // [ENDEREÇO COMPLETO] → endereço da sede
 // [NOME DO DPO] → nome do encarregado
-// privacidade@pruma.ia → email ainda não criado
+// privacidade@pruma.io → email ainda não criado
 
 export default function PrivacyPage() {
   return (
@@ -92,7 +92,7 @@ export default function PrivacyPage() {
       </ul>
       <p>
         Para exercer seus direitos, entre em contato com o nosso Encarregado de Dados (DPO) pelo e-mail:{" "}
-        <a href="mailto:privacidade@pruma.ia">privacidade@pruma.ia</a>. Atenderemos sua solicitação em até <strong>15 dias úteis</strong>.
+        <a href="mailto:privacidade@pruma.io">privacidade@pruma.io</a>. Atenderemos sua solicitação em até <strong>15 dias úteis</strong>.
       </p>
 
       <h2>7. Segurança da Informação</h2>
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
       <p>O Encarregado de Dados da Pruma IA é:</p>
       <ul>
         <li><strong>Nome:</strong> [NOME DO DPO]</li>
-        <li><strong>E-mail:</strong> <a href="mailto:privacidade@pruma.ia">privacidade@pruma.ia</a></li>
+        <li><strong>E-mail:</strong> <a href="mailto:privacidade@pruma.io">privacidade@pruma.io</a></li>
       </ul>
 
       <h2>9. Alterações nesta Política</h2>
@@ -124,7 +124,7 @@ export default function PrivacyPage() {
       <div className="mt-8 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400">
         <strong>Aviso:</strong> A Pruma nunca solicita senhas, dados de cartão ou informações sensíveis por e-mail. Se receber
         mensagem suspeita em nosso nome, contate{" "}
-        <a href="mailto:privacidade@pruma.ia">privacidade@pruma.ia</a>.
+        <a href="mailto:privacidade@pruma.io">privacidade@pruma.io</a>.
       </div>
     </article>
   )

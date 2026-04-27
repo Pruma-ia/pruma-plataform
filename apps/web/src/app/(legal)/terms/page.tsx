@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 
 // TODO: substituir antes de publicar
 // [CNPJ] → CNPJ real da empresa
-// privacidade@pruma.ia → email ainda não criado
+// privacidade@pruma.io → email ainda não criado
 
 export default function TermsPage() {
   return (
@@ -108,7 +108,7 @@ export default function TermsPage() {
 
       <div className="mt-8 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400">
         <strong>Aviso:</strong> A Pruma nunca solicita senhas, dados de cartão ou informações sensíveis por e-mail. Dúvidas
-        sobre estes termos: <a href="mailto:privacidade@pruma.ia">privacidade@pruma.ia</a>
+        sobre estes termos: <a href="mailto:privacidade@pruma.io">privacidade@pruma.io</a>
       </div>
     </article>
   )

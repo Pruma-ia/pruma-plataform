@@ -25,7 +25,6 @@ const schema = z.object({
     addressNumber: z.string(),
     phone: z.string().optional(),
   }).optional(),
-  remoteIp: z.string().optional(),
 })
 
 const PLANS = {
@@ -46,7 +45,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { planId, billingType, creditCard, holderInfo, remoteIp } = parsed.data
+  const { planId, billingType, creditCard, holderInfo } = parsed.data
+  const remoteIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
   const plan = PLANS[planId]
 
   const [org] = await db

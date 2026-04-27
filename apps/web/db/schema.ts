@@ -167,12 +167,15 @@ export const flowRuns = pgTable(
     payload: jsonb("payload"),
     errorMessage: text("error_message"),
     // ID da execução no n8n — usado para idempotência (evita duplicatas em reentregas)
-    n8nExecutionId: text("n8n_execution_id").unique(),
+    n8nExecutionId: text("n8n_execution_id"),
     startedAt: timestamp("started_at"),
     finishedAt: timestamp("finished_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (t) => [index("flow_run_flow_idx").on(t.flowId)]
+  (t) => [
+    index("flow_run_flow_idx").on(t.flowId),
+    uniqueIndex("flow_run_org_execution_unique").on(t.organizationId, t.n8nExecutionId),
+  ]
 )
 
 // ─── Approvals ────────────────────────────────────────────────────────────────

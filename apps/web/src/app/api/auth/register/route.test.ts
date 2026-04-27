@@ -41,7 +41,7 @@ function makeRequest(body: object) {
 const validBody = {
   name: "João Silva",
   email: "joao@test.com",
-  password: "senha123",
+  password: "Senha@123",
   organizationName: "Acme Corp",
   acceptedTerms: true as const,
 }

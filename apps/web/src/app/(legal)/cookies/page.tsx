@@ -5,7 +5,7 @@ export const metadata: Metadata = {
 }
 
 // TODO: substituir antes de publicar
-// privacidade@pruma.ia → email ainda não criado
+// privacidade@pruma.io → email ainda não criado
 
 export default function CookiesPage() {
   return (
@@ -81,7 +81,7 @@ export default function CookiesPage() {
       <h2>6. Contato</h2>
       <p>
         Dúvidas sobre o uso de cookies? Entre em contato com nosso DPO:{" "}
-        <a href="mailto:privacidade@pruma.ia">privacidade@pruma.ia</a>
+        <a href="mailto:privacidade@pruma.io">privacidade@pruma.io</a>
       </p>
 
       <div className="mt-8 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400">

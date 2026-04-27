@@ -131,13 +131,13 @@ describe("GET /api/onboarding/[token]", () => {
     expect(body.n8nSecret).toBe("")
   })
 
-  it("retorna apiUrl padrão quando NEXTAUTH_URL não configurado", async () => {
+  it("retorna apiUrl undefined quando NEXTAUTH_URL não configurado", async () => {
     delete process.env.NEXTAUTH_URL
     mockTokenRows.mockResolvedValue([makeValidRecord()])
     mockOrgRows.mockResolvedValue([{ n8nSlug: "acme", slug: "acme" }])
     const { GET } = await import("./route")
     const res = await GET(makeRequest("pruma_ot_abc123"), makeParams("pruma_ot_abc123"))
     const body = await res.json()
-    expect(body.apiUrl).toBe("https://app.pruma.ia")
+    expect(body.apiUrl).toBeUndefined()
   })
 })

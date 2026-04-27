@@ -52,6 +52,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   return NextResponse.json({
     organizationSlug: org.n8nSlug ?? org.slug,
     n8nSecret: process.env.N8N_WEBHOOK_SECRET ?? "",
-    apiUrl: process.env.NEXTAUTH_URL ?? "https://app.pruma.ia",
+    apiUrl: process.env.NEXTAUTH_URL,
   })
 }

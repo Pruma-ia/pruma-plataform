@@ -78,17 +78,17 @@ export default function DpaPage() {
       <p>Dados podem ser transferidos para os EUA (Neon, Vercel, Cloudflare, Google, Resend). Essas transferências são amparadas por cláusulas contratuais padrão ou adequação reconhecida, conforme art. 33 da LGPD.</p>
 
       <h2>9. Direitos dos titulares durante a vigência</h2>
-      <p>Titulares de dados podem exercer seus direitos previstos na LGPD (acesso, correção, exclusão, portabilidade, revogação de consentimento) a qualquer momento durante a relação contratual, enviando solicitação para <a href="mailto:privacidade@pruma.ia">privacidade@pruma.ia</a>. A Pruma responderá em até <strong>15 dias úteis</strong> e executará as ações cabíveis conforme a legislação vigente.</p>
+      <p>Titulares de dados podem exercer seus direitos previstos na LGPD (acesso, correção, exclusão, portabilidade, revogação de consentimento) a qualquer momento durante a relação contratual, enviando solicitação para <a href="mailto:privacidade@pruma.io">privacidade@pruma.io</a>. A Pruma responderá em até <strong>15 dias úteis</strong> e executará as ações cabíveis conforme a legislação vigente.</p>
       <p>Pedidos de exclusão de dados durante a vigência serão atendidos desde que não haja obrigação legal de retenção (ex.: dados fiscais retidos por 5 anos). Quando a exclusão não for possível, a Pruma informará o motivo e o prazo estimado.</p>
 
       <h2>10. Duração e encerramento</h2>
       <p>Este DPA vigora pelo período da relação contratual entre as partes. Ao término, a Pruma excluirá os dados pessoais do Cliente em até 30 dias, salvo obrigação legal de retenção. Dados de aprovações serão mantidos pelo período legal mínimo (5 anos para fins fiscais) e depois eliminados.</p>
 
       <h2>11. Contato</h2>
-      <p>Para questões relativas a este DPA: <a href="mailto:privacidade@pruma.ia">privacidade@pruma.ia</a></p>
+      <p>Para questões relativas a este DPA: <a href="mailto:privacidade@pruma.io">privacidade@pruma.io</a></p>
 
       <div className="mt-8 rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 text-sm text-blue-700 dark:text-blue-400">
-        Para assinar este DPA formalmente (empresas B2B), entre em contato com <a href="mailto:privacidade@pruma.ia">privacidade@pruma.ia</a>.
+        Para assinar este DPA formalmente (empresas B2B), entre em contato com <a href="mailto:privacidade@pruma.io">privacidade@pruma.io</a>.
       </div>
 
       <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400">

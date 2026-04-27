@@ -6,7 +6,7 @@ Documentos de requisitos ordenados por prioridade RICE.
 |---|---------|--------|-----------|---------|------------|
 | 1 | [Login com Google](login-google.md) | ✅ Entregue | 666 | S | — |
 | 2 | [Avatar do Google](avatar-google.md) | ✅ Entregue | 250 | XS | — |
-| 3 | [Email de Aprovação Pendente](email-aprovacao-pendente.md) | 📋 Pronto para dev | 550 | M | P0 |
+| 3 | [Email de Aprovação Pendente](email-aprovacao-pendente.md) | ✅ Entregue | 550 | M | — |
 | 4 | [Compliance LGPD: Termos, Privacidade e DPA](compliance-lgpd-termos.md) | ✅ Entregue | 500 | M | — |
 | 5 | [Gestão de Senha (Recuperação + Troca)](gestao-senha.md) | ✅ Entregue | 450 | S | — |
 | 6 | [Verificação de Email e Telefone](verificacao-email-telefone.md) | 📋 Pronto para dev | 320 | M | P0 |

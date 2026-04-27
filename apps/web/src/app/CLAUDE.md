@@ -12,6 +12,15 @@ Nunca retornar dados cross-tenant. Exceção única: superadmin via `/admin`.
 - Correção de dado de cliente: orientar o próprio cliente, ou usar script de manutenção com log explícito.
 - Acesso por URL: `/admin/orgs/[orgId]/*` — orgId vem do params, não da sessão.
 
+## Notificações por email
+
+Email disparado em `POST /api/n8n/approvals` após inserção da aprovação no banco.
+
+- **Destinatários:** `organizationMembers` JOIN `users` WHERE `emailVerified IS NOT NULL`. Membros sem email verificado não recebem.
+- **Fire-and-forget:** `void Promise.allSettled(...)` — falha de email não bloqueia a resposta da rota nem cancela a aprovação.
+- **Campos n8n no template** (`title`, `description`, `flowName`, `filenames`) passam por `escapeHtml()` antes da interpolação — n8n é fonte autenticada mas não confiável para HTML.
+- **Adicionar novo tipo de email:** criar função `build*Html` + `send*Email` em `src/lib/email.ts` seguindo o mesmo padrão. Não chamar `resend` ou `nodemailer` diretamente — usar `sendEmail()` interno.
+
 ## Fluxos (n8n)
 
 - Criados/atualizados **exclusivamente pelo n8n** via webhook — nunca pelo usuário.

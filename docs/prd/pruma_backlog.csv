@@ -1,7 +1,7 @@
 name,reach,impact,confidence,effort,description,priority
 Login Google OAuth,1000,high,high,s,Adicionar login via Google para reduzir fricao no onboarding e aumentar conversao,entregue
 Avatar Google,500,low,high,xs,Exibir foto do Google na sidebar — dado ja capturado pelo DrizzleAdapter,entregue
-Email Aprovacao Pendente,900,massive,high,m,Notificar aprovadores por email quando nova aprovacao chega — sem isso o produto nao funciona standalone,p0
+Email Aprovacao Pendente,900,massive,high,m,Notificar aprovadores por email quando nova aprovacao chega — sem isso o produto nao funciona standalone,entregue
 Compliance LGPD Termos Privacidade DPA,1000,massive,high,m,Politica de privacidade + termos de uso + DPA para clientes B2B — obrigatorio por lei (LGPD),entregue
 Gestao Senha Recuperacao Troca,800,high,high,s,Recuperacao de senha via email + troca de senha para usuarios com credentials,entregue
 Verificacao Email Telefone,700,high,high,m,OTP por email no cadastro e OTP por SMS ao adicionar telefone — prerequisito para notificacoes e WhatsApp,p0

@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 import { approvals, approvalFiles } from "../../../../../../db/schema"
 import { eq, and } from "drizzle-orm"
 import { z } from "zod"
-import { validateCallbackUrl } from "@/lib/n8n"
+import { dispatchCallback } from "@/lib/n8n"
 
 const schema = z.object({
   comment: z.string().min(1, "Informe o motivo da rejeição"),
@@ -66,44 +66,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .from(approvalFiles)
       .where(eq(approvalFiles.approvalId, id))
 
-    if (!validateCallbackUrl(approval.callbackUrl)) {
-      console.error("[approval:reject] callbackUrl bloqueado por SSRF", {
-        approvalId: approval.id,
-        callbackUrl: approval.callbackUrl,
-      })
-      await db
-        .update(approvals)
-        .set({ callbackStatus: "blocked", updatedAt: new Date() })
-        .where(and(eq(approvals.id, id), eq(approvals.organizationId, session.user.organizationId)))
-    } else {
-      const callbackOk = await fetch(approval.callbackUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(5000),
-        body: JSON.stringify({
-          approvalId: approval.id,
-          status: "rejected",
-          resolvedBy: session.user.email,
-          comment,
-          decisionValues: decisionValues ?? null,
-          resolvedAt: new Date().toISOString(),
-          files: files.map(f => ({ r2Key: f.r2Key, filename: f.filename, mimeType: f.mimeType, sizeBytes: f.sizeBytes })),
-        }),
-      })
-        .then((r) => r.ok)
-        .catch((err) => {
-          console.error("[approval:reject] falha no callback n8n", {
-            approvalId: approval.id,
-            error: String(err),
-          })
-          return false
-        })
+    const callbackStatus = await dispatchCallback(approval.callbackUrl, {
+      approvalId: approval.id,
+      status: "rejected",
+      resolvedBy: session.user.email ?? null,
+      comment,
+      decisionValues: decisionValues ?? null,
+      resolvedAt: new Date().toISOString(),
+      files: files.map(f => ({ r2Key: f.r2Key, filename: f.filename, mimeType: f.mimeType, sizeBytes: f.sizeBytes })),
+    })
 
-      await db
-        .update(approvals)
-        .set({ callbackStatus: callbackOk ? "sent" : "failed", updatedAt: new Date() })
-        .where(and(eq(approvals.id, id), eq(approvals.organizationId, session.user.organizationId)))
-    }
+    await db
+      .update(approvals)
+      .set({ callbackStatus, updatedAt: new Date() })
+      .where(and(eq(approvals.id, id), eq(approvals.organizationId, session.user.organizationId)))
   }
 
   return NextResponse.json({ ok: true })

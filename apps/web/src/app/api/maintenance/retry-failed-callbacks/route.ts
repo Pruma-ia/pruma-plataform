@@ -3,7 +3,7 @@ import { db } from "@/lib/db"
 import { approvals, users, approvalFiles } from "../../../../../db/schema"
 import { eq, and, lt, isNotNull, sql, inArray } from "drizzle-orm"
 import { timingSafeEqual } from "crypto"
-import { validateCallbackUrl } from "@/lib/n8n"
+import { dispatchCallback } from "@/lib/n8n"
 
 const MAX_RETRIES = 5
 // Janela máxima: não tenta callbacks de aprovações resolvidas há mais de 48h
@@ -81,53 +81,31 @@ export async function GET(req: Request) {
   for (const approval of pending) {
     if (!approval.callbackUrl) continue
 
-    if (!validateCallbackUrl(approval.callbackUrl)) {
-      await db
-        .update(approvals)
-        .set({ callbackStatus: "blocked", updatedAt: new Date() })
-        .where(eq(approvals.id, approval.id))
-      results.blocked++
-      continue
-    }
-
     const approvalFilesList = filesByApprovalId.get(approval.id) ?? []
-    const ok = await fetch(approval.callbackUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(5000),
-      body: JSON.stringify({
-        approvalId: approval.id,
-        status: approval.status,
-        resolvedBy: approval.resolverEmail ?? null,
-        comment: approval.comment,
-        decisionValues: approval.decisionValues ?? null,
-        resolvedAt: approval.resolvedAt?.toISOString(),
-        files: approvalFilesList.map(f => ({ r2Key: f.r2Key, filename: f.filename, mimeType: f.mimeType, sizeBytes: f.sizeBytes })),
-        retried: true,
-      }),
+    const result = await dispatchCallback(approval.callbackUrl, {
+      approvalId: approval.id,
+      status: approval.status,
+      resolvedBy: approval.resolverEmail ?? null,
+      comment: approval.comment,
+      decisionValues: approval.decisionValues ?? null,
+      resolvedAt: approval.resolvedAt!.toISOString(),
+      files: approvalFilesList.map(f => ({ r2Key: f.r2Key, filename: f.filename, mimeType: f.mimeType, sizeBytes: f.sizeBytes })),
+      retried: true,
     })
-      .then((r) => r.ok)
-      .catch(() => false)
 
     const nextRetries = approval.callbackRetries + 1
 
-    if (ok) {
-      await db
-        .update(approvals)
-        .set({ callbackStatus: "sent", callbackRetries: nextRetries, updatedAt: new Date() })
-        .where(eq(approvals.id, approval.id))
+    if (result === "blocked") {
+      await db.update(approvals).set({ callbackStatus: "blocked", updatedAt: new Date() }).where(eq(approvals.id, approval.id))
+      results.blocked++
+    } else if (result === "sent") {
+      await db.update(approvals).set({ callbackStatus: "sent", callbackRetries: nextRetries, updatedAt: new Date() }).where(eq(approvals.id, approval.id))
       results.sent++
     } else if (nextRetries >= MAX_RETRIES) {
-      await db
-        .update(approvals)
-        .set({ callbackStatus: "exhausted", callbackRetries: nextRetries, updatedAt: new Date() })
-        .where(eq(approvals.id, approval.id))
+      await db.update(approvals).set({ callbackStatus: "exhausted", callbackRetries: nextRetries, updatedAt: new Date() }).where(eq(approvals.id, approval.id))
       results.exhausted++
     } else {
-      await db
-        .update(approvals)
-        .set({ callbackRetries: nextRetries, updatedAt: new Date() })
-        .where(eq(approvals.id, approval.id))
+      await db.update(approvals).set({ callbackRetries: nextRetries, updatedAt: new Date() }).where(eq(approvals.id, approval.id))
       results.failed++
     }
   }

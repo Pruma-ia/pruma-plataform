@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const mockValidateCallback = vi.fn()
-vi.mock("@/lib/n8n", () => ({ validateCallbackUrl: mockValidateCallback }))
+const mockDispatchCallback = vi.hoisted(() => vi.fn().mockResolvedValue("sent"))
+vi.mock("@/lib/n8n", () => ({ dispatchCallback: mockDispatchCallback }))
 
 const mockSelectPending = vi.fn()
 const mockSelectFiles = vi.fn()
@@ -53,11 +53,10 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.MAINTENANCE_SECRET = SECRET
-    mockValidateCallback.mockReturnValue(true)
+    mockDispatchCallback.mockResolvedValue("sent")
     mockUpdate.mockResolvedValue([])
     mockSelectPending.mockResolvedValue([])
     mockSelectFiles.mockResolvedValue([])
-    global.fetch = vi.fn().mockResolvedValue({ ok: true })
   })
 
   afterEach(() => {
@@ -102,7 +101,6 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
 
   it("marca 'sent' quando callback bem-sucedido", async () => {
     mockSelectPending.mockResolvedValue([makeApproval({ callbackRetries: 0 })])
-    global.fetch = vi.fn().mockResolvedValue({ ok: true })
     const { GET } = await import("./route")
     const res = await GET(makeRequest(SECRET))
     expect(res.status).toBe(200)
@@ -113,8 +111,8 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
   })
 
   it("mantém 'failed' quando callback falha e retries < MAX_RETRIES", async () => {
+    mockDispatchCallback.mockResolvedValue("failed")
     mockSelectPending.mockResolvedValue([makeApproval({ callbackRetries: 2 })]) // nextRetries=3 < 5
-    global.fetch = vi.fn().mockResolvedValue({ ok: false })
     const { GET } = await import("./route")
     const res = await GET(makeRequest(SECRET))
     const body = await res.json()
@@ -124,8 +122,8 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
   })
 
   it("marca 'exhausted' quando callback falha na última tentativa (MAX_RETRIES)", async () => {
+    mockDispatchCallback.mockResolvedValue("failed")
     mockSelectPending.mockResolvedValue([makeApproval({ callbackRetries: 4 })]) // nextRetries=5 = MAX_RETRIES
-    global.fetch = vi.fn().mockResolvedValue({ ok: false })
     const { GET } = await import("./route")
     const res = await GET(makeRequest(SECRET))
     const body = await res.json()
@@ -134,13 +132,13 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
   })
 
   it("marca 'blocked' quando callbackUrl falha validação SSRF", async () => {
-    mockValidateCallback.mockReturnValue(false)
+    mockDispatchCallback.mockResolvedValue("blocked")
     mockSelectPending.mockResolvedValue([makeApproval({ callbackUrl: "https://169.254.169.254/webhook" })])
     const { GET } = await import("./route")
     const res = await GET(makeRequest(SECRET))
     const body = await res.json()
     expect(body.blocked).toBe(1)
-    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockDispatchCallback).toHaveBeenCalled()
   })
 
   it("retorna contagens combinadas para múltiplas aprovações", async () => {
@@ -148,9 +146,9 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
       makeApproval({ id: "a1", callbackRetries: 0 }),
       makeApproval({ id: "a2", callbackRetries: 4 }),
     ])
-    global.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true })   // a1 → sent
-      .mockResolvedValueOnce({ ok: false })  // a2 → exhausted
+    mockDispatchCallback
+      .mockResolvedValueOnce("sent")    // a1 → sent
+      .mockResolvedValueOnce("failed")  // a2 → exhausted
     const { GET } = await import("./route")
     const res = await GET(makeRequest(SECRET))
     const body = await res.json()
@@ -169,12 +167,16 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
     })])
     const { GET } = await import("./route")
     await GET(makeRequest(SECRET))
-    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
-    expect(callBody.retried).toBe(true)
-    expect(callBody.approvalId).toBe("appr-1")
-    expect(callBody.status).toBe("approved")
-    expect(callBody.comment).toBe("ok")
-    expect(callBody.resolvedBy).toBe("resolver@example.com")
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        retried: true,
+        approvalId: "appr-1",
+        status: "approved",
+        comment: "ok",
+        resolvedBy: "resolver@example.com",
+      }),
+    )
   })
 
   it("inclui files e decisionValues no payload do retry callback", async () => {
@@ -184,26 +186,32 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
     mockSelectFiles.mockResolvedValue([file])
     const { GET } = await import("./route")
     await GET(makeRequest(SECRET))
-    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
-    expect(callBody.decisionValues).toEqual(decisionValues)
-    expect(callBody.files).toHaveLength(1)
-    expect(callBody.files[0].r2Key).toBe("org/uuid/doc.pdf")
-    expect(callBody.files[0].filename).toBe("doc.pdf")
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        decisionValues,
+        files: expect.arrayContaining([
+          expect.objectContaining({ r2Key: "org/uuid/doc.pdf", filename: "doc.pdf" }),
+        ]),
+      }),
+    )
   })
 
   it("envia resolvedBy:null quando resolver não encontrado (LEFT JOIN miss)", async () => {
     mockSelectPending.mockResolvedValue([makeApproval({ resolverEmail: null })])
     const { GET } = await import("./route")
     await GET(makeRequest(SECRET))
-    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
-    expect(callBody.resolvedBy).toBeNull()
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ resolvedBy: null }),
+    )
   })
 
   it("não dispara callback quando callbackUrl é nula (guard interno)", async () => {
     mockSelectPending.mockResolvedValue([makeApproval({ callbackUrl: null })])
     const { GET } = await import("./route")
     await GET(makeRequest(SECRET))
-    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockDispatchCallback).not.toHaveBeenCalled()
   })
 
   it("não processa approvals fora da janela de 48h (query retorna vazio)", async () => {
@@ -214,6 +222,6 @@ describe("GET /api/maintenance/retry-failed-callbacks", () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.processed).toBe(0)
-    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockDispatchCallback).not.toHaveBeenCalled()
   })
 })

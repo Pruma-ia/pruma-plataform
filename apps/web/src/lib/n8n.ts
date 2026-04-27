@@ -11,6 +11,39 @@ export function verifyN8nSecret(req: Request): boolean {
   }
 }
 
+export interface N8nCallbackPayload {
+  approvalId: string
+  status: string
+  resolvedBy: string | null
+  comment?: string | null
+  decisionValues?: Record<string, string> | null
+  resolvedAt: string
+  files: { r2Key: string; filename: string; mimeType: string; sizeBytes: number }[]
+  retried?: boolean
+}
+
+export async function dispatchCallback(
+  callbackUrl: string,
+  payload: N8nCallbackPayload
+): Promise<"sent" | "failed" | "blocked"> {
+  if (!validateCallbackUrl(callbackUrl)) {
+    console.error("[approval] callbackUrl bloqueado por SSRF", { approvalId: payload.approvalId, callbackUrl })
+    return "blocked"
+  }
+  const ok = await fetch(callbackUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(5000),
+    body: JSON.stringify(payload),
+  })
+    .then((r) => r.ok)
+    .catch((err) => {
+      console.error("[approval] falha no callback n8n", { approvalId: payload.approvalId, error: String(err) })
+      return false
+    })
+  return ok ? "sent" : "failed"
+}
+
 // Bloqueia URLs que apontam para redes privadas/internas (SSRF)
 const PRIVATE_PATTERNS = [
   /^localhost$/i,

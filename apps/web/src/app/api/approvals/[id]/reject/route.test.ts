@@ -14,8 +14,8 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("drizzle-orm", () => ({ eq: vi.fn(), and: vi.fn(), inArray: vi.fn() }))
 vi.mock("../../../../../../db/schema", () => ({ approvals: {}, approvalFiles: {} }))
-const mockValidateCallbackUrl = vi.hoisted(() => vi.fn(() => true))
-vi.mock("@/lib/n8n", () => ({ validateCallbackUrl: mockValidateCallbackUrl }))
+const mockDispatchCallback = vi.hoisted(() => vi.fn().mockResolvedValue("sent"))
+vi.mock("@/lib/n8n", () => ({ dispatchCallback: mockDispatchCallback }))
 
 function makeRequest(body: object = {}) {
   return new Request("http://localhost/api/approvals/test-id/reject", {
@@ -33,8 +33,7 @@ describe("POST /api/approvals/[id]/reject", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUpdate.mockResolvedValue([])
-    global.fetch = vi.fn().mockResolvedValue({ ok: true })
-    mockValidateCallbackUrl.mockReturnValue(true)
+    mockDispatchCallback.mockResolvedValue("sent")
   })
 
   it("retorna 401 sem sessão", async () => {
@@ -79,9 +78,10 @@ describe("POST /api/approvals/[id]/reject", () => {
     const { POST } = await import("./route")
     const res = await POST(makeRequest({ comment: "dados incorretos" }), makeParams())
     expect(res.status).toBe(200)
-    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
-    expect(callBody.status).toBe("rejected")
-    expect(callBody.comment).toBe("dados incorretos")
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ status: "rejected", comment: "dados incorretos" }),
+    )
   })
 
   it("retorna 422 quando campo required não preenchido ao rejeitar", async () => {
@@ -120,13 +120,25 @@ describe("POST /api/approvals/[id]/reject", () => {
       .mockResolvedValueOnce([file])
     const { POST } = await import("./route")
     await POST(makeRequest({ comment: "reprovado" }), makeParams())
-    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
-    expect(callBody.files).toHaveLength(1)
-    expect(callBody.files[0]).toEqual(file)
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ files: [file] }),
+    )
+  })
+
+  it("envia resolvedBy:null quando usuário não tem email", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "u1", organizationId: "org1" } }) // sem email
+    mockSelect.mockResolvedValue([{ id: "test-id", status: "pending", callbackUrl: "https://n8n.example.com/webhook/abc" }])
+    const { POST } = await import("./route")
+    await POST(makeRequest({ comment: "motivo" }), makeParams())
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ resolvedBy: null }),
+    )
   })
 
   it("marca callbackStatus='blocked' quando callbackUrl é privada (SSRF)", async () => {
-    mockValidateCallbackUrl.mockReturnValue(false)
+    mockDispatchCallback.mockResolvedValue("blocked")
     mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
     mockSelect.mockResolvedValue([{
       id: "test-id",
@@ -136,18 +148,18 @@ describe("POST /api/approvals/[id]/reject", () => {
     const { POST } = await import("./route")
     const res = await POST(makeRequest({ comment: "motivo" }), makeParams())
     expect(res.status).toBe(200)
-    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockDispatchCallback).toHaveBeenCalled()
     expect(mockUpdate).toHaveBeenCalled()
   })
 
   it("marca callbackStatus='failed' quando fetch lança (timeout/rede)", async () => {
+    mockDispatchCallback.mockResolvedValue("failed")
     mockAuth.mockResolvedValue({ user: { id: "u1", email: "user@test.com", organizationId: "org1" } })
     mockSelect.mockResolvedValue([{
       id: "test-id",
       status: "pending",
       callbackUrl: "https://n8n.example.com/webhook",
     }])
-    global.fetch = vi.fn().mockRejectedValue(new Error("AbortError: signal timed out"))
     const { POST } = await import("./route")
     const res = await POST(makeRequest({ comment: "motivo" }), makeParams())
     expect(res.status).toBe(200)
@@ -164,8 +176,9 @@ describe("POST /api/approvals/[id]/reject", () => {
     const { POST } = await import("./route")
     const decisionValues = { advogado: "adv-2" }
     await POST(makeRequest({ comment: "não aprovado", decisionValues }), makeParams())
-    const callBody = JSON.parse((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body)
-    expect(callBody.decisionValues).toEqual(decisionValues)
-    expect(callBody.status).toBe("rejected")
+    expect(mockDispatchCallback).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ decisionValues, status: "rejected" }),
+    )
   })
 })

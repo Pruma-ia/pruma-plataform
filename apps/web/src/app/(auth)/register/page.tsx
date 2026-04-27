@@ -24,6 +24,16 @@ export default function RegisterPage() {
   const [marketingConsent, setMarketingConsent] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [passwordFocused, setPasswordFocused] = useState(false)
+
+  const passwordRules = [
+    { label: "Mínimo 8 caracteres", met: form.password.length >= 8 },
+    { label: "Letra maiúscula", met: /[A-Z]/.test(form.password) },
+    { label: "Letra minúscula", met: /[a-z]/.test(form.password) },
+    { label: "Número", met: /\d/.test(form.password) },
+    { label: "Caractere especial (!@#$...)", met: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(form.password) },
+  ]
+  const passwordValid = passwordRules.every((r) => r.met)
 
   function update(key: string) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -130,10 +140,21 @@ export default function RegisterPage() {
             type="password"
             value={form.password}
             onChange={update("password")}
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={() => setPasswordFocused(false)}
             required
-            minLength={8}
             className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/70"
           />
+          {(passwordFocused || form.password.length > 0) && (
+            <ul className="mt-2 space-y-1">
+              {passwordRules.map((rule) => (
+                <li key={rule.label} className={`flex items-center gap-1.5 text-xs ${rule.met ? "text-green-400" : "text-white/40"}`}>
+                  <span>{rule.met ? "✓" : "○"}</span>
+                  {rule.label}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="space-y-3 pt-1">
           <label className="flex items-start gap-2.5 cursor-pointer">
@@ -170,7 +191,7 @@ export default function RegisterPage() {
         {error && <p className="text-sm text-red-400">{error}</p>}
         <button
           type="submit"
-          disabled={loading || !acceptedTerms}
+          disabled={loading || !acceptedTerms || !passwordValid}
           className="w-full rounded-lg bg-[#00AEEF] py-2.5 text-sm font-semibold text-white hover:bg-[#00AEEF]/90 disabled:opacity-60 transition-colors"
         >
           {loading ? "Criando conta..." : "Criar conta grátis"}

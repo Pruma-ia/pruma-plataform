@@ -8,7 +8,12 @@ import { z } from "zod"
 const schema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(8).regex(/[A-Z]/).regex(/[a-z]/).regex(/\d/).regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/),
+  password: z.string()
+    .min(8, "Mínimo 8 caracteres")
+    .regex(/[A-Z]/, "Pelo menos uma letra maiúscula")
+    .regex(/[a-z]/, "Pelo menos uma letra minúscula")
+    .regex(/\d/, "Pelo menos um número")
+    .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, "Pelo menos um caractere especial (!@#$...)"),
   organizationName: z.string().min(2),
   acceptedTerms: z.literal(true, { error: "Aceite dos termos é obrigatório" }),
   marketingConsent: z.boolean().default(false),
@@ -27,7 +32,12 @@ export async function POST(req: Request) {
   const body = await req.json()
   const parsed = schema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+    const flat = parsed.error.flatten()
+    const firstError =
+      Object.values(flat.fieldErrors).flat()[0] ??
+      flat.formErrors[0] ??
+      "Dados inválidos"
+    return NextResponse.json({ error: firstError }, { status: 400 })
   }
 
   const { name, email, password, organizationName, marketingConsent } = parsed.data

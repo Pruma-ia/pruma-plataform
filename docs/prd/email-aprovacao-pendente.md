@@ -1,6 +1,6 @@
 # PRD — Notificação por Email de Aprovação Pendente
 
-**Status:** 📋 Pronto para dev | **Prioridade:** P0 | **Esforço estimado:** M (3–4 dias) | **RICE Score:** 550
+**Status:** ✅ Entregue | **Prioridade:** P0 | **Esforço estimado:** M (3–4 dias) | **RICE Score:** 550
 
 ---
 

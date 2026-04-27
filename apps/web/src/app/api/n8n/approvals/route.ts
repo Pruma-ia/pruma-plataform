@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { approvals, approvalFiles, approvalFileUploads, flows, organizations, users } from "../../../../../db/schema"
-import { eq, and, inArray } from "drizzle-orm"
+import { approvals, approvalFiles, approvalFileUploads, flows, organizations, organizationMembers, users } from "../../../../../db/schema"
+import { eq, and, inArray, isNotNull } from "drizzle-orm"
 import { verifyN8nSecret, validateCallbackUrl } from "@/lib/n8n"
+import { sendApprovalNotificationEmail } from "@/lib/email"
 import { z } from "zod"
 
 const decisionOptionSchema = z.object({
@@ -90,6 +91,7 @@ export async function POST(req: Request) {
   }
 
   let flowId: string | undefined
+  let flowName: string | undefined
   if (prumaFlowId) {
     const [flow] = await db
       .select()
@@ -97,6 +99,7 @@ export async function POST(req: Request) {
       .where(and(eq(flows.organizationId, org.id), eq(flows.prumaFlowId, prumaFlowId)))
       .limit(1)
     flowId = flow?.id
+    flowName = flow?.name
   }
 
   // Valida r2Keys: devem pertencer à mesma org e estar com status "pending"
@@ -160,6 +163,30 @@ export async function POST(req: Request) {
       .set({ status: "confirmed" })
       .where(and(eq(approvalFileUploads.organizationId, org.id), inArray(approvalFileUploads.r2Key, files.map((f) => f.r2Key))))
   }
+
+  const members = await db
+    .select({ email: users.email, name: users.name })
+    .from(organizationMembers)
+    .innerJoin(users, eq(organizationMembers.userId, users.id))
+    .where(and(eq(organizationMembers.organizationId, org.id), isNotNull(users.emailVerified)))
+
+  void Promise.allSettled(
+    members.map((m) =>
+      sendApprovalNotificationEmail(m, {
+        approvalId: approval.id,
+        title,
+        flowName,
+        description,
+        filenames: files?.map((f) => f.filename),
+      })
+    )
+  ).then((results) => {
+    for (const r of results) {
+      if (r.status === "rejected") {
+        console.error("[email] falha ao notificar aprovação:", r.reason)
+      }
+    }
+  })
 
   return NextResponse.json({ ok: true, approvalId: approval.id })
 }

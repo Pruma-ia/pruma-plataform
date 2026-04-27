@@ -37,14 +37,20 @@ export default auth((req) => {
     }
   }
 
-  // ── Onboarding guard — usuário Google sem org ─────────────────────────────
+  // ── Onboarding guard — usuário sem org: só /onboarding (step 1) liberado ──
   if (session && !session.user.isSuperAdmin && !session.user.organizationId) {
-    if (!pathname.startsWith("/onboarding") && pathname !== "/api/auth/onboarding") {
+    if (pathname !== "/onboarding" && pathname !== "/api/auth/onboarding") {
       return NextResponse.redirect(new URL("/onboarding", req.url))
     }
   }
-  if (pathname.startsWith("/onboarding") && session?.user.organizationId) {
+  // Step 1 já cumprido: redireciona /onboarding para /dashboard
+  if (pathname === "/onboarding" && session?.user.organizationId) {
     return NextResponse.redirect(new URL("/dashboard", req.url))
+  }
+  // Step 2 (/onboarding/org-profile): requer auth + org criada
+  if (pathname.startsWith("/onboarding/org-profile")) {
+    if (!session) return NextResponse.redirect(new URL("/login", req.url))
+    if (!session.user.organizationId) return NextResponse.redirect(new URL("/onboarding", req.url))
   }
 
   // ── Proteção do painel admin ───────────────────────────────────────────────

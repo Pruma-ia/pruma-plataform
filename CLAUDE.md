@@ -44,10 +44,12 @@ Toda decisão de produto, negócio ou arquitetura:
 Nunca implementar features direto na `master`. Sequência:
 
 1. Commitar trabalho aberto na branch atual
-2. Criar branch `feat/<nome-da-feature>` antes de escrever qualquer código
+2. Criar branch `feat/<nome-da-feature>` **antes de escrever qualquer código** — sem exceção
 3. Mergar apenas via Pull Request
 
-**Rationale:** master deve refletir só código revisado. Feature branches isolam dev e permitem PR review antes de integrar.
+**Regra para o Claude:** ao iniciar qualquer feature, a primeira ação obrigatória é criar a branch. Antes de editar qualquer arquivo, checar `git branch --show-current`. Se estiver em `master`, criar branch imediatamente.
+
+**Rationale:** master deve refletir só código revisado. Feature branches isolam dev e permitem PR review antes de integrar. Mudança feita em master antes da branch = retrabalho de cherry-pick ou reset.
 
 ---
 

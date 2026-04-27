@@ -57,6 +57,21 @@ export async function POST(req: Request) {
 
   if (!org) return NextResponse.json({ error: "Organization not found" }, { status: 404 })
 
+  // Se org tem dados cadastrais completos, monta holderInfo automaticamente
+  const orgHolderInfo =
+    org.cnpj && org.addressZipCode && org.addressNumber
+      ? {
+          name: org.name,
+          email: session.user.email!,
+          cpfCnpj: org.cnpj,
+          postalCode: org.addressZipCode,
+          addressNumber: org.addressNumber,
+          phone: org.phone ?? undefined,
+        }
+      : undefined
+
+  const resolvedHolderInfo = holderInfo ?? orgHolderInfo
+
   // Cria ou recupera customer no Asaas
   let customerId = org.asaasCustomerId
   if (!customerId) {
@@ -79,7 +94,7 @@ export async function POST(req: Request) {
   }
 
   // Se não tiver dados de cartão, usa payment link
-  if (!creditCard || !holderInfo) {
+  if (!creditCard || !resolvedHolderInfo) {
     const link = await asaas.paymentLinks.create({
       name: `Pruma.ia - ${plan.label}`,
       description: `Assinatura mensal do plano ${plan.label}`,
@@ -111,12 +126,12 @@ export async function POST(req: Request) {
       ccv: creditCard.ccv,
     },
     creditCardHolderInfo: {
-      name: holderInfo.name,
-      email: holderInfo.email,
-      cpfCnpj: holderInfo.cpfCnpj,
-      postalCode: holderInfo.postalCode,
-      addressNumber: holderInfo.addressNumber,
-      phone: holderInfo.phone,
+      name: resolvedHolderInfo.name,
+      email: resolvedHolderInfo.email,
+      cpfCnpj: resolvedHolderInfo.cpfCnpj,
+      postalCode: resolvedHolderInfo.postalCode,
+      addressNumber: resolvedHolderInfo.addressNumber,
+      phone: resolvedHolderInfo.phone,
     },
     remoteIp,
   })

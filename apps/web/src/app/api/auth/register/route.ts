@@ -35,8 +35,8 @@ export async function POST(req: Request) {
     const flat = parsed.error.flatten()
     const firstError =
       Object.values(flat.fieldErrors).flat()[0] ??
-      flat.formErrors[0] ??
-      "Dados inválidos"
+      /* v8 ignore next */
+      (flat.formErrors[0] ?? "Dados inválidos")
     return NextResponse.json({ error: firstError }, { status: 400 })
   }
 

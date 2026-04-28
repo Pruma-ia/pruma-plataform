@@ -155,6 +155,21 @@ sed 's/-->.*//' db/migrations/<arquivo>.sql | docker exec -i pruma_db psql -U pr
 
 ---
 
+## Convenções de Formulários
+
+Todo formulário deve seguir estas regras — sem exceção:
+
+- **`htmlFor` + `id`**: cada `<label>` tem `htmlFor` apontando para o `id` do input correspondente. Screen readers dependem disso.
+- **`autoComplete`**: todo input de auth/dados pessoais declara o valor semântico correto:
+  - `name`, `email`, `organization`, `new-password`, `current-password`, `tel`, etc.
+  - Sem `autoComplete`, gerenciadores de senha e autofill do browser não funcionam.
+- **`role="alert"`**: mensagens de erro dinâmicas (state que aparece após ação do usuário) sempre com `role="alert"` — garante anúncio por leitores de tela.
+- **`aria-describedby`**: quando há texto auxiliar condicional (ex: lista de requisitos de senha), o input referencia o `id` desse bloco via `aria-describedby`. Só setar quando o bloco está visível.
+
+**Rationale:** Descoberto na revisão de `(auth)/register` e `(auth)/login` — nenhum input tinha `htmlFor`/`id`, erros não eram anunciados, autofill quebrado. Acessibilidade e UX básica, custo zero.
+
+---
+
 ## Identidade Visual
 
 Pruma IA colors (use by semantic name, never invent variants):

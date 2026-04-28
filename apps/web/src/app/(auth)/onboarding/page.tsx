@@ -27,7 +27,7 @@ export default function OnboardingPage() {
     }
 
     // Hard reload: força NextAuth a re-executar JWT callback, que agora encontra org criada
-    window.location.href = "/dashboard"
+    window.location.href = "/onboarding/org-profile"
   }
 
   return (

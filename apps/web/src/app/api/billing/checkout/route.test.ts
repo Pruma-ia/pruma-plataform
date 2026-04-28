@@ -152,4 +152,48 @@ describe("POST /api/billing/checkout", () => {
     expect(resBody.subscriptionId).toBe("sub_new")
     expect(mockAsaas.subscriptions.create).toHaveBeenCalled()
   })
+
+  it("usa dados cadastrais da org como holderInfo quando creditCard fornecido mas holderInfo não", async () => {
+    mockSelect.mockResolvedValue([{
+      ...org,
+      asaasCustomerId: "cus_stored",
+      cnpj: "12345678000195",
+      addressZipCode: "01310100",
+      addressNumber: "1000",
+      phone: null,
+    }])
+    const creditCard = { holderName: "Acme", number: "1234567890123456", expiryMonth: "12", expiryYear: "2027", ccv: "123" }
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ planId: "starter", billingType: "CREDIT_CARD", creditCard }))
+    expect(res.status).toBe(200)
+    expect(mockAsaas.subscriptions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        creditCardHolderInfo: expect.objectContaining({
+          cpfCnpj: "12345678000195",
+          addressNumber: "1000",
+          phone: undefined,
+        }),
+      })
+    )
+  })
+
+  it("usa dados cadastrais da org com phone quando disponível", async () => {
+    mockSelect.mockResolvedValue([{
+      ...org,
+      asaasCustomerId: "cus_stored",
+      cnpj: "12345678000195",
+      addressZipCode: "01310100",
+      addressNumber: "1000",
+      phone: "11999990000",
+    }])
+    const creditCard = { holderName: "Acme", number: "1234567890123456", expiryMonth: "12", expiryYear: "2027", ccv: "123" }
+    const { POST } = await import("./route")
+    const res = await POST(makeRequest({ planId: "starter", billingType: "CREDIT_CARD", creditCard }))
+    expect(res.status).toBe(200)
+    expect(mockAsaas.subscriptions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        creditCardHolderInfo: expect.objectContaining({ phone: "11999990000" }),
+      })
+    )
+  })
 })

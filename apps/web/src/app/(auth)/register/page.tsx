@@ -57,7 +57,7 @@ export default function RegisterPage() {
       password: form.password,
       redirect: false,
     })
-    router.push("/dashboard")
+    router.push("/onboarding/org-profile")
   }
 
   return (

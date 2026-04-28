@@ -50,6 +50,13 @@
       "when": 1777248327843,
       "tag": "0006_security_flowruns_composite_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777257413655,
+      "tag": "0007_org_cadastral_fields",
+      "breakpoints": true
     }
   ]
 }

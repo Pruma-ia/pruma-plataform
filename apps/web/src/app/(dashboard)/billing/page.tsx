@@ -20,10 +20,28 @@ export default async function BillingPage() {
   const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId))
   const statusInfo = statusLabels[org?.subscriptionStatus ?? "inactive"]
 
+  const profileIncomplete = !org?.cnpj || !org?.addressZipCode || !org?.addressNumber
+
   return (
     <div>
       <Header title="Plano & Cobrança" />
       <div className="p-6 space-y-6">
+        {/* Banner dados incompletos */}
+        {profileIncomplete && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-start gap-3">
+            <span className="text-amber-500 mt-0.5">⚠</span>
+            <div>
+              <p className="text-sm font-medium text-amber-800">Dados cadastrais incompletos</p>
+              <p className="text-sm text-amber-700 mt-0.5">
+                CNPJ e endereço são necessários para assinar.{" "}
+                <a href="/settings/organization" className="underline font-medium">
+                  Completar dados
+                </a>
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Status atual */}
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between">

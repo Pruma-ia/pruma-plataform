@@ -81,6 +81,15 @@ export const organizations = pgTable("organizations", {
   // URL base do n8n self-hosted — usada para validar callbackUrl nas approvals
   n8nBaseUrl: text("n8n_base_url"),
   logo: text("logo"),
+  // Dados cadastrais — coletados no onboarding step 2, usados para pré-preencher billing Asaas
+  cnpj: text("cnpj"),
+  phone: text("phone"),
+  addressStreet: text("address_street"),
+  addressNumber: text("address_number"),
+  addressComplement: text("address_complement"),
+  addressZipCode: text("address_zip_code"),
+  addressCity: text("address_city"),
+  addressState: text("address_state"),
   // Asaas
   asaasCustomerId: text("asaas_customer_id").unique(),
   asaasSubscriptionId: text("asaas_subscription_id"),

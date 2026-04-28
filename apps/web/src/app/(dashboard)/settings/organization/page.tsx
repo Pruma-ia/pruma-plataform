@@ -2,12 +2,14 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { organizations } from "../../../../../db/schema"
 import { eq } from "drizzle-orm"
+import { notFound } from "next/navigation"
 import { Header } from "@/components/dashboard/header"
 import { OrgProfileFormSettings } from "./org-profile-form-settings"
 
 export default async function OrganizationSettingsPage() {
   const session = await auth()
-  const orgId = session!.user.organizationId!
+  const orgId = session?.user?.organizationId
+  if (!orgId) return notFound()
 
   const [org] = await db
     .select({

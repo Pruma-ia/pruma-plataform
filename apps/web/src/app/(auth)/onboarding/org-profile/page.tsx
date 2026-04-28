@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { OrgProfileForm } from "@/components/org-profile-form"
 
 export default function OrgProfileOnboardingPage() {
+  const router = useRouter()
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 shadow-2xl w-full max-w-lg">
       <div className="mb-7 flex flex-col items-center gap-3">
@@ -23,8 +25,8 @@ export default function OrgProfileOnboardingPage() {
       </div>
 
       <OrgProfileForm
-        onSuccess={() => { window.location.href = "/dashboard" }}
-        onSkip={() => { window.location.href = "/dashboard" }}
+        onSuccess={() => router.push("/dashboard")}
+        onSkip={() => router.push("/dashboard")}
         theme="dark"
       />
     </div>

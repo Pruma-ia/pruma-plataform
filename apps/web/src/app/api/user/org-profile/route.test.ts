@@ -136,5 +136,26 @@ describe("PATCH /api/user/org-profile", () => {
     })
     const res = await PATCH(req)
     expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(typeof body.error).toBe("string")
+  })
+
+  it("returns 200 for admin role", async () => {
+    mockAuth.mockResolvedValue(session)
+    mockSelect.mockResolvedValue([{ role: "admin" }])
+    mockUpdate.mockResolvedValue([])
+    const req = new Request("http://localhost", {
+      method: "PATCH",
+      body: JSON.stringify({
+        cnpj: "12345678000195",
+        addressZipCode: "01310100",
+        addressStreet: "Av Paulista",
+        addressNumber: "1000",
+        addressCity: "São Paulo",
+        addressState: "SP",
+      }),
+    })
+    const res = await PATCH(req)
+    expect(res.status).toBe(200)
   })
 })

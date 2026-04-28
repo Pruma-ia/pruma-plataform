@@ -60,6 +60,20 @@ describe("POST /api/auth/register", () => {
     expect(res.status).toBe(400)
   })
 
+  it("retorna 400 com formError quando body não é objeto (ex: null)", async () => {
+    const { POST } = await import("./route")
+    const req = new Request("http://localhost/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "null",
+    })
+    const res = await POST(req)
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(typeof body.error).toBe("string")
+    expect(body.error.length).toBeGreaterThan(0)
+  })
+
   it("retorna 400 quando email inválido", async () => {
     const { POST } = await import("./route")
     const res = await POST(makeRequest({ ...validBody, email: "not-an-email" }))

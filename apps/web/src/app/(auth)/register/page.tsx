@@ -24,8 +24,18 @@ export default function RegisterPage() {
   const [marketingConsent, setMarketingConsent] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [passwordFocused, setPasswordFocused] = useState(false)
 
-  function update(key: string) {
+  const passwordRules = [
+    { label: "Mínimo 8 caracteres", met: form.password.length >= 8 },
+    { label: "Letra maiúscula", met: /[A-Z]/.test(form.password) },
+    { label: "Letra minúscula", met: /[a-z]/.test(form.password) },
+    { label: "Número", met: /\d/.test(form.password) },
+    { label: "Caractere especial (!@#$...)", met: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(form.password) },
+  ]
+  const passwordValid = passwordRules.every((r) => r.met)
+
+  function update(key: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((f) => ({ ...f, [key]: e.target.value }))
   }
@@ -93,47 +103,67 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-white/70 mb-1.5">Seu nome</label>
+          <label htmlFor="name" className="block text-xs font-medium text-white/70 mb-1.5">Seu nome</label>
           <input
+            id="name"
             type="text"
             value={form.name}
             onChange={update("name")}
             required
             minLength={2}
+            autoComplete="name"
             className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/70"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-white/70 mb-1.5">Nome da empresa / organização</label>
+          <label htmlFor="organizationName" className="block text-xs font-medium text-white/70 mb-1.5">Nome da empresa / organização</label>
           <input
+            id="organizationName"
             type="text"
             value={form.organizationName}
             onChange={update("organizationName")}
             required
             minLength={2}
+            autoComplete="organization"
             className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/70"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-white/70 mb-1.5">E-mail</label>
+          <label htmlFor="email" className="block text-xs font-medium text-white/70 mb-1.5">E-mail</label>
           <input
+            id="email"
             type="email"
             value={form.email}
             onChange={update("email")}
             required
+            autoComplete="email"
             className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/70"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-white/70 mb-1.5">Senha</label>
+          <label htmlFor="password" className="block text-xs font-medium text-white/70 mb-1.5">Senha</label>
           <input
+            id="password"
             type="password"
             value={form.password}
             onChange={update("password")}
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={() => setPasswordFocused(false)}
             required
-            minLength={8}
+            autoComplete="new-password"
+            aria-describedby={passwordFocused || form.password.length > 0 ? "password-rules" : undefined}
             className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/70"
           />
+          {(passwordFocused || form.password.length > 0) && (
+            <ul id="password-rules" className="mt-2 space-y-1">
+              {passwordRules.map((rule) => (
+                <li key={rule.label} className={`flex items-center gap-1.5 text-xs ${rule.met ? "text-green-400" : "text-white/40"}`}>
+                  <span>{rule.met ? "✓" : "○"}</span>
+                  {rule.label}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="space-y-3 pt-1">
           <label className="flex items-start gap-2.5 cursor-pointer">
@@ -167,10 +197,10 @@ export default function RegisterPage() {
             </span>
           </label>
         </div>
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
         <button
           type="submit"
-          disabled={loading || !acceptedTerms}
+          disabled={loading || !acceptedTerms || !passwordValid}
           className="w-full rounded-lg bg-[#00AEEF] py-2.5 text-sm font-semibold text-white hover:bg-[#00AEEF]/90 disabled:opacity-60 transition-colors"
         >
           {loading ? "Criando conta..." : "Criar conta grátis"}

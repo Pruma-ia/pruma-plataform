@@ -83,8 +83,11 @@ export default auth((req) => {
   }
 
   // ── Subscription guard — bloqueia acesso ao dashboard para contas canceladas ─
+  // /settings/organization liberado para contas bloqueadas: cliente precisa completar
+  // CNPJ/endereço antes de assinar — sem isso o link na billing page resulta em loop.
   const isGuardedRoute = GUARDED_PREFIXES.some((p) => pathname.startsWith(p))
-  if (isGuardedRoute && session && !session.user.isSuperAdmin) {
+  const isSettingsOrgException = pathname.startsWith("/settings/organization")
+  if (isGuardedRoute && !isSettingsOrgException && session && !session.user.isSuperAdmin) {
     const status = session.user.subscriptionStatus
     if (status && BLOCKED_STATUSES.has(status)) {
       return NextResponse.redirect(new URL("/billing", req.url))

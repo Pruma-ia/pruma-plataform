@@ -44,7 +44,7 @@ export default async function BillingPage() {
   return (
     <div>
       <Header title="Plano & Cobrança" />
-      <div className="p-6 space-y-6 max-w-3xl">
+      <div className="p-6 space-y-6 max-w-3xl mx-auto">
         {/* Banner dados incompletos */}
         {profileIncomplete && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-start gap-3">

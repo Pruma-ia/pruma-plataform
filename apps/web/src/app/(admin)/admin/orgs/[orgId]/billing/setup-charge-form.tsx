@@ -1,22 +1,34 @@
 "use client"
 
 import { useState } from "react"
+import { Loader2 } from "lucide-react"
 
 interface Props {
   orgId: string
   currentStatus: string | null
 }
 
+const inputCls =
+  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+
 export function SetupChargeForm({ orgId, currentStatus }: Props) {
   const [amount, setAmount] = useState("")
+  const [amountDisplay, setAmountDisplay] = useState("")
   const [installments, setInstallments] = useState("1")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, "")
+    setAmount(digits)
+    const num = parseInt(digits, 10)
+    setAmountDisplay(digits && num > 0 ? num.toLocaleString("pt-BR") : digits)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const amountNum = parseInt(amount.replace(/\D/g, ""), 10)
+    const amountNum = parseInt(amount, 10)
     if (!amountNum || amountNum < 1) {
       setError("Informe um valor válido.")
       return
@@ -58,7 +70,7 @@ export function SetupChargeForm({ orgId, currentStatus }: Props) {
 
   if (success) {
     return (
-      <p className="text-sm text-green-700 bg-green-50 rounded-lg px-4 py-3 border border-green-200">
+      <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-4 py-3 border border-emerald-200">
         Cobrança criada. O cliente verá o banner de pagamento.
       </p>
     )
@@ -75,10 +87,10 @@ export function SetupChargeForm({ orgId, currentStatus }: Props) {
             id="sc-amount"
             type="text"
             inputMode="numeric"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-[#00AEEF] focus:ring-2 focus:ring-[#00AEEF]/20"
-            placeholder="2000"
+            value={amountDisplay}
+            onChange={handleAmountChange}
+            className={inputCls}
+            placeholder="0"
           />
         </div>
         <div>
@@ -89,22 +101,17 @@ export function SetupChargeForm({ orgId, currentStatus }: Props) {
             id="sc-installments"
             value={installments}
             onChange={(e) => setInstallments(e.target.value)}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-[#00AEEF] focus:ring-2 focus:ring-[#00AEEF]/20"
+            className={inputCls}
           >
             {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n}x
-                {amount && parseInt(amount) > 0
-                  ? ` de R$ ${Math.ceil((parseInt(amount) / n) * 100) / 100}`
-                  : ""}
-              </option>
+              <option key={n} value={n}>{n}x</option>
             ))}
           </select>
         </div>
       </div>
 
       {error && (
-        <p role="alert" className="text-sm text-red-700 bg-red-50 rounded-lg px-3 py-2 border border-red-200">
+        <p role="alert" className="text-sm text-destructive bg-destructive/5 rounded-lg px-3 py-2 border border-destructive/20">
           {error}
         </p>
       )}
@@ -113,9 +120,16 @@ export function SetupChargeForm({ orgId, currentStatus }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-[#00AEEF] px-4 py-2 text-sm font-medium text-white hover:bg-[#0097d1] disabled:opacity-60 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
         >
-          {loading ? "Salvando..." : "Criar cobrança de setup"}
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              Salvando...
+            </>
+          ) : (
+            "Criar cobrança de setup"
+          )}
         </button>
 
         {currentStatus === "pending" && (
@@ -123,7 +137,7 @@ export function SetupChargeForm({ orgId, currentStatus }: Props) {
             type="button"
             onClick={handleCancel}
             disabled={loading}
-            className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-60 transition-colors"
+            className="rounded-lg border border-input px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-60 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
           >
             Cancelar cobrança
           </button>

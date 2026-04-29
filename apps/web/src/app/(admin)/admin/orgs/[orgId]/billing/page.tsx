@@ -79,13 +79,31 @@ export default async function AdminOrgBilling({
           )}
 
           {org?.setupChargeStatus === "pending" && (
-            <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-4 py-3 border border-amber-200 mb-4">
-              Cobrança pendente:{" "}
-              {org.setupChargeAmount != null
-                ? org.setupChargeAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-                : "—"}{" "}
-              em {org.setupChargeInstallments}x. Cliente ainda não pagou.
-            </p>
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 space-y-3">
+              <p className="text-sm text-amber-700">
+                <span className="font-medium">Cobrança pendente:</span>{" "}
+                {org.setupChargeAmount != null
+                  ? org.setupChargeAmount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                  : "—"}{" "}
+                em {org.setupChargeInstallments}x. Cliente ainda não pagou.
+              </p>
+              <div>
+                <p className="text-xs font-medium text-amber-800 mb-2">Entregas comprometidas:</p>
+                <ol className="space-y-1">
+                  {[
+                    { num: "01", label: "Diagnóstico — mapeamento de gargalos da operação" },
+                    { num: "02", label: "Construção — automações sob medida" },
+                    { num: "03", label: "Validação — ajustes até funcionar como esperado" },
+                    { num: "04", label: "Operação Fluida — manutenção e evolução contínua" },
+                  ].map((d) => (
+                    <li key={d.num} className="flex items-start gap-2 text-xs text-amber-700">
+                      <span className="font-bold shrink-0">{d.num}</span>
+                      {d.label}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
           )}
 
           {(!org?.setupChargeStatus || org.setupChargeStatus !== "paid") && (

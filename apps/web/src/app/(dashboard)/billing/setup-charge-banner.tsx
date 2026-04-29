@@ -15,7 +15,6 @@ function formatBRL(value: number) {
 
 export function SetupChargeBanner({ amount, installments, profileIncomplete }: Props) {
   const [open, setOpen] = useState(false)
-  const installmentValue = Math.ceil((amount / installments) * 100) / 100
 
   return (
     <>
@@ -23,8 +22,7 @@ export function SetupChargeBanner({ amount, installments, profileIncomplete }: P
         <div>
           <p className="text-sm font-medium text-primary">Taxa de setup pendente</p>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {formatBRL(amount)}{" "}
-            {installments > 1 && `— ${installments}x de ${formatBRL(installmentValue)}`}
+            {formatBRL(amount)}{installments > 1 && ` — ${installments}x`}
           </p>
         </div>
         <button

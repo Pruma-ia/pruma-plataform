@@ -11,6 +11,7 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   profileIncomplete: boolean
+  onSuccess?: () => void
 }
 
 function formatBRL(value: number) {
@@ -23,6 +24,7 @@ export function SetupChargeModal({
   isOpen,
   onClose,
   profileIncomplete,
+  onSuccess,
 }: Props) {
   const [step, setStep] = useState<Step>("card-form")
   const [error, setError] = useState<string | null>(null)
@@ -348,7 +350,8 @@ export function SetupChargeModal({
                 type="button"
                 onClick={() => {
                   handleClose()
-                  window.location.reload()
+                  if (onSuccess) onSuccess()
+                  else window.location.reload()
                 }}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
               >

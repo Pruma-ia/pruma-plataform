@@ -5,7 +5,8 @@ import { eq } from "drizzle-orm"
 import { AlertTriangle } from "lucide-react"
 import { Header } from "@/components/dashboard/header"
 import { BillingPlans } from "./billing-plans"
-import { SetupChargeBanner } from "./setup-charge-banner"
+import { BillingBundle } from "./billing-bundle"
+import { redirect } from "next/navigation"
 
 const statusLabels: Record<string, { label: string; className: string }> = {
   active: { label: "Ativo", className: "text-emerald-700 bg-emerald-50 border-emerald-200" },
@@ -24,7 +25,8 @@ function trialDaysRemaining(endsAt: Date | null): number | null {
 
 export default async function BillingPage() {
   const session = await auth()
-  const orgId = session!.user.organizationId!
+  const orgId = session?.user?.organizationId
+  if (!orgId) redirect("/dashboard")
 
   const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId))
   const statusInfo = statusLabels[org?.subscriptionStatus ?? "inactive"]
@@ -45,8 +47,8 @@ export default async function BillingPage() {
     <div>
       <Header title="Plano & Cobrança" />
       <div className="p-6 space-y-6 max-w-3xl mx-auto">
-        {/* Banner dados incompletos */}
-        {profileIncomplete && (
+        {/* Banner dados incompletos — só quando não há setup (bundle já trata internamente) */}
+        {profileIncomplete && !hasSetupCharge && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-start gap-3">
             <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" aria-hidden="true" />
             <div>
@@ -61,50 +63,50 @@ export default async function BillingPage() {
           </div>
         )}
 
-        {/* Banner taxa de setup pendente */}
-        {hasSetupCharge && (
-          <SetupChargeBanner
-            amount={org.setupChargeAmount!}
-            installments={org.setupChargeInstallments!}
-            profileIncomplete={profileIncomplete}
-          />
-        )}
-
-        {/* Status atual */}
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-6">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Status da assinatura</p>
-              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium ${statusInfo.className}`}>
-                {statusInfo.label}
-              </span>
-              {isTrial && trialEndsFormatted && (
-                <div className="space-y-0.5">
-                  <p className="text-sm text-muted-foreground">
-                    Período de teste encerra em{" "}
-                    <span className="font-medium text-foreground">{trialEndsFormatted}</span>
-                  </p>
-                  {daysLeft !== null && daysLeft <= 7 && (
-                    <p className="text-sm font-medium text-amber-600">
-                      {daysLeft === 0
-                        ? "Expira hoje — assine para continuar."
-                        : `${daysLeft} dia${daysLeft > 1 ? "s" : ""} restante${daysLeft > 1 ? "s" : ""}.`}
+        {/* Status atual — só quando não há setup charge pendente */}
+        {!hasSetupCharge && (
+          <div className="rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-6">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Status da assinatura</p>
+                <span className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium ${statusInfo.className}`}>
+                  {statusInfo.label}
+                </span>
+                {isTrial && trialEndsFormatted && (
+                  <div className="space-y-0.5">
+                    <p className="text-sm text-muted-foreground">
+                      Período de teste encerra em{" "}
+                      <span className="font-medium text-foreground">{trialEndsFormatted}</span>
                     </p>
-                  )}
+                    {daysLeft !== null && daysLeft <= 7 && (
+                      <p className="text-sm font-medium text-amber-600">
+                        {daysLeft === 0
+                          ? "Expira hoje — assine para continuar."
+                          : `${daysLeft} dia${daysLeft > 1 ? "s" : ""} restante${daysLeft > 1 ? "s" : ""}.`}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+              {org?.asaasPlanId && (
+                <div className="text-right shrink-0">
+                  <p className="text-sm text-muted-foreground">Plano atual</p>
+                  <p className="font-semibold capitalize text-primary">{org.asaasPlanId}</p>
                 </div>
               )}
             </div>
-            {org?.asaasPlanId && (
-              <div className="text-right shrink-0">
-                <p className="text-sm text-muted-foreground">Plano atual</p>
-                <p className="font-semibold capitalize text-primary">{org.asaasPlanId}</p>
-              </div>
-            )}
           </div>
-        </div>
+        )}
 
-        {/* Plano */}
-        <BillingPlans currentPlan={org?.asaasPlanId ?? null} profileIncomplete={profileIncomplete} />
+        {/* Setup + plano unificados (bundle lado a lado) ou só plano */}
+        {hasSetupCharge ? (
+          <BillingBundle
+            amount={org.setupChargeAmount!}
+            installments={org.setupChargeInstallments!}
+          />
+        ) : (
+          <BillingPlans currentPlan={org?.asaasPlanId ?? null} profileIncomplete={profileIncomplete} />
+        )}
       </div>
     </div>
   )

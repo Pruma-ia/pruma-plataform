@@ -22,6 +22,7 @@ export default defineConfig({
         "src/lib/email.ts",
         "src/lib/password-rules.ts",
         "src/app/api/auth/\\[...nextauth\\]/route.ts",
+        "src/instrumentation.ts",
       ],
       thresholds: {
         lines: 100,

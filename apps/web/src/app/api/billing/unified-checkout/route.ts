@@ -31,8 +31,10 @@ export async function POST(req: Request) {
   }
 
   const { creditCard } = parsed.data
-  const remoteIp = req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim()
-    ?? req.headers.get("x-real-ip") ?? undefined
+  const remoteIp =
+    req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ??
+    req.headers.get("x-real-ip") ??
+    undefined
 
   const [org] = await db
     .select()
@@ -43,12 +45,12 @@ export async function POST(req: Request) {
 
   if (!org.cnpj || !org.addressZipCode || !org.addressNumber) {
     return NextResponse.json(
-      { error: "Complete o cadastro da organização (CNPJ e endereço) antes de assinar." },
+      { error: "Complete o cadastro da organização (CNPJ e endereço) antes de contratar." },
       { status: 400 }
     )
   }
 
-  // Cria ou recupera customer no Asaas
+  // Resolve ou cria customer Asaas
   let customerId = org.asaasCustomerId
   if (!customerId) {
     const { data: existing } = await asaas.customers.find(session.user.email!)
@@ -62,13 +64,62 @@ export async function POST(req: Request) {
       })
       customerId = customer.id
     }
-
     await db
       .update(organizations)
       .set({ asaasCustomerId: customerId })
       .where(eq(organizations.id, org.id))
   }
 
+  const holderInfo = {
+    name: org.name,
+    email: session.user.email!,
+    cpfCnpj: org.cnpj,
+    postalCode: org.addressZipCode,
+    addressNumber: org.addressNumber,
+    phone: org.phone ?? undefined,
+  }
+
+  const card = {
+    holderName: creditCard.holderName,
+    number: creditCard.number,
+    expiryMonth: creditCard.expiryMonth,
+    expiryYear: creditCard.expiryYear,
+    ccv: creditCard.ccv,
+  }
+
+  // Setup charge — só processa se ainda pendente (idempotente em retry)
+  const hasPendingSetup =
+    org.setupChargeStatus === "pending" &&
+    org.setupChargeAmount != null &&
+    org.setupChargeInstallments != null
+
+  if (hasPendingSetup) {
+    const dueDateStr = new Date().toISOString().split("T")[0]
+
+    const totalAmount = org.setupChargeAmount!
+    const installments = org.setupChargeInstallments!
+    const installmentValue = Math.ceil((totalAmount / installments) * 100) / 100
+
+    const payment = await asaas.payments.create({
+      customer: customerId,
+      billingType: "CREDIT_CARD",
+      value: totalAmount,
+      dueDate: dueDateStr,
+      description: "Taxa de setup - Pruma.ia",
+      installmentCount: installments > 1 ? installments : undefined,
+      installmentValue: installments > 1 ? installmentValue : undefined,
+      creditCard: card,
+      creditCardHolderInfo: holderInfo,
+      remoteIp,
+    })
+
+    await db
+      .update(organizations)
+      .set({ setupChargeAsaasId: payment.id, setupChargeStatus: "paid" })
+      .where(eq(organizations.id, org.id))
+  }
+
+  // Assinatura mensal
   const nextDueDateStr = new Date().toISOString().split("T")[0]
 
   const subscription = await asaas.subscriptions.create({
@@ -78,21 +129,8 @@ export async function POST(req: Request) {
     nextDueDate: nextDueDateStr,
     cycle: "MONTHLY",
     description: `Plano ${PLAN.label} - Pruma.ia`,
-    creditCard: {
-      holderName: creditCard.holderName,
-      number: creditCard.number,
-      expiryMonth: creditCard.expiryMonth,
-      expiryYear: creditCard.expiryYear,
-      ccv: creditCard.ccv,
-    },
-    creditCardHolderInfo: {
-      name: org.name,
-      email: session.user.email!,
-      cpfCnpj: org.cnpj,
-      postalCode: org.addressZipCode,
-      addressNumber: org.addressNumber,
-      phone: org.phone ?? undefined,
-    },
+    creditCard: card,
+    creditCardHolderInfo: holderInfo,
     remoteIp,
   })
 

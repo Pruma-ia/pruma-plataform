@@ -49,7 +49,11 @@ export default auth((req) => {
   }
 
   // ── Rate limiting em billing — 5 req/min por IP ────────────────────────────
-  if (pathname === "/api/billing/checkout") {
+  if (
+    pathname === "/api/billing/checkout" ||
+    pathname === "/api/billing/unified-checkout" ||
+    pathname === "/api/billing/setup-charge/pay"
+  ) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
     if (isRateLimited(billingRateMap, ip, 5, 60_000)) {
       return new NextResponse("Too Many Requests", { status: 429 })
@@ -110,5 +114,7 @@ export const config = {
     "/api/n8n/:path*",
     "/api/user/:path*",
     "/api/billing/checkout",
+    "/api/billing/unified-checkout",
+    "/api/billing/setup-charge/pay",
   ],
 }

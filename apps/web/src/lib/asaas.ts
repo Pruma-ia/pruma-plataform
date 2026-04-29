@@ -95,6 +95,37 @@ export const asaas = {
       asaasRequest(`/subscriptions/${id}`, { method: "DELETE" }),
   },
 
+  webhooks: {
+    register: (data: {
+      url: string
+      email: string
+      authToken: string
+      events?: string[]
+    }) =>
+      asaasRequest("/webhooks", {
+        method: "POST",
+        body: JSON.stringify({
+          name: "Pruma IA",
+          url: data.url,
+          email: data.email,
+          sendType: "SEQUENTIALLY",
+          apiVersion: 3,
+          enabled: true,
+          interrupted: false,
+          authToken: data.authToken,
+          events: data.events ?? [
+            "PAYMENT_CONFIRMED",
+            "PAYMENT_RECEIVED",
+            "PAYMENT_OVERDUE",
+            "PAYMENT_DELETED",
+            "SUBSCRIPTION_DELETED",
+          ],
+        }),
+      }),
+
+    list: () => asaasRequest<{ data: object[] }>("/webhooks"),
+  },
+
   payments: {
     list: (subscriptionId: string) =>
       asaasRequest<{ data: AsaasPayment[] }>(

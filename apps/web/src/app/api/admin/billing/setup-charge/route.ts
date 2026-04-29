@@ -51,6 +51,12 @@ export async function DELETE(req: Request) {
   const orgId = searchParams.get("orgId")
   if (!orgId) return NextResponse.json({ error: "orgId required" }, { status: 400 })
 
+  const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId))
+  if (!org) return NextResponse.json({ error: "Organization not found" }, { status: 404 })
+  if (org.setupChargeStatus === "paid") {
+    return NextResponse.json({ error: "Setup charge already paid — cannot remove." }, { status: 409 })
+  }
+
   await db
     .update(organizations)
     .set({

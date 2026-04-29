@@ -42,9 +42,15 @@ describe("GET /api/maintenance/expire-trials", () => {
     expect(res.status).toBe(401)
   })
 
-  it("retorna 401 com secret errado", async () => {
+  it("retorna 401 com secret errado (mesmo comprimento — cobre branch timingSafeEqual false)", async () => {
     const { GET } = await import("./route")
-    const res = await GET(makeRequest("wrong-secret"))
+    const res = await GET(makeRequest("xxxx-xxxxxx"))
+    expect(res.status).toBe(401)
+  })
+
+  it("retorna 401 com secret de comprimento diferente (cobre catch do timingSafeEqual)", async () => {
+    const { GET } = await import("./route")
+    const res = await GET(makeRequest("wrong-secret-length"))
     expect(res.status).toBe(401)
   })
 

@@ -96,6 +96,11 @@ export const organizations = pgTable("organizations", {
   asaasPlanId: text("asaas_plan_id"),
   subscriptionStatus: subscriptionStatusEnum("subscription_status").default("trial").notNull(),
   subscriptionEndsAt: timestamp("subscription_ends_at"),
+  // Setup charge (cobrado pelo superadmin, pago pelo cliente parcelado no cartão)
+  setupChargeAsaasId: text("setup_charge_asaas_id"),
+  setupChargeAmount: integer("setup_charge_amount"),
+  setupChargeInstallments: integer("setup_charge_installments"),
+  setupChargeStatus: text("setup_charge_status"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })

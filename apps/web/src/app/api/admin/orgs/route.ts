@@ -70,9 +70,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "n8nSlug já está em uso por outra organização" }, { status: 409 })
   }
 
+  const trialEndsAt = new Date()
+  trialEndsAt.setDate(trialEndsAt.getDate() + 14)
+
   const [org] = await db
     .insert(organizations)
-    .values({ name, slug, n8nSlug, n8nBaseUrl })
+    .values({ name, slug, n8nSlug, n8nBaseUrl, subscriptionEndsAt: trialEndsAt })
     .returning()
 
   // Token raw nunca é salvo — apenas o hash SHA-256

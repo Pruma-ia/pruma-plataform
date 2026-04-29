@@ -20,3 +20,4 @@ Notificacao InApp,700,medium,high,m,Bell icon com contador de nao-lidas e dropdo
 WhatsApp Notificacao Aprovacao,800,massive,medium,l,Notificacao e aprovacao via WhatsApp com numero verificado Pruma + link assinado JWT,p2
 Refactor Fluxos em Execucao,500,high,medium,l,Refatorar modulo de flow runs para melhorar performance e manutenibilidade do codigo,p2
 2FA Autenticacao Dois Fatores,400,high,medium,l,TOTP via Google Authenticator para usuarios credentials — obrigatorio configuravel por org,p3
+Historico de Cobranças,600,medium,high,s,Listar faturas e pagamentos passados na pagina de billing — cliente audita cobranças e baixa comprovantes via Asaas GET /payments,p2

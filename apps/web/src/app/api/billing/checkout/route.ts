@@ -7,31 +7,16 @@ import { asaas } from "@/lib/asaas"
 import { z } from "zod"
 
 const schema = z.object({
-  planId: z.enum(["starter", "pro", "enterprise"]),
-  billingType: z.enum(["CREDIT_CARD", "BOLETO", "PIX"]).default("CREDIT_CARD"),
-  // Para crédito direto (não obrigatório se usar payment link)
   creditCard: z.object({
     holderName: z.string(),
     number: z.string(),
     expiryMonth: z.string(),
     expiryYear: z.string(),
     ccv: z.string(),
-  }).optional(),
-  holderInfo: z.object({
-    name: z.string(),
-    email: z.string().email(),
-    cpfCnpj: z.string(),
-    postalCode: z.string(),
-    addressNumber: z.string(),
-    phone: z.string().optional(),
-  }).optional(),
+  }),
 })
 
-const PLANS = {
-  starter: { value: 97, label: "Starter" },
-  pro: { value: 297, label: "Pro" },
-  enterprise: { value: 997, label: "Enterprise" },
-}
+const PLAN = { value: 990, label: "Pro" }
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -45,10 +30,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { planId, billingType, creditCard, holderInfo } = parsed.data
+  const { creditCard } = parsed.data
   const remoteIp = req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim()
     ?? req.headers.get("x-real-ip") ?? undefined
-  const plan = PLANS[planId]
 
   const [org] = await db
     .select()
@@ -57,20 +41,12 @@ export async function POST(req: Request) {
 
   if (!org) return NextResponse.json({ error: "Organization not found" }, { status: 404 })
 
-  // Se org tem dados cadastrais completos, monta holderInfo automaticamente
-  const orgHolderInfo =
-    org.cnpj && org.addressZipCode && org.addressNumber
-      ? {
-          name: org.name,
-          email: session.user.email!,
-          cpfCnpj: org.cnpj,
-          postalCode: org.addressZipCode,
-          addressNumber: org.addressNumber,
-          phone: org.phone ?? undefined,
-        }
-      : undefined
-
-  const resolvedHolderInfo = holderInfo ?? orgHolderInfo
+  if (!org.cnpj || !org.addressZipCode || !org.addressNumber) {
+    return NextResponse.json(
+      { error: "Complete o cadastro da organização (CNPJ e endereço) antes de assinar." },
+      { status: 400 }
+    )
+  }
 
   // Cria ou recupera customer no Asaas
   let customerId = org.asaasCustomerId
@@ -82,7 +58,7 @@ export async function POST(req: Request) {
       const customer = await asaas.customers.create({
         name: org.name,
         email: session.user.email!,
-        cpfCnpj: holderInfo?.cpfCnpj,
+        cpfCnpj: org.cnpj,
       })
       customerId = customer.id
     }
@@ -93,31 +69,15 @@ export async function POST(req: Request) {
       .where(eq(organizations.id, org.id))
   }
 
-  // Se não tiver dados de cartão, usa payment link
-  if (!creditCard || !resolvedHolderInfo) {
-    const link = await asaas.paymentLinks.create({
-      name: `Pruma.ia - ${plan.label}`,
-      description: `Assinatura mensal do plano ${plan.label}`,
-      value: plan.value,
-      billingType,
-      chargeType: "RECURRENT",
-      subscriptionCycle: "MONTHLY",
-      notificationEnabled: true,
-    })
-    return NextResponse.json({ url: link.url })
-  }
-
-  // Cria assinatura direta com cartão
-  const nextDueDate = new Date()
-  nextDueDate.setDate(nextDueDate.getDate() + 1)
+  const nextDueDateStr = new Date().toISOString().split("T")[0]
 
   const subscription = await asaas.subscriptions.create({
     customer: customerId,
-    billingType,
-    value: plan.value,
-    nextDueDate: nextDueDate.toISOString().split("T")[0],
+    billingType: "CREDIT_CARD",
+    value: PLAN.value,
+    nextDueDate: nextDueDateStr,
     cycle: "MONTHLY",
-    description: `Plano ${plan.label} - Pruma.ia`,
+    description: `Plano ${PLAN.label} - Pruma.ia`,
     creditCard: {
       holderName: creditCard.holderName,
       number: creditCard.number,
@@ -126,12 +86,12 @@ export async function POST(req: Request) {
       ccv: creditCard.ccv,
     },
     creditCardHolderInfo: {
-      name: resolvedHolderInfo.name,
-      email: resolvedHolderInfo.email,
-      cpfCnpj: resolvedHolderInfo.cpfCnpj,
-      postalCode: resolvedHolderInfo.postalCode,
-      addressNumber: resolvedHolderInfo.addressNumber,
-      phone: resolvedHolderInfo.phone,
+      name: org.name,
+      email: session.user.email!,
+      cpfCnpj: org.cnpj,
+      postalCode: org.addressZipCode,
+      addressNumber: org.addressNumber,
+      phone: org.phone ?? undefined,
     },
     remoteIp,
   })
@@ -140,8 +100,9 @@ export async function POST(req: Request) {
     .update(organizations)
     .set({
       asaasSubscriptionId: subscription.id,
-      asaasPlanId: planId,
+      asaasPlanId: "pro",
       subscriptionStatus: "active",
+      subscriptionEndsAt: null,
     })
     .where(eq(organizations.id, org.id))
 

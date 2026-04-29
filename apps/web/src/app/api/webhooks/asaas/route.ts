@@ -15,16 +15,21 @@ function verifyWebhookToken(req: Request): boolean {
   }
 }
 
-function mapAsaasStatus(event: string): "active" | "past_due" | "canceled" | "inactive" | null {
+type StatusUpdate = {
+  subscriptionStatus: "active" | "past_due" | "canceled" | "inactive"
+  subscriptionEndsAt?: Date | null
+}
+
+function mapAsaasEvent(event: string): StatusUpdate | null {
   switch (event) {
     case "PAYMENT_CONFIRMED":
     case "PAYMENT_RECEIVED":
-      return "active"
+      return { subscriptionStatus: "active", subscriptionEndsAt: null }
     case "PAYMENT_OVERDUE":
-      return "past_due"
+      return { subscriptionStatus: "past_due" }
     case "SUBSCRIPTION_DELETED":
     case "PAYMENT_DELETED":
-      return "canceled"
+      return { subscriptionStatus: "canceled", subscriptionEndsAt: new Date() }
     default:
       return null
   }
@@ -44,17 +49,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true })
   }
 
-  const newStatus = mapAsaasStatus(event)
-  if (!newStatus) {
+  const update = mapAsaasEvent(event)
+  if (!update) {
     return NextResponse.json({ ok: true })
   }
 
   await db
     .update(organizations)
-    .set({
-      subscriptionStatus: newStatus,
-      updatedAt: new Date(),
-    })
+    .set({ ...update, updatedAt: new Date() })
     .where(eq(organizations.asaasSubscriptionId, asaasSubscriptionId))
 
   return NextResponse.json({ ok: true })

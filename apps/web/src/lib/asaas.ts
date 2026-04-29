@@ -36,6 +36,30 @@ export interface AsaasSubscription {
   cycle: string
 }
 
+export interface AsaasPayment {
+  id: string
+  status: string
+  billingType: string
+  dueDate: string
+  bankSlipUrl?: string
+  invoiceUrl?: string
+  pixTransaction?: {
+    qrCode: {
+      encodedImage: string
+      payload: string
+    }
+  }
+}
+
+export interface AsaasInstallmentPayment {
+  id: string
+  status: string
+  billingType: string
+  value: number
+  dueDate: string
+  installmentCount?: number
+}
+
 export const asaas = {
   customers: {
     create: (data: { name: string; email: string; cpfCnpj?: string }) =>
@@ -51,7 +75,7 @@ export const asaas = {
   subscriptions: {
     create: (data: {
       customer: string
-      billingType: "CREDIT_CARD" | "BOLETO" | "PIX"
+      billingType: "CREDIT_CARD"
       value: number
       nextDueDate: string
       cycle: "MONTHLY" | "YEARLY"
@@ -71,17 +95,56 @@ export const asaas = {
       asaasRequest(`/subscriptions/${id}`, { method: "DELETE" }),
   },
 
-  paymentLinks: {
-    create: (data: {
-      name: string
-      description?: string
-      value: number
-      billingType: string
-      chargeType: "RECURRENT" | "INSTALLMENT" | "DETACHED"
-      subscriptionCycle?: "MONTHLY" | "YEARLY"
-      notificationEnabled?: boolean
+  webhooks: {
+    register: (data: {
+      url: string
+      email: string
+      authToken: string
+      events?: string[]
     }) =>
-      asaasRequest<{ id: string; url: string }>("/paymentLinks", {
+      asaasRequest("/webhooks", {
+        method: "POST",
+        body: JSON.stringify({
+          name: "Pruma IA",
+          url: data.url,
+          email: data.email,
+          sendType: "SEQUENTIALLY",
+          apiVersion: 3,
+          enabled: true,
+          interrupted: false,
+          authToken: data.authToken,
+          events: data.events ?? [
+            "PAYMENT_CONFIRMED",
+            "PAYMENT_RECEIVED",
+            "PAYMENT_OVERDUE",
+            "PAYMENT_DELETED",
+            "SUBSCRIPTION_DELETED",
+          ],
+        }),
+      }),
+
+    list: () => asaasRequest<{ data: object[] }>("/webhooks"),
+  },
+
+  payments: {
+    list: (subscriptionId: string) =>
+      asaasRequest<{ data: AsaasPayment[] }>(
+        `/payments?subscription=${encodeURIComponent(subscriptionId)}&limit=1`
+      ),
+
+    create: (data: {
+      customer: string
+      billingType: "CREDIT_CARD"
+      value: number
+      dueDate: string
+      description?: string
+      installmentCount?: number
+      installmentValue?: number
+      creditCard: object
+      creditCardHolderInfo: object
+      remoteIp?: string
+    }) =>
+      asaasRequest<AsaasInstallmentPayment>("/payments", {
         method: "POST",
         body: JSON.stringify(data),
       }),

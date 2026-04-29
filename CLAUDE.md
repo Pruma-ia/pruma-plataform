@@ -51,6 +51,25 @@ Nunca implementar features direto na `master`. Sequência:
 
 **Rationale:** master deve refletir só código revisado. Feature branches isolam dev e permitem PR review antes de integrar. Mudança feita em master antes da branch = retrabalho de cherry-pick ou reset.
 
+### Validação visual com Playwright (obrigatória para features de UI)
+
+Ao finalizar qualquer feature com componentes visuais, rodar Playwright antes de abrir PR:
+
+```bash
+cd apps/web && npx playwright test
+```
+
+Ciclo obrigatório:
+1. Implementar feature
+2. Rodar Playwright → inspecionar screenshots em `tests/e2e/screenshots/`
+3. Corrigir bugs visuais, UX e acessibilidade encontrados
+4. Rodar novamente até todos os testes passarem
+5. Só então abrir PR
+
+**Regra para o Claude:** ao concluir implementação de UI, propor rodar Playwright sem esperar o usuário pedir. Se não existir spec para a feature, criar junto com a implementação.
+
+**Rationale:** componentes são avaliados visualmente — type check e unit tests não detectam regressões de layout, contraste, foco ou estados de loading. Playwright com screenshots fecha esse gap antes do code review.
+
 ---
 
 ## Estrutura do monorepo

@@ -1,117 +1,89 @@
-"use client"
-
-import { useState } from "react"
 import { Check } from "lucide-react"
+import Link from "next/link"
 
-const plans = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: "R$ 97",
-    period: "/mês",
-    description: "Para pequenas equipes e projetos iniciais",
-    features: ["Até 10 fluxos ativos", "50 aprovações/mês", "2 usuários", "Suporte por e-mail"],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "R$ 297",
-    period: "/mês",
-    description: "Para times em crescimento",
-    features: [
-      "Fluxos ilimitados",
-      "500 aprovações/mês",
-      "10 usuários",
-      "Suporte prioritário",
-      "Webhooks customizados",
-    ],
-    highlight: true,
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    price: "R$ 997",
-    period: "/mês",
-    description: "Para grandes operações",
-    features: [
-      "Tudo do Pro",
-      "Aprovações ilimitadas",
-      "Usuários ilimitados",
-      "SLA 99.9%",
-      "Onboarding dedicado",
-    ],
-  },
-]
+const plan = {
+  id: "pro",
+  name: "Pro",
+  originalPrice: "R$ 1.499",
+  price: "R$ 990",
+  period: "/mês",
+  savings: "Economia de R$ 509/mês",
+  description: "Automação de aprovações humanas para o seu time",
+  features: [
+    "Aprovações ilimitadas, sem restrição de volume",
+    "Time completo incluso — sem custo por usuário",
+    "Integra com as ferramentas que você já usa",
+    "Visibilidade total de cada decisão",
+    "Plataforma disponível 24h por dia",
+    "Suporte com retorno em até 4h",
+  ],
+}
 
-export function BillingPlans({ currentPlan }: { currentPlan: string | null }) {
-  const [loading, setLoading] = useState<string | null>(null)
+interface Props {
+  currentPlan: string | null
+  profileIncomplete: boolean
+}
 
-  async function subscribe(planId: string) {
-    setLoading(planId)
-    const res = await fetch("/api/billing/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planId, billingType: "PIX" }),
-    })
-    const data = await res.json()
-    setLoading(null)
-    if (data.url) {
-      window.open(data.url, "_blank")
-    } else if (data.ok) {
-      window.location.reload()
-    }
-  }
+export function BillingPlans({ currentPlan }: Props) {
+  const isCurrent = currentPlan === plan.id
 
   return (
     <div>
-      <h2 className="mb-4 font-semibold">Escolha seu plano</h2>
-      <div className="grid gap-4 sm:grid-cols-3">
-        {plans.map((plan) => {
-          const isCurrent = plan.id === currentPlan
-          return (
-            <div
-              key={plan.id}
-              className={`rounded-xl border p-6 shadow-sm flex flex-col ${
-                plan.highlight
-                  ? "border-primary ring-1 ring-primary bg-primary/5"
-                  : "bg-card"
-              }`}
-            >
-              {plan.highlight && (
-                <span className="mb-3 inline-block rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
-                  Mais popular
-                </span>
-              )}
-              <h3 className="text-lg font-bold">{plan.name}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-3xl font-bold">{plan.price}</span>
-                <span className="text-sm text-muted-foreground">{plan.period}</span>
-              </div>
-              <ul className="mt-4 flex-1 space-y-2">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-[#00AEEF] shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => subscribe(plan.id)}
-                disabled={isCurrent || !!loading}
-                className={`mt-6 w-full rounded-lg py-2 text-sm font-medium transition-colors ${
-                  isCurrent
-                    ? "bg-muted text-muted-foreground cursor-not-allowed"
-                    : plan.highlight
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "border border-border hover:bg-muted"
-                } disabled:opacity-60`}
-              >
-                {isCurrent ? "Plano atual" : loading === plan.id ? "Processando..." : "Assinar"}
-              </button>
+      <h2 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wide">Plano</h2>
+      <div className="rounded-xl border border-primary/20 ring-1 ring-primary/20 bg-card p-6 shadow-sm flex flex-col gap-5">
+        {/* Badge lançamento */}
+        <div className="flex items-center justify-between">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent uppercase tracking-wide">
+            Preço de lançamento
+          </span>
+          <span className="text-xs font-medium text-emerald-600">{plan.savings}</span>
+        </div>
+
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-primary">{plan.name}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-sm text-muted-foreground line-through">{plan.originalPrice}/mês</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-bold text-primary">{plan.price}</span>
+              <span className="text-sm text-muted-foreground">{plan.period}</span>
             </div>
-          )
-        })}
+            <p className="text-xs text-muted-foreground mt-0.5">cobrado mensalmente</p>
+          </div>
+        </div>
+
+        <hr className="border-border" />
+
+        {/* Features */}
+        <ul className="grid grid-cols-2 gap-x-6 gap-y-2">
+          {plan.features.map((f) => (
+            <li key={f} className="flex items-start gap-2 text-sm">
+              <Check className="h-4 w-4 text-accent shrink-0 mt-0.5" aria-hidden="true" />
+              {f}
+            </li>
+          ))}
+        </ul>
+
+        {/* CTA */}
+        {isCurrent ? (
+          <div className="w-full rounded-lg bg-muted py-2.5 text-sm font-medium text-muted-foreground text-center cursor-not-allowed">
+            Plano atual
+          </div>
+        ) : (
+          <Link
+            href="/billing/checkout"
+            className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none text-center block"
+          >
+            Assinar agora
+          </Link>
+        )}
+
+        <p className="text-center text-xs text-muted-foreground">
+          Sem fidelidade · Cancele quando quiser
+        </p>
       </div>
     </div>
   )

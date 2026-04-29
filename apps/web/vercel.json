@@ -7,6 +7,10 @@
     {
       "path": "/api/maintenance/cleanup-pending-uploads",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/maintenance/expire-trials",
+      "schedule": "0 5 * * *"
     }
   ]
 }

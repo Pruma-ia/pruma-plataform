@@ -250,6 +250,41 @@ Produto desktop-first (SaaS B2B). Breakpoints mínimos:
 
 ---
 
+## Formatação Numérica BRL
+
+Todo valor monetário exibido na UI usa `toLocaleString("pt-BR", { style: "currency", currency: "BRL" })`.
+
+```ts
+function formatBRL(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+}
+// 2000 → "R$ 2.000,00"
+// 666.67 → "R$ 666,67"
+```
+
+### Inputs de valor monetário
+
+- **Armazena**: string de dígitos (ex: `"2000"`)
+- **Exibe no input**: com separador de milhar via `parseInt(digits).toLocaleString("pt-BR")` — sem R$ no campo
+- **Helper text abaixo**: `formatBRL(parseInt(digits))` — exibe o valor completo formatado
+- **Dropdown de parcelas**: sempre `formatBRL(installmentValue)` — nunca `R$ ${raw}`
+
+```tsx
+function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const digits = e.target.value.replace(/\D/g, "")
+  setAmount(digits)
+  const num = parseInt(digits, 10)
+  setAmountDisplay(digits && num > 0 ? num.toLocaleString("pt-BR") : digits)
+}
+```
+
+### Anti-patterns de formatação
+- ❌ `R$ ${value}` — sem separador de milhar/decimal
+- ❌ Input `type="number"` para moeda — não suporta máscara BRL
+- ❌ Valor sem formatar em dropdown de parcelas
+
+---
+
 ## Anti-Patterns
 
 - ❌ Hex hardcoded em className (usar token)

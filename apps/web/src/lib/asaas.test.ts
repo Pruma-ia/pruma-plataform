@@ -66,17 +66,13 @@ describe("asaas client", () => {
     expect(opts.method).toBe("POST")
   })
 
-  it("paymentLinks.create sends POST /paymentLinks", async () => {
-    mockFetch({ id: "pl_1", url: "https://asaas.com/pay/pl_1" })
+  it("payments.list sends GET /payments?subscription=... (URL-encoded)", async () => {
+    mockFetch({ data: [{ id: "pay_1", billingType: "PIX" }] })
     const { asaas } = await import("./asaas")
-    const result = await asaas.paymentLinks.create({
-      name: "Plano Pro",
-      value: 297,
-      billingType: "PIX",
-      chargeType: "RECURRENT",
-      subscriptionCycle: "MONTHLY",
-    })
-    expect(result.url).toBe("https://asaas.com/pay/pl_1")
+    const result = await asaas.payments.list("sub_1")
+    expect(result.data[0].id).toBe("pay_1")
+    const [url] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toContain("/payments?subscription=sub_1")
   })
 
   it("throws on non-ok response with status code", async () => {
@@ -102,5 +98,69 @@ describe("asaas client", () => {
     })
     const { asaas } = await import("./asaas")
     await expect(asaas.customers.find("x@test.com")).rejects.toThrow("Asaas API error 500")
+  })
+
+  it("webhooks.register sends POST /webhooks with correct payload", async () => {
+    mockFetch({ id: "wh_1" })
+    const { asaas } = await import("./asaas")
+    await asaas.webhooks.register({
+      url: "https://app.test/api/webhooks/asaas",
+      email: "admin@test.com",
+      authToken: "a".repeat(32),
+    })
+    const [url, opts] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toContain("/webhooks")
+    expect(opts.method).toBe("POST")
+    const body = JSON.parse(opts.body)
+    expect(body.url).toBe("https://app.test/api/webhooks/asaas")
+    expect(body.sendType).toBe("SEQUENTIALLY")
+    expect(body.name).toBe("Pruma IA")
+    expect(body.apiVersion).toBe(3)
+    expect(Array.isArray(body.events)).toBe(true)
+  })
+
+  it("webhooks.register usa events customizados quando fornecidos", async () => {
+    mockFetch({ id: "wh_1" })
+    const { asaas } = await import("./asaas")
+    await asaas.webhooks.register({
+      url: "https://app.test/api/webhooks/asaas",
+      email: "admin@test.com",
+      authToken: "a".repeat(32),
+      events: ["PAYMENT_CONFIRMED"],
+    })
+    const [, opts] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    const body = JSON.parse(opts.body)
+    expect(body.events).toEqual(["PAYMENT_CONFIRMED"])
+  })
+
+  it("webhooks.list sends GET /webhooks", async () => {
+    mockFetch({ data: [] })
+    const { asaas } = await import("./asaas")
+    await asaas.webhooks.list()
+    const [url, opts] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toContain("/webhooks")
+    expect(opts?.method).toBeUndefined()
+  })
+
+  it("payments.create sends POST /payments with body", async () => {
+    mockFetch({ id: "pay_1", installmentCount: 3 })
+    const { asaas } = await import("./asaas")
+    const result = await asaas.payments.create({
+      customer: "cus_1",
+      billingType: "CREDIT_CARD",
+      value: 5000,
+      dueDate: "2026-04-29",
+      installmentCount: 3,
+      installmentValue: 1666.67,
+      creditCard: {},
+      creditCardHolderInfo: {},
+    })
+    expect(result.id).toBe("pay_1")
+    const [url, opts] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toContain("/payments")
+    expect(opts.method).toBe("POST")
+    const body = JSON.parse(opts.body)
+    expect(body.value).toBe(5000)
+    expect(body.installmentCount).toBe(3)
   })
 })

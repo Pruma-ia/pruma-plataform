@@ -4,12 +4,18 @@ import { NextResponse } from "next/server"
 // Rate limiter em memória por instância.
 // Para múltiplas instâncias (Vercel production): migrar para Vercel KV ou @upstash/ratelimit.
 const authRateMap = new Map<string, { count: number; resetAt: number }>()
+const billingRateMap = new Map<string, { count: number; resetAt: number }>()
 
-function isRateLimited(ip: string, limit: number, windowMs: number): boolean {
+function isRateLimited(
+  map: Map<string, { count: number; resetAt: number }>,
+  ip: string,
+  limit: number,
+  windowMs: number,
+): boolean {
   const now = Date.now()
-  const entry = authRateMap.get(ip)
+  const entry = map.get(ip)
   if (!entry || now > entry.resetAt) {
-    authRateMap.set(ip, { count: 1, resetAt: now + windowMs })
+    map.set(ip, { count: 1, resetAt: now + windowMs })
     return false
   }
   if (entry.count >= limit) return true
@@ -37,7 +43,19 @@ export default auth((req) => {
     pathname === "/api/user/password"
   ) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
-    if (isRateLimited(ip, 20, 60_000)) {
+    if (isRateLimited(authRateMap, ip, 20, 60_000)) {
+      return new NextResponse("Too Many Requests", { status: 429 })
+    }
+  }
+
+  // ── Rate limiting em billing — 5 req/min por IP ────────────────────────────
+  if (
+    pathname === "/api/billing/checkout" ||
+    pathname === "/api/billing/unified-checkout" ||
+    pathname === "/api/billing/setup-charge/pay"
+  ) {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+    if (isRateLimited(billingRateMap, ip, 5, 60_000)) {
       return new NextResponse("Too Many Requests", { status: 429 })
     }
   }
@@ -69,8 +87,11 @@ export default auth((req) => {
   }
 
   // ── Subscription guard — bloqueia acesso ao dashboard para contas canceladas ─
+  // /settings/organization liberado para contas bloqueadas: cliente precisa completar
+  // CNPJ/endereço antes de assinar — sem isso o link na billing page resulta em loop.
   const isGuardedRoute = GUARDED_PREFIXES.some((p) => pathname.startsWith(p))
-  if (isGuardedRoute && session && !session.user.isSuperAdmin) {
+  const isSettingsOrgException = pathname.startsWith("/settings/organization")
+  if (isGuardedRoute && !isSettingsOrgException && session && !session.user.isSuperAdmin) {
     const status = session.user.subscriptionStatus
     if (status && BLOCKED_STATUSES.has(status)) {
       return NextResponse.redirect(new URL("/billing", req.url))
@@ -92,5 +113,8 @@ export const config = {
     "/api/auth/:path*",
     "/api/n8n/:path*",
     "/api/user/:path*",
+    "/api/billing/checkout",
+    "/api/billing/unified-checkout",
+    "/api/billing/setup-charge/pay",
   ],
 }

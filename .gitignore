@@ -27,3 +27,12 @@ yarn-error.log*
 .vercel/
 .vercel
 .wrangler/
+
+# graphify - regenerable outputs (keep GRAPH_REPORT.md, cost.json, manifest.json)
+graphify-out/graph.html
+graphify-out/graph.json
+graphify-out/cache/
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/.graphify_uncached.txt
+graphify-out/.graphify_*.json

@@ -316,8 +316,8 @@
 10. `MigrationGenerator` - 32 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `validateCnpj()` --calls--> `calc()`  [INFERRED]
-  apps/web/src/components/org-profile-form.tsx → claude-skills/tests/test_ratio_calculator.py
+- `calc()` --calls--> `validateCnpj()`  [INFERRED]
+  claude-skills/tests/test_ratio_calculator.py → apps/web/src/components/org-profile-form.tsx
 - `Unit tests for the Commit Linter (Conventional Commits).` --uses--> `CLIError`  [INFERRED]
   claude-skills/tests/test_commit_linter.py → claude-skills/engineering/changelog-generator/scripts/commit_linter.py
 - `Test the regex pattern against various commit message formats.` --uses--> `CLIError`  [INFERRED]

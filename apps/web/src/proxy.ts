@@ -25,6 +25,11 @@ export default auth((req) => {
   const { pathname } = req.nextUrl
   const session = req.auth
 
+  // ── Design preview — somente em desenvolvimento ────────────────────────────
+  if (pathname.startsWith("/design-preview") && process.env.NODE_ENV === "production") {
+    return new NextResponse(null, { status: 404 })
+  }
+
   // ── Rate limiting em endpoints de autenticação ─────────────────────────────
   if (
     pathname.startsWith("/api/auth/") ||

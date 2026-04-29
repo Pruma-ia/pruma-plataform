@@ -1,0 +1,48 @@
+"use client"
+
+import { useState } from "react"
+import { SetupChargeModal } from "./setup-charge-modal"
+
+interface Props {
+  amount: number
+  installments: number
+  profileIncomplete: boolean
+}
+
+function formatBRL(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+}
+
+export function SetupChargeBanner({ amount, installments, profileIncomplete }: Props) {
+  const [open, setOpen] = useState(false)
+  const installmentValue = Math.ceil((amount / installments) * 100) / 100
+
+  return (
+    <>
+      <div className="rounded-xl border border-[#00AEEF]/30 bg-[#E0F6FE] px-5 py-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-[#0D1B4B]">Taxa de setup pendente</p>
+          <p className="text-sm text-[#0D1B4B]/70 mt-0.5">
+            {formatBRL(amount)}{" "}
+            {installments > 1 && `— ${installments}x de ${formatBRL(installmentValue)}`}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="shrink-0 rounded-lg bg-[#00AEEF] px-4 py-2 text-sm font-medium text-white hover:bg-[#0097d1] transition-colors focus-visible:ring-2 focus-visible:ring-[#00AEEF] outline-none"
+        >
+          Pagar agora
+        </button>
+      </div>
+
+      <SetupChargeModal
+        amount={amount}
+        installments={installments}
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        profileIncomplete={profileIncomplete}
+      />
+    </>
+  )
+}

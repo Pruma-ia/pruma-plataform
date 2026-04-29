@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { X, Check } from "lucide-react"
+import { X, Check, Loader2 } from "lucide-react"
 
 type Step = "card-form" | "loading" | "success" | "error"
 
@@ -37,6 +37,16 @@ export function SetupChargeModal({
 
   useEffect(() => {
     if (isOpen) closeBtnRef.current?.focus()
+  }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") handleClose()
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   if (!isOpen) return null
@@ -103,8 +113,13 @@ export function SetupChargeModal({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-[#00AEEF] focus:ring-2 focus:ring-[#00AEEF]/20 transition-colors"
+    "flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
   const labelCls = "mb-1 block text-xs font-medium text-muted-foreground"
+
+  const submitLabel =
+    installments > 1
+      ? `Pagar ${installments}x de ${formatBRL(installmentValue)}`
+      : `Pagar ${formatBRL(amount)}`
 
   return (
     <div
@@ -117,12 +132,12 @@ export function SetupChargeModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="setup-modal-title"
-        className="relative w-full max-w-md rounded-2xl bg-white shadow-xl"
+        className="relative w-full max-w-md rounded-xl border bg-card shadow-xl"
       >
         <div className="flex items-center justify-between border-b px-6 py-4">
           <div>
             <p className="text-xs text-muted-foreground">Taxa de setup</p>
-            <p id="setup-modal-title" className="font-semibold text-[#0D1B4B]">
+            <p id="setup-modal-title" className="font-semibold text-primary">
               {formatBRL(amount)}{" "}
               {installments > 1 && (
                 <span className="text-sm font-normal text-muted-foreground">
@@ -135,7 +150,7 @@ export function SetupChargeModal({
             ref={closeBtnRef}
             type="button"
             onClick={handleClose}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors focus-visible:ring-2 focus-visible:ring-[#00AEEF] outline-none"
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
             aria-label="Fechar"
           >
             <X className="h-4 w-4" aria-hidden="true" />
@@ -155,14 +170,14 @@ export function SetupChargeModal({
               </div>
               <a
                 href="/settings/organization"
-                className="block w-full rounded-lg bg-[#00AEEF] py-2.5 text-center text-sm font-medium text-white hover:bg-[#0097d1] transition-colors"
+                className="block w-full rounded-lg bg-primary py-2.5 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
               >
                 Completar dados
               </a>
               <button
                 type="button"
                 onClick={handleClose}
-                className="w-full rounded-lg border border-border py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+                className="w-full rounded-lg border border-input py-2.5 text-sm font-medium hover:bg-muted transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
               >
                 Fechar
               </button>
@@ -173,7 +188,9 @@ export function SetupChargeModal({
           {!profileIncomplete && step === "card-form" && (
             <div className="space-y-4">
               <div>
-                <label htmlFor="sc-holderName" className={labelCls}>Nome no cartão</label>
+                <label htmlFor="sc-holderName" className={labelCls}>
+                  Nome no cartão <span aria-hidden className="text-destructive">*</span>
+                </label>
                 <input
                   id="sc-holderName"
                   type="text"
@@ -185,7 +202,9 @@ export function SetupChargeModal({
                 />
               </div>
               <div>
-                <label htmlFor="sc-cardNumber" className={labelCls}>Número do cartão</label>
+                <label htmlFor="sc-cardNumber" className={labelCls}>
+                  Número do cartão <span aria-hidden className="text-destructive">*</span>
+                </label>
                 <input
                   id="sc-cardNumber"
                   type="text"
@@ -200,7 +219,9 @@ export function SetupChargeModal({
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label htmlFor="sc-expiryMonth" className={labelCls}>Mês</label>
+                  <label htmlFor="sc-expiryMonth" className={labelCls}>
+                    Mês <span aria-hidden className="text-destructive">*</span>
+                  </label>
                   <input
                     id="sc-expiryMonth"
                     type="text"
@@ -214,7 +235,9 @@ export function SetupChargeModal({
                   />
                 </div>
                 <div>
-                  <label htmlFor="sc-expiryYear" className={labelCls}>Ano</label>
+                  <label htmlFor="sc-expiryYear" className={labelCls}>
+                    Ano <span aria-hidden className="text-destructive">*</span>
+                  </label>
                   <input
                     id="sc-expiryYear"
                     type="text"
@@ -228,7 +251,9 @@ export function SetupChargeModal({
                   />
                 </div>
                 <div>
-                  <label htmlFor="sc-ccv" className={labelCls}>CVV</label>
+                  <label htmlFor="sc-ccv" className={labelCls}>
+                    CVV <span aria-hidden className="text-destructive">*</span>
+                  </label>
                   <input
                     id="sc-ccv"
                     type="text"
@@ -242,23 +267,13 @@ export function SetupChargeModal({
                   />
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={submit}
-                className="w-full rounded-lg bg-[#00AEEF] py-2.5 text-sm font-medium text-white hover:bg-[#0097d1] transition-colors focus-visible:ring-2 focus-visible:ring-[#00AEEF] outline-none"
-              >
-                {installments > 1
-                  ? `Pagar ${installments}x de ${formatBRL(installmentValue)}`
-                  : `Pagar ${formatBRL(amount)}`}
-              </button>
             </div>
           )}
 
           {/* Loading */}
           {!profileIncomplete && step === "loading" && (
             <div className="flex flex-col items-center gap-4 py-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#00AEEF] border-t-transparent" />
+              <Loader2 className="h-8 w-8 animate-spin text-accent" aria-hidden="true" />
               <p className="text-sm text-muted-foreground">Processando...</p>
             </div>
           )}
@@ -266,56 +281,82 @@ export function SetupChargeModal({
           {/* Sucesso */}
           {!profileIncomplete && step === "success" && (
             <div className="space-y-4 py-4 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#E0F6FE]">
-                <Check className="h-6 w-6 text-[#00AEEF]" aria-hidden="true" />
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+                <Check className="h-6 w-6 text-accent" aria-hidden="true" />
               </div>
               <div>
-                <p className="font-semibold text-[#0D1B4B]">Pagamento realizado!</p>
+                <p className="font-semibold text-primary">Pagamento realizado!</p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Taxa de setup confirmada.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  handleClose()
-                  window.location.reload()
-                }}
-                className="w-full rounded-lg bg-[#00AEEF] py-2.5 text-sm font-medium text-white hover:bg-[#0097d1] transition-colors"
-              >
-                Continuar
-              </button>
             </div>
           )}
 
           {/* Erro */}
           {!profileIncomplete && step === "error" && (
-            <div className="space-y-4">
-              <div
-                role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-              >
-                {error}
-              </div>
-              <div className="flex gap-2">
+            <div
+              role="alert"
+              className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+            >
+              {error}
+            </div>
+          )}
+        </div>
+
+        {/* Footer — ações */}
+        {!profileIncomplete && (step === "card-form" || step === "error" || step === "success") && (
+          <div className="flex justify-end gap-3 border-t px-6 py-4">
+            {step === "card-form" && (
+              <>
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 rounded-lg border border-border py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+                  className="rounded-lg border border-input px-4 py-2 text-sm font-medium hover:bg-muted transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={submit}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
+                >
+                  {submitLabel}
+                </button>
+              </>
+            )}
+            {step === "error" && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="rounded-lg border border-input px-4 py-2 text-sm font-medium hover:bg-muted transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
                 >
                   Fechar
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep("card-form")}
-                  className="flex-1 rounded-lg bg-[#00AEEF] py-2.5 text-sm font-medium text-white hover:bg-[#0097d1] transition-colors"
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
                 >
                   Tentar novamente
                 </button>
-              </div>
-            </div>
-          )}
-        </div>
+              </>
+            )}
+            {step === "success" && (
+              <button
+                type="button"
+                onClick={() => {
+                  handleClose()
+                  window.location.reload()
+                }}
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring outline-none"
+              >
+                Continuar
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

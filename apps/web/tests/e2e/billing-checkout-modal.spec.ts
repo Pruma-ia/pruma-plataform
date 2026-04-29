@@ -10,7 +10,7 @@ test.beforeAll(() => {
 })
 
 async function shot(page: Page, name: string) {
-  const modal = page.locator(".rounded-2xl.bg-white.shadow-xl")
+  const modal = page.locator('[role="dialog"]')
   await modal.waitFor({ state: "visible" })
   await modal.screenshot({ path: path.join(SHOTS, name) })
 }

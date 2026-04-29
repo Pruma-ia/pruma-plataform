@@ -1,18 +1,29 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useId } from "react"
 import { Button } from "@/components/ui/button"
 import { X, Trash2, AlertTriangle } from "lucide-react"
 
 function Modal({
   open,
   onClose,
+  titleId,
   children,
 }: {
   open: boolean
   onClose: () => void
+  titleId: string
   children: React.ReactNode
 }) {
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [open, onClose])
+
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -26,6 +37,7 @@ function Modal({
       <div
         role="dialog"
         aria-modal
+        aria-labelledby={titleId}
         className="relative z-10 w-full max-w-md rounded-xl border border-border bg-card shadow-xl"
       >
         {children}
@@ -36,6 +48,9 @@ function Modal({
 
 export default function ModalsPage() {
   const [modal, setModal] = useState<"standard" | "destructive" | "form" | null>(null)
+  const standardId = useId()
+  const formId = useId()
+  const destructiveId = useId()
 
   return (
     <div className="max-w-3xl space-y-10">
@@ -148,9 +163,9 @@ export default function ModalsPage() {
       </section>
 
       {/* Interactive modals */}
-      <Modal open={modal === "standard"} onClose={() => setModal(null)}>
+      <Modal open={modal === "standard"} onClose={() => setModal(null)} titleId={standardId}>
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h3 className="font-heading text-base font-semibold">Modal Padrão</h3>
+          <h3 id={standardId} className="font-heading text-base font-semibold">Modal Padrão</h3>
           <button onClick={() => setModal(null)} className="rounded-md p-1 text-muted-foreground hover:bg-muted" aria-label="Fechar">
             <X className="h-4 w-4" />
           </button>
@@ -164,9 +179,9 @@ export default function ModalsPage() {
         </div>
       </Modal>
 
-      <Modal open={modal === "form"} onClose={() => setModal(null)}>
+      <Modal open={modal === "form"} onClose={() => setModal(null)} titleId={formId}>
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h3 className="font-heading text-base font-semibold">Convidar membro</h3>
+          <h3 id={formId} className="font-heading text-base font-semibold">Convidar membro</h3>
           <button onClick={() => setModal(null)} className="rounded-md p-1 text-muted-foreground hover:bg-muted" aria-label="Fechar">
             <X className="h-4 w-4" />
           </button>
@@ -190,13 +205,13 @@ export default function ModalsPage() {
         </div>
       </Modal>
 
-      <Modal open={modal === "destructive"} onClose={() => setModal(null)}>
+      <Modal open={modal === "destructive"} onClose={() => setModal(null)} titleId={destructiveId}>
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-destructive/10 p-2">
               <AlertTriangle className="h-4 w-4 text-destructive" />
             </div>
-            <h3 className="font-heading text-base font-semibold">Remover membro</h3>
+            <h3 id={destructiveId} className="font-heading text-base font-semibold">Remover membro</h3>
           </div>
           <button onClick={() => setModal(null)} className="rounded-md p-1 text-muted-foreground hover:bg-muted" aria-label="Fechar">
             <X className="h-4 w-4" />

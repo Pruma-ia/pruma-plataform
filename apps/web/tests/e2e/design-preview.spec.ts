@@ -1,5 +1,9 @@
 import { test, expect } from "@playwright/test"
 import path from "path"
+import { fileURLToPath } from "url"
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const sections = [
   { name: "index", path: "/design-preview" },
@@ -17,7 +21,7 @@ const sections = [
   { name: "crud", path: "/design-preview/crud" },
 ]
 
-const screenshotDir = path.join("tests/e2e/screenshots/design-preview")
+const screenshotDir = path.join(__dirname, "../screenshots/design-preview")
 
 test.describe("Design Preview — capturas de referência visual", () => {
   for (const section of sections) {

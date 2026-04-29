@@ -1,7 +1,7 @@
 # Graph Report - pruma-plataform  (2026-04-29)
 
 ## Corpus Check
-- 545 files · ~2,336,323 words
+- 545 files · ~2,336,325 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary

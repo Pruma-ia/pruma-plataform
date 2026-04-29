@@ -1,9 +1,5 @@
 import { test, expect } from "@playwright/test"
 import path from "path"
-import { fileURLToPath } from "url"
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 const sections = [
   { name: "index", path: "/design-preview" },
@@ -21,7 +17,8 @@ const sections = [
   { name: "crud", path: "/design-preview/crud" },
 ]
 
-const screenshotDir = path.join(__dirname, "../screenshots/design-preview")
+// CWD quando Playwright roda = apps/web/ (onde playwright.config.ts está)
+const screenshotDir = path.resolve(process.cwd(), "tests/e2e/screenshots/design-preview")
 
 test.describe("Design Preview — capturas de referência visual", () => {
   for (const section of sections) {
@@ -46,9 +43,9 @@ test.describe("Design Preview — capturas de referência visual", () => {
 test("design-preview: sidebar navegável", async ({ page }) => {
   await page.goto("/design-preview")
 
-  // Verifica links de navegação existem
+  // Verifica links na sidebar (primeiro elemento = sidebar, ignora duplicatas na grid)
   for (const section of sections.slice(1)) {
-    const link = page.locator(`a[href="${section.path}"]`)
+    const link = page.locator(`aside a[href="${section.path}"]`)
     await expect(link).toBeVisible()
   }
 })

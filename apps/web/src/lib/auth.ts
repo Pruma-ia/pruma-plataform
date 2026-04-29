@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs"
 const SUBSCRIPTION_REFRESH_MS = 5 * 60 * 1000
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   adapter: DrizzleAdapter(db, {
     usersTable: users,
     accountsTable: accounts,

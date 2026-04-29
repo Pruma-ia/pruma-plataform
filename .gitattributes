@@ -1,0 +1,9 @@
+# Binários — sem diff de texto, merge strategy=ours
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary

@@ -6,6 +6,39 @@ Breaking changes — APIs, conventions, file structure may differ from training 
 
 # apps/web — Stack e Decisões Arquiteturais
 
+## Design System — Referência Obrigatória
+
+Antes de implementar qualquer tela ou componente visual:
+
+1. **Ler `apps/web/design-system/MASTER.md`** — tokens, cores, tipografia, espaçamento, regras
+2. **Consultar `apps/web/design-system/components/<padrão>.md`** — spec do componente específico
+3. **Ver referência visual em `apps/web/tests/e2e/screenshots/design-preview/`** — screenshots de todos os padrões
+4. **Preview ao vivo**: `npm run dev` → `http://localhost:3000/design-preview`
+
+### Fluxo por feature com UI
+
+```
+1. Ler MASTER.md + spec do padrão relevante
+2. Implementar seguindo tokens (nunca hex hardcoded)
+3. npm run dev → validar visual em /design-preview vs tela implementada
+4. Playwright captura screenshot antes do PR
+5. PR aprovado → merge
+```
+
+### Padrões disponíveis
+
+| Padrão | Spec | Preview |
+|---|---|---|
+| Botões | `design-system/components/buttons.md` | `/design-preview/buttons` |
+| Formulários | `design-system/components/forms.md` | `/design-preview/inputs` |
+| Tabelas | `design-system/components/tables.md` | `/design-preview/tables` |
+| Badges | `design-system/components/badges.md` | `/design-preview/badges` |
+| Modais | `design-system/components/modals.md` | `/design-preview/modals` |
+| Empty states | `design-system/components/empty-states.md` | `/design-preview/empty-states` |
+| CRUD completo | — | `/design-preview/crud` |
+| Loading | — | `/design-preview/loading` |
+| Navegação | — | `/design-preview/navigation` |
+
 ## Next.js 16 — Breaking Changes
 
 ### proxy.ts (não middleware.ts)

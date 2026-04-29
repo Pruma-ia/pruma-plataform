@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { organizations } from "../../../../../../../db/schema"
 import { eq } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
+import { SetupChargeForm } from "./setup-charge-form"
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   active: { label: "Ativo", color: "text-[#00AEEF] bg-[#E0F6FE]" },
@@ -25,6 +26,7 @@ export default async function AdminOrgBilling({
     <div>
       <Header title="Plano & Cobrança" />
       <div className="p-6 space-y-6">
+        {/* Status da assinatura */}
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -60,6 +62,31 @@ export default async function AdminOrgBilling({
                 Vence em: {new Date(org.subscriptionEndsAt).toLocaleDateString("pt-BR")}
               </p>
             </div>
+          )}
+        </div>
+
+        {/* Taxa de setup */}
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <h2 className="font-semibold mb-4">Taxa de Setup</h2>
+
+          {org?.setupChargeStatus === "paid" && (
+            <p className="text-sm text-green-700 bg-green-50 rounded-lg px-4 py-3 border border-green-200">
+              Setup pago.{" "}
+              {org.setupChargeAsaasId && (
+                <span className="font-mono text-xs">ID Asaas: {org.setupChargeAsaasId}</span>
+              )}
+            </p>
+          )}
+
+          {org?.setupChargeStatus === "pending" && (
+            <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-4 py-3 border border-amber-200 mb-4">
+              Cobrança pendente: R$ {org.setupChargeAmount} em {org.setupChargeInstallments}x.
+              Cliente ainda não pagou.
+            </p>
+          )}
+
+          {(!org?.setupChargeStatus || org.setupChargeStatus !== "paid") && (
+            <SetupChargeForm orgId={orgId} currentStatus={org?.setupChargeStatus ?? null} />
           )}
         </div>
       </div>

@@ -10,6 +10,7 @@ vi.mock("@/lib/n8n", () => ({ validateCallbackUrl: mockValidateCallback }))
 
 let selectCallCount = 0
 let insertCallCount = 0
+let capturedOrgInsertValues: Record<string, unknown> | null = null
 const mockSlugRows = vi.fn()
 const mockN8nSlugRows = vi.fn()
 const mockInsertOrg = vi.fn()
@@ -29,9 +30,10 @@ vi.mock("@/lib/db", () => ({
       }),
     }),
     insert: () => ({
-      values: () => {
+      values: (data: Record<string, unknown>) => {
         insertCallCount++
         if (insertCallCount === 1) {
+          capturedOrgInsertValues = data
           return { returning: mockInsertOrg }  // org insert
         }
         return mockInsertToken()  // token insert
@@ -60,6 +62,7 @@ describe("POST /api/admin/orgs", () => {
     vi.clearAllMocks()
     selectCallCount = 0
     insertCallCount = 0
+    capturedOrgInsertValues = null
     mockValidateCallback.mockReturnValue(true)
     mockSlugRows.mockResolvedValue([])      // sem conflito de slug
     mockN8nSlugRows.mockResolvedValue([])   // sem conflito de n8nSlug
@@ -150,6 +153,18 @@ describe("POST /api/admin/orgs", () => {
     await POST(makeRequest({ name: "Acme Corp" }))
     // Token insert é a 2ª chamada de insert — verificamos que foi chamado
     expect(insertCallCount).toBe(2)
+  })
+
+  it("inclui subscriptionEndsAt ~14 dias no futuro ao criar org (trial)", async () => {
+    mockAuth.mockResolvedValue({ user: { isSuperAdmin: true } })
+    const before = Date.now()
+    const { POST } = await import("./route")
+    await POST(makeRequest({ name: "Acme Corp" }))
+    const after = Date.now()
+    expect(capturedOrgInsertValues?.subscriptionEndsAt).toBeInstanceOf(Date)
+    const endsAt = (capturedOrgInsertValues?.subscriptionEndsAt as Date).getTime()
+    expect(endsAt).toBeGreaterThanOrEqual(before + 14 * 24 * 60 * 60 * 1000)
+    expect(endsAt).toBeLessThanOrEqual(after + 14 * 24 * 60 * 60 * 1000)
   })
 
   it("incrementa sufixo quando slug base já existe (cobre branch while)", async () => {

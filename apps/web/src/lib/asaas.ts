@@ -36,6 +36,30 @@ export interface AsaasSubscription {
   cycle: string
 }
 
+export interface AsaasPayment {
+  id: string
+  status: string
+  billingType: string
+  dueDate: string
+  bankSlipUrl?: string
+  invoiceUrl?: string
+  pixTransaction?: {
+    qrCode: {
+      encodedImage: string
+      payload: string
+    }
+  }
+}
+
+export interface AsaasInstallmentPayment {
+  id: string
+  status: string
+  billingType: string
+  value: number
+  dueDate: string
+  installmentCount?: number
+}
+
 export const asaas = {
   customers: {
     create: (data: { name: string; email: string; cpfCnpj?: string }) =>
@@ -51,7 +75,7 @@ export const asaas = {
   subscriptions: {
     create: (data: {
       customer: string
-      billingType: "CREDIT_CARD" | "BOLETO" | "PIX"
+      billingType: "CREDIT_CARD"
       value: number
       nextDueDate: string
       cycle: "MONTHLY" | "YEARLY"
@@ -71,17 +95,25 @@ export const asaas = {
       asaasRequest(`/subscriptions/${id}`, { method: "DELETE" }),
   },
 
-  paymentLinks: {
+  payments: {
+    list: (subscriptionId: string) =>
+      asaasRequest<{ data: AsaasPayment[] }>(
+        `/payments?subscription=${encodeURIComponent(subscriptionId)}&limit=1`
+      ),
+
     create: (data: {
-      name: string
-      description?: string
+      customer: string
+      billingType: "CREDIT_CARD"
       value: number
-      billingType: string
-      chargeType: "RECURRENT" | "INSTALLMENT" | "DETACHED"
-      subscriptionCycle?: "MONTHLY" | "YEARLY"
-      notificationEnabled?: boolean
+      dueDate: string
+      description?: string
+      installmentCount?: number
+      installmentValue?: number
+      creditCard: object
+      creditCardHolderInfo: object
+      remoteIp?: string
     }) =>
-      asaasRequest<{ id: string; url: string }>("/paymentLinks", {
+      asaasRequest<AsaasInstallmentPayment>("/payments", {
         method: "POST",
         body: JSON.stringify(data),
       }),

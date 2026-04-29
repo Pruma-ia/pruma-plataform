@@ -4,6 +4,7 @@ import { organizations } from "../../../../db/schema"
 import { eq } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
 import { BillingPlans } from "./billing-plans"
+import { SetupChargeBanner } from "./setup-charge-banner"
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   active: { label: "Ativo", color: "text-[#00AEEF] bg-[#E0F6FE]" },
@@ -21,6 +22,10 @@ export default async function BillingPage() {
   const statusInfo = statusLabels[org?.subscriptionStatus ?? "inactive"]
 
   const profileIncomplete = !org?.cnpj || !org?.addressZipCode || !org?.addressNumber
+  const hasSetupCharge =
+    org?.setupChargeStatus === "pending" &&
+    org?.setupChargeAmount != null &&
+    org?.setupChargeInstallments != null
 
   return (
     <div>
@@ -42,6 +47,15 @@ export default async function BillingPage() {
           </div>
         )}
 
+        {/* Banner taxa de setup pendente */}
+        {hasSetupCharge && (
+          <SetupChargeBanner
+            amount={org.setupChargeAmount!}
+            installments={org.setupChargeInstallments!}
+            profileIncomplete={profileIncomplete}
+          />
+        )}
+
         {/* Status atual */}
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
@@ -60,8 +74,8 @@ export default async function BillingPage() {
           </div>
         </div>
 
-        {/* Planos */}
-        <BillingPlans currentPlan={org?.asaasPlanId ?? null} />
+        {/* Plano */}
+        <BillingPlans currentPlan={org?.asaasPlanId ?? null} profileIncomplete={profileIncomplete} />
       </div>
     </div>
   )

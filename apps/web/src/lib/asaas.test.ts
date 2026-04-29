@@ -66,17 +66,13 @@ describe("asaas client", () => {
     expect(opts.method).toBe("POST")
   })
 
-  it("paymentLinks.create sends POST /paymentLinks", async () => {
-    mockFetch({ id: "pl_1", url: "https://asaas.com/pay/pl_1" })
+  it("payments.list sends GET /payments?subscription=... (URL-encoded)", async () => {
+    mockFetch({ data: [{ id: "pay_1", billingType: "PIX" }] })
     const { asaas } = await import("./asaas")
-    const result = await asaas.paymentLinks.create({
-      name: "Plano Pro",
-      value: 297,
-      billingType: "PIX",
-      chargeType: "RECURRENT",
-      subscriptionCycle: "MONTHLY",
-    })
-    expect(result.url).toBe("https://asaas.com/pay/pl_1")
+    const result = await asaas.payments.list("sub_1")
+    expect(result.data[0].id).toBe("pay_1")
+    const [url] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toContain("/payments?subscription=sub_1")
   })
 
   it("throws on non-ok response with status code", async () => {

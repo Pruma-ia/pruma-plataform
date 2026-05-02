@@ -66,7 +66,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const [dbUser, membership] = await Promise.all([
           db
-            .select({ isSuperAdmin: users.isSuperAdmin })
+            .select({ isSuperAdmin: users.isSuperAdmin, emailVerified: users.emailVerified })
             .from(users)
             .where(eq(users.id, userId))
             .limit(1)
@@ -87,6 +87,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ])
 
         token.isSuperAdmin = dbUser?.isSuperAdmin ?? false
+        // emailVerified: timestamp value in DB = verified; null = unverified
+        token.emailVerified = dbUser?.emailVerified != null
 
         if (!dbUser?.isSuperAdmin && membership) {
           token.organizationId = membership.orgId
@@ -159,6 +161,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         | "canceled"
         | "inactive"
         | undefined
+      session.user.emailVerified = (token.emailVerified as boolean | undefined) ?? false
       return session
     },
   },

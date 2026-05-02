@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: true
 preset: base-nova / neutral / cssVariables
 created: 2026-05-02
+revised: 2026-05-02
 ---
 
 # Phase 1 — UI Design Contract
@@ -63,14 +64,14 @@ Base: 4px grid (Tailwind spacing scale). Source: `design-system/MASTER.md`.
 
 | Component | Padding |
 |-----------|---------|
-| Button sm | `px-3 py-1.5` |
+| Button sm | `px-3 py-1` |
 | Button default | `px-4 py-2` |
 | Button lg | `px-6 py-3` |
-| Input | `px-3 py-2.5` (auth surfaces) / `px-3 py-2` (dashboard surfaces) |
+| Input | `px-3 py-3` (auth surfaces) / `px-3 py-2` (dashboard surfaces) |
 | Card (dashboard) | `p-6` |
 | Card (auth panel) | `p-8` |
 | Table cell | `px-4 py-3` |
-| Badge | `px-2 py-0.5` |
+| Badge | `px-2 py-1` |
 | Page content area | `p-6` |
 
 **Exceptions:**
@@ -84,21 +85,26 @@ Base: 4px grid (Tailwind spacing scale). Source: `design-system/MASTER.md`.
 
 Source: `design-system/MASTER.md`. Heading font = Barlow. Body font = Inter.
 
+**Declared sizes (4 total):**
+
 | Role | Size | Weight | Line Height | Class | Usage |
 |------|------|--------|-------------|-------|-------|
-| Page title | 24px (text-2xl) | 600 (font-semibold) | 1.375 (leading-snug) | `font-heading text-2xl font-semibold` | Page h1 (via Header component) |
+| Page title / stat display | 24px (text-2xl) | 600 (font-semibold) | 1.375 (leading-snug) | `font-heading text-2xl font-semibold` | Page h1 (via Header), stat card metric values |
 | Section heading | 20px (text-xl) | 600 (font-semibold) | 1.375 | `font-heading text-xl font-semibold` | Card section titles, modal h3 |
-| Card title | 16px (text-base) | 600 (font-semibold) | 1.375 | `font-heading text-base font-semibold` | Stat card labels, checklist title |
-| Body / Input | 14px (text-sm) | 400 (font-normal) | 1.5 (leading-normal) | `text-sm font-normal` | Body text, inputs, table rows |
-| Caption / Badge | 12px (text-xs) | 500 (font-medium) | 1.375 | `text-xs font-medium` | Stat card sub-labels, badges, timestamps |
+| Card title | 16px (text-base) | 600 (font-semibold) | 1.375 | `font-heading text-base font-semibold` | Stat card labels, checklist title, section h2 |
+| Body / Input / Caption / Badge | 14px (text-sm) | 400 (font-normal) | 1.5 (leading-normal) | `text-sm font-normal` | Body text, inputs, table rows, captions, badges, timestamps, sub-labels |
 
-**Stat card metric value (special case):**
-- Value: `text-2xl font-bold` (24px, weight 700) — matches existing dashboard pattern (`text-2xl font-bold`)
+**Declared weights (2 total):** 400 (font-normal) and 600 (font-semibold).
+
+**Weight mapping for existing patterns:**
+- Any `font-medium` (500) in the codebase → replace with `font-normal` (400)
+- Any `font-bold` (700) in the codebase → replace with `font-semibold` (600)
+- Stat card metric values previously declared as `text-2xl font-bold` → use `text-2xl font-semibold`; size contrast alone preserves hierarchy at 24px
 
 **Auth surface typography (existing pattern from login page):**
-- Labels: `text-xs font-medium text-white/70`
-- Helper / secondary: `text-sm text-white/60`
-- Links: `text-xs text-[#5CCFF5]` (Ciano Claro on dark)
+- Labels: `text-sm font-normal text-white/70` (14px, weight 400)
+- Helper / secondary: `text-sm font-normal text-white/60`
+- Links: `text-sm text-[#5CCFF5]` (Ciano Claro on dark)
 - Error: `text-sm text-red-400` with `role="alert"`
 
 ---
@@ -204,7 +210,10 @@ All UI text in Brazilian Portuguese. Never use English in UI. Source: CONTEXT.md
 | Logo upload drag hint | `Arraste uma imagem ou clique para selecionar` |
 | Logo upload sub-hint | `PNG, JPG ou WebP — máximo 2 MB` |
 | Logo upload CTA | `Enviar logo` |
-| Logo save CTA | `Salvar` |
+| Name save CTA | `Salvar nome` |
+| Name save loading | `Salvando nome...` |
+| Logo save CTA | `Salvar logo` |
+| Logo save loading | `Salvando logo...` |
 | Logo remove CTA | `Remover logo` |
 | Logo upload error — wrong type | `Formato não aceito. Use PNG, JPG ou WebP.` |
 | Logo upload error — too large | `Arquivo muito grande. Tamanho máximo: 2 MB.` |
@@ -219,6 +228,7 @@ All UI text in Brazilian Portuguese. Never use English in UI. Source: CONTEXT.md
 |---------|------|
 | Fallback initials rule | First letter of each word in org name, max 2 letters. "Acme Corp" → `AC`. "Pruma IA" → `PI`. |
 | Logo image alt | `Logo {orgName}` |
+| Bell icon aria-label | `Ver notificações` |
 
 ### Profile Page — Display Name & Connected Accounts (PROF-01, PROF-02)
 
@@ -228,8 +238,8 @@ All UI text in Brazilian Portuguese. Never use English in UI. Source: CONTEXT.md
 | Name section title | `Informações pessoais` |
 | Name field label | `Nome de exibição` |
 | Name field placeholder | `Seu nome` |
-| Name save CTA | `Salvar` |
-| Name save loading | `Salvando...` |
+| Name save CTA | `Salvar alterações` |
+| Name save loading | `Salvando alterações...` |
 | Name save success | `Nome atualizado.` |
 | Accounts section title | `Contas conectadas` |
 | Provider: Google | `Google` |
@@ -266,9 +276,9 @@ Auth layout (full-screen gradient background)
     │       focus:ring-2 focus:ring-[#00AEEF]/70 focus:outline-none
     │       caret-transparent
     ├── Error: role="alert" text-sm text-red-400 mt-2 (conditionally shown)
-    ├── Primary button: full-width bg-[#00AEEF] py-2.5 text-sm font-semibold text-white
+    ├── Primary button: full-width bg-[#00AEEF] py-3 text-sm font-semibold text-white
     │   rounded-lg hover:bg-[#00AEEF]/90 disabled:opacity-60
-    └── Resend row: text-xs text-white/40 mt-4 centered
+    └── Resend row: text-sm text-white/40 mt-4 centered
         ├── Available: button text-[#5CCFF5] hover:text-white (active after 60s)
         └── Cooldown: text-white/40 + countdown "{N}s" in text-[#00AEEF]/70
 ```
@@ -311,9 +321,9 @@ className={`rounded-lg p-2 ${s.bg}`}  // bg-[#E0F6FE] dark:bg-[#00AEEF]/15
 // Icon:
 className={`h-5 w-5 ${s.color}`}      // text-[#00AEEF] or text-[#0D1B4B] dark:text-[#00AEEF]
 // Value:
-className="text-2xl font-bold"
+className="text-2xl font-semibold"
 // Label:
-className="text-xs text-muted-foreground"
+className="text-sm text-muted-foreground"
 ```
 
 **New cards to add (cards 3 and 4):**
@@ -322,8 +332,8 @@ Card 3 — "Resolvidas hoje":
 - Icon: `CheckCircle2` (lucide)
 - Icon bg: `bg-emerald-50 dark:bg-emerald-900/20`
 - Icon color: `text-emerald-600 dark:text-emerald-400`
-- Value: integer count, `text-2xl font-bold`
-- Label: `text-xs text-muted-foreground` — `Resolvidas hoje`
+- Value: integer count, `text-2xl font-semibold`
+- Label: `text-sm text-muted-foreground` — `Resolvidas hoje`
 - href: `/approvals` (same as pending approvals card)
 - Wrapper: `<Link>` (navigable, same as existing)
 
@@ -333,14 +343,14 @@ Card 4 — "Tempo médio (30d)":
 - Icon color: `text-[#00AEEF]`
 - Value: formatted string from `formatAvgTime(ms)` — e.g. `12min`, `2h`, `3d`, or `—` when null
 - When value is `—`: wrap value in shadcn `<Tooltip>` with content `Sem aprovações resolvidas nos últimos 30 dias`
-- Label: `text-xs text-muted-foreground` — `Tempo médio (30d)`
+- Label: `text-sm text-muted-foreground` — `Tempo médio (30d)`
 - Wrapper: `<div>` (non-navigable — no meaningful drill-down target)
 - The non-navigable card uses same visual classes but without hover shadow and without `<Link>`
 
 **Tooltip implementation for empty avg-time:**
 - Use `src/components/ui/tooltip.tsx` (install via `npx shadcn add tooltip`)
 - Trigger: the `—` text span
-- Content: `text-xs max-w-xs`
+- Content: `text-sm max-w-xs`
 - Tooltip only rendered when `avgMs === null`
 
 ---
@@ -357,7 +367,7 @@ Section card: rounded-xl border bg-card shadow-sm
 ├── Header row: border-b px-6 py-4
 │   ├── Icon: ListChecks h-4 w-4 text-muted-foreground
 │   ├── Title: font-semibold text-base "Primeiros passos"
-│   └── Progress: "{N} de 3 concluídos" text-xs text-muted-foreground ml-auto
+│   └── Progress: "{N} de 3 concluídos" text-sm text-muted-foreground ml-auto
 └── Items list: divide-y
     ├── Item 1: "Agendar suporte com a Pruma"
     ├── Item 2: "Processo configurado pela Pruma"
@@ -371,8 +381,8 @@ div.flex.items-start.gap-4.px-6.py-4
 │   ├── Complete: CheckCircle2 h-5 w-5 text-accent (Ciano Elétrico, filled)
 │   └── Incomplete: Circle h-5 w-5 text-muted-foreground/40 (empty ring)
 ├── Text block (flex-1):
-│   ├── Label: text-sm font-medium (completed = text-muted-foreground line-through)
-│   └── Sub-label (items 2 & 3 only): text-xs text-muted-foreground mt-0.5
+│   ├── Label: text-sm font-normal (completed = text-muted-foreground line-through)
+│   └── Sub-label (items 2 & 3 only): text-sm text-muted-foreground mt-1
 └── Action (right, item 1 only when incomplete):
     └── Button variant="secondary" size="sm" + ExternalLink h-3 w-3
         "Falar com suporte" — opens SUPPORT_WHATSAPP_LINK in new tab
@@ -410,7 +420,7 @@ Section: "Identidade da organização"
 ├── Org name field (full width):
 │   ├── Label: "Nome da organização" (htmlFor/id pair)
 │   ├── Input: standard inputBase classes
-│   └── Save button: variant="default" size="sm" inline or footer
+│   └── Save button: "Salvar nome" variant="default" size="sm" inline or footer
 └── Logo upload field:
     ├── Label: "Logo da organização"
     ├── Upload zone (drag+drop OR click-to-select):
@@ -418,16 +428,16 @@ Section: "Identidade da organização"
     │   │           bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors
     │   │           UploadCloud h-8 w-8 text-muted-foreground/60 centered
     │   │           text-sm text-muted-foreground "Arraste uma imagem ou clique para selecionar"
-    │   │           text-xs text-muted-foreground/60 mt-1 "PNG, JPG ou WebP — máximo 2 MB"
+    │   │           text-sm text-muted-foreground/60 mt-1 "PNG, JPG ou WebP — máximo 2 MB"
     │   ├── Drag-over: border-accent bg-secondary (Ciano Pálido) ring-2 ring-accent/30
     │   ├── Uploading: spinner Loader2 animate-spin h-6 w-6 text-accent centered
     │   │            text-sm text-muted-foreground "Enviando..."
     │   └── Preview (logo exists):
     │       ├── img: 80×80 rounded-lg object-contain border border-border bg-muted
     │       │        alt="Logo {orgName}"
-    │       ├── Filename + size in text-xs text-muted-foreground
+    │       ├── Filename + size in text-sm text-muted-foreground
     │       └── "Remover logo" ghost button size="sm" text-destructive
-    └── Error: role="alert" text-xs text-destructive mt-1.5 with AlertCircle h-3 w-3
+    └── Error: role="alert" text-sm text-destructive mt-2 with AlertCircle h-3 w-3
 ```
 
 **Upload flow behavior:**
@@ -467,7 +477,7 @@ Link href="/settings/organization" (no underline, rounded)
     └── img src={orgLogoUrl} alt="Logo {orgName}" className="h-8 w-8 rounded-md object-contain border border-border"
     if !orgLogo:
     └── div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center"
-        └── span className="text-primary-foreground text-xs font-semibold font-heading"
+        └── span className="text-primary-foreground text-sm font-semibold font-heading"
             {initials}  ← max 2 chars
 ```
 
@@ -479,7 +489,7 @@ header.flex.h-16.items-center.justify-between.border-b.bg-background.px-6
 │   └── h1 text-lg font-semibold {title}
 └── Right: flex items-center gap-4
     ├── Theme toggle button
-    └── Bell icon button
+    └── Bell icon button aria-label="Ver notificações"
 ```
 
 **Initials computation:** same function as logo-upload component — extract from `design-system/MASTER.md` as a shared `getOrgInitials(name: string): string` utility.
@@ -504,11 +514,11 @@ form.space-y-5
 │   ├── label htmlFor="display-name"
 │   ├── input id="display-name" type="text" autoComplete="name"
 │   │   value={name} onChange={...}
-│   └── error: role="alert" text-xs text-destructive (empty name)
+│   └── error: role="alert" text-sm text-destructive (empty name)
 └── Footer: flex justify-end
     └── Button variant="default" size="default" type="submit"
-        ├── Idle: "Salvar"
-        └── Loading: Loader2 animate-spin + "Salvando..."
+        ├── Idle: "Salvar alterações"
+        └── Loading: Loader2 animate-spin + "Salvando alterações..."
 ```
 
 **Section 2 — Contas conectadas:**
@@ -520,9 +530,9 @@ ul.space-y-2 (role="list")
     div.flex.items-center.justify-between.rounded-lg.border.bg-muted/30.px-4.py-3
     ├── Left: flex items-center gap-3
     │   ├── Provider icon (20×20): Google SVG or Mail h-5 w-5 for credentials
-    │   └── span.text-sm.font-medium {providerLabel}
+    │   └── span.text-sm.font-normal {providerLabel}
     └── Right:
-        └── Badge: bg-emerald-50 text-emerald-700 text-xs "Conectado"
+        └── Badge: bg-emerald-50 text-emerald-700 text-sm "Conectado"
 ```
 
 **Provider labels:**

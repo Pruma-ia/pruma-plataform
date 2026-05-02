@@ -161,7 +161,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         | "canceled"
         | "inactive"
         | undefined
-      session.user.emailVerified = (token.emailVerified as boolean | undefined) ?? false
+      // Cast required: DrizzleAdapter augments Session.user.emailVerified as Date|null;
+      // our JWT carries a derived boolean. The intersection is resolved at runtime.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(session.user as any).emailVerified = (token.emailVerified as boolean | undefined) ?? false
       return session
     },
   },

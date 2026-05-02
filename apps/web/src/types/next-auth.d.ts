@@ -9,8 +9,9 @@ declare module "next-auth" {
       organizationSlug?: string
       role?: "owner" | "admin" | "member" | "viewer"
       subscriptionStatus?: "active" | "trial" | "past_due" | "canceled" | "inactive"
+      /** Boolean form of users.emailVerified — true when DB timestamp is non-null */
       emailVerified?: boolean
-    } & DefaultSession["user"]
+    } & Omit<NonNullable<DefaultSession["user"]>, "emailVerified">
   }
 }
 

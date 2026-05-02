@@ -36,7 +36,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 
 **Wave 1**
-- [ ] 01-01-PLAN.md — schema + Upstash ratelimit module + JWT emailVerified claim
+- [x] 01-01-PLAN.md — schema + Upstash ratelimit module + JWT emailVerified claim
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 01-02-PLAN.md — OTP flow (lib/otp, verify-otp + resend-otp routes, /verify-email page)
@@ -141,7 +141,7 @@ Phases execute em ordem numérica: 1 → 2 → 3 → 4 → 5 (requer WABA aprova
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 1/6 | In progress | - |
 | 2. Gestao e Auditoria | 0/TBD | Not started | - |
 | 3. Billing Self-Service | 0/TBD | Not started | - |
 | 4. Notificacoes e Phone OTP | 0/TBD | Not started | - |

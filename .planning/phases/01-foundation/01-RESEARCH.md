@@ -796,22 +796,25 @@ Wave 5 (User profile — PROF-01, PROF-02)
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Checklist visibility after first flow/approval arrives**
    - What we know: D-10 says show when `flows.count=0 AND approvals.count=0`. D-11 says disappear when all 3 complete.
    - What's unclear: If a flow is configured (item 2 done) but WhatsApp link never clicked (item 1 not done), does the checklist still show? D-10 hides it once flows.count>0. This means a customer who configures their flow before clicking the WhatsApp support link would never see the WhatsApp item again.
    - Recommendation: Planner should clarify with user. Suggested resolution: show checklist until all 3 items are complete OR until 30 days after org creation (whichever comes first). Simplest safe default: only hide via D-11 (all done); ignore D-10 as a show trigger — always show until complete. Let planner decide.
+   - **RESOLVED:** Visibility expression locked as `shouldShow = (flowCount === 0 && approvalCount === 0) || !allDone` — implements D-10 literal (fresh org) combined with D-11 literal (hide only when all 3 items complete). `whatsappClicked` does NOT condition visibility, only per-item visual state. Implementation lives in Plan 01-03 Task 1 (`apps/web/src/lib/dashboard-metrics.ts → getOnboardingChecklistState`). Truth-table verified by 6 unit-test cases in `dashboard-metrics.test.ts`.
 
 2. **JWT refresh mechanism after OTP verification**
    - What we know: NextAuth v5 exposes `unstable_update()` which can update JWT claims without re-login. Alternatively, the OTP verify endpoint can redirect to a NextAuth sign-in callback.
    - What's unclear: Does `unstable_update()` propagate immediately to the client cookie? The `unstable` prefix suggests potential breakage.
    - Recommendation: Use the most reliable path — after `verify-otp` succeeds, force a fresh sign-in using `signIn("credentials", { redirect: true, callbackUrl: "/onboarding/org-profile" })` client-side. This guarantees a fresh JWT with `emailVerified: true`. The UX impact is minimal (user just verified their email; one extra auth round-trip is acceptable).
+   - **RESOLVED:** Use NextAuth v5 `useSession().update()` (no args) as the SINGLE locked refresh mechanism. After POST /api/auth/verify-otp returns 200, the client calls `await update()` which re-runs the JWT callback in `auth.ts`, re-selects `users.emailVerified` from DB, and emits a fresh JWT carrying `emailVerified=true`. Then `router.push("/dashboard")` carries the refreshed cookie through the proxy gate. Implementation lives in Plan 01-02 Task 3 (`apps/web/src/app/(auth)/verify-email/page.tsx`). `signIn()` and `router.refresh()` before `update()` are explicitly forbidden alternatives. End-to-end proof in Plan 01-06 Playwright spec 4 ("after verify, dashboard becomes reachable").
 
 3. **Upstash account availability in dev environment**
    - What we know: Upstash free tier exists; env vars needed.
    - What's unclear: Does the developer already have an Upstash account? Should the planner include a "create Upstash account" task?
    - Recommendation: Planner should include a Wave 0 infrastructure task: "Create Upstash Redis database (free tier) and add `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` to `.env.local` and Vercel environment." For local dev without Upstash, the ratelimit module can gracefully fall back (check for empty env vars and skip rate limiting in dev).
+   - **RESOLVED:** No-op fallback when `UPSTASH_REDIS_REST_URL` is empty — local dev uses in-memory fallback mode in `apps/web/src/lib/ratelimit.ts`. The `makeLimiter()` factory checks `hasUpstash = !!URL && !!TOKEN`; when false, returns `{ limit: async () => ({ success: true, ... }) }` so dev requests pass through unrestricted. Production REQUIRES both env vars (set via `user_setup` frontmatter on Plan 01-01). Implementation lives in Plan 01-01 Task 2. Validated by unit test "no-op fallback when UPSTASH_REDIS_REST_URL is empty".
 
 ---
 

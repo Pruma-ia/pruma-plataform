@@ -31,7 +31,26 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Dashboard exibe métricas reais da org: pendentes, resolvidas hoje, fluxos ativos, tempo médio de resolução
   4. Org nova vê checklist de primeiros passos que se marca automaticamente conforme ações são completadas e desaparece quando tudo está feito
   5. Owner da org pode editar nome e logo; usuário pode editar nome e ver contas conectadas
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+
+**Wave 1**
+- [ ] 01-01-PLAN.md — schema + Upstash ratelimit module + JWT emailVerified claim
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 01-02-PLAN.md — OTP flow (lib/otp, verify-otp + resend-otp routes, /verify-email page)
+- [ ] 01-03-PLAN.md — dashboard metrics (4 cards + onboarding checklist)
+- [ ] 01-04-PLAN.md — org identity (name + logo edit, header logo display)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 01-05-PLAN.md — user profile (display name + connected accounts) — depends_on: [01, 04]
+- [ ] 01-06-PLAN.md — proxy.ts emailVerified gate + Upstash migration — depends_on: [01, 02]
+
+Cross-cutting constraints:
+- All API routes must read `organizationId` from `session.user.organizationId` only (never request body)
+- All DB queries must be scoped by `eq(<table>.organizationId, orgId)` — multi-tenant isolation
+- `drizzle-kit push` is forbidden — use `drizzle-kit generate` + psql apply only
 **UI hint**: yes
 
 **External dependency (INICIAR IMEDIATAMENTE — paralelo ao desenvolvimento):**

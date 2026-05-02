@@ -101,6 +101,8 @@ export const organizations = pgTable("organizations", {
   setupChargeAmount: integer("setup_charge_amount"),
   setupChargeInstallments: integer("setup_charge_installments"),
   setupChargeStatus: text("setup_charge_status"),
+  // Onboarding checklist item 1 ("Agendar suporte") — D-08, derived state for DASH-03/04
+  onboardingWhatsappClickedAt: timestamp("onboarding_whatsapp_clicked_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 })
@@ -279,6 +281,19 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})
+
+// ─── Email OTP Tokens ─────────────────────────────────────────────────────────
+// Verifies user email at signup (AUTH-01). One row per user; resend deletes-then-inserts.
+export const emailOtpTokens = pgTable("email_otp_tokens", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   usedAt: timestamp("used_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

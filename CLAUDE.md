@@ -41,15 +41,50 @@ Toda decisão de produto, negócio ou arquitetura:
 
 ## Fluxo de desenvolvimento (obrigatório)
 
-Nunca implementar features direto na `master`. Sequência:
+### Modelo de branches
 
-1. Commitar trabalho aberto na branch atual
-2. Criar branch `feat/<nome-da-feature>` **antes de escrever qualquer código** — sem exceção
-3. Mergar apenas via Pull Request
+```
+feat/<nome> → master (staging) → production (prod)
+```
 
-**Regra para o Claude:** ao iniciar qualquer feature, a primeira ação obrigatória é criar a branch. Antes de editar qualquer arquivo, checar `git branch --show-current`. Se estiver em `master`, criar branch imediatamente.
+| Branch | Ambiente | Banco | Deploy |
+|---|---|---|---|
+| `feat/*` | local | Docker local | — |
+| `master` | staging | Neon branch `staging` | Vercel preview |
+| `production` | produção | Neon branch `main` | Vercel production |
 
-**Rationale:** master deve refletir só código revisado. Feature branches isolam dev e permitem PR review antes de integrar. Mudança feita em master antes da branch = retrabalho de cherry-pick ou reset.
+**Regra para o Claude:** ao iniciar qualquer feature, checar `git branch --show-current`. Se estiver em `master` ou `production`, criar branch `feat/<nome>` imediatamente antes de tocar qualquer arquivo.
+
+**Regra absoluta:** nunca mergar `feat/*` direto em `production`. Sempre passar por `master` primeiro.
+
+### Sequência de desenvolvimento
+
+1. Criar `feat/<nome>` a partir de `master`
+2. Implementar + testes + Playwright (se UI)
+3. PR `feat/<nome>` → `master` (staging)
+4. CI valida migrations, deploya em staging, aplica `db:migrate` no Neon staging
+5. Validar manualmente no staging URL gerado pelo Vercel
+6. PR `master` → `production` (promoção de release)
+7. CI testa migrations em Neon preview do main, aplica em prod, deploya
+
+**Rationale:** migrations sem staging causavam erros silenciosos em prod (journal desync, `when` errado). Toda migration agora é testada contra dados reais de staging antes de tocar prod.
+
+### Setup inicial obrigatório (one-time, manual)
+
+Antes do pipeline funcionar completamente:
+
+1. **Neon console:** criar branch `staging` a partir de `main` → copiar branch ID
+2. **Neon console:** rodar baseline no staging (banco criado sem `__drizzle_migrations`):
+   ```bash
+   DATABASE_URL=<neon-staging-url> npm run db:baseline
+   ```
+3. **GitHub → Settings → Environments:** criar environment `staging` com secrets:
+   - `NEON_API_KEY` (mesmo do prod)
+   - `NEON_STAGING_BRANCH_ID` (branch ID do passo 1)
+   - `DATABASE_URL_STAGING` (connection string do passo 1)
+   - `VERCEL_TOKEN` (mesmo do prod)
+4. **GitHub → Settings → Branches:** proteger `production` — require PR, no direct push, require status checks (`Validate Migrations`)
+5. **Vercel dashboard:** desabilitar auto-deploy da integração GitHub (CI faz deploy via CLI)
 
 ### Validação visual com Playwright (obrigatória para features de UI)
 

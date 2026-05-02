@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, production]
   pull_request:
-    branches: [master]
+    branches: [master, production]
 
 defaults:
   run:
@@ -34,8 +34,6 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     env:
-      # Placeholders para satisfazer validações em tempo de build.
-      # Nenhum valor real é necessário — nenhuma rota é executada durante o build.
       DATABASE_URL: "postgresql://user:pass@localhost/placeholder"
       AUTH_SECRET: "ci-placeholder-secret-must-be-32-chars-long"
       AUTH_GOOGLE_ID: "placeholder"
@@ -55,23 +53,13 @@ jobs:
 
       - run: npm run build
 
-  # ── 3. Migrate + Deploy (somente em merge para main/master) ─────────────────
-  deploy:
-    name: Migrate & Deploy
+  # ── 3. Validate migrations (PRs e pushes em ambas as branches) ──────────────
+  validate-migrations:
+    name: Validate Migrations
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-
-      - run: npm ci
 
       - name: Validate migration journal
         run: |
@@ -100,22 +88,60 @@ jobs:
           done
           [ $invalid -eq 0 ] || exit 1
 
-      - name: Create Neon preview branch
+  # ── 4a. Staging deploy (push para master) ───────────────────────────────────
+  # Requer secrets no GitHub Environment "staging":
+  #   NEON_API_KEY           — mesmo do prod
+  #   NEON_STAGING_BRANCH_ID — branch ID do branch "staging" no Neon console
+  #   DATABASE_URL_STAGING   — connection string do Neon branch staging
+  #   VERCEL_TOKEN           — mesmo do prod
+  deploy-staging:
+    name: Migrate & Deploy → Staging
+    needs: validate-migrations
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - run: npm ci
+
+      - name: Create Neon preview branch from staging
         id: neon-branch
         run: |
           response=$(curl -sf -X POST \
             "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches" \
             -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d "{\"branch\":{\"name\":\"ci-migrate-${{ github.run_id }}\"},\"endpoints\":[{\"type\":\"read_write\"}]}")
+            -d "{\"branch\":{\"name\":\"ci-staging-${{ github.run_id }}\",\"parent_id\":\"${{ secrets.NEON_STAGING_BRANCH_ID }}\"},\"endpoints\":[{\"type\":\"read_write\"}]}")
           branch_id=$(echo "$response" | jq -r '.branch.id')
+          if [ -z "$branch_id" ] || [ "$branch_id" = "null" ]; then
+            echo "ERROR: Neon branch creation failed. Response: $response"
+            exit 1
+          fi
           echo "branch_id=$branch_id" >> $GITHUB_OUTPUT
+          # Wait for endpoint to be ready (Neon cold-start up to 5s)
+          sleep 5
           conn=$(curl -sf \
             "https://console.neon.tech/api/v2/projects/wild-shape-63460566/connection_uri?branch_id=$branch_id&database_name=neondb&role_name=neondb_owner" \
             -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}")
-          echo "db_url=$(echo "$conn" | jq -r '.uri')" >> $GITHUB_OUTPUT
+          db_url=$(echo "$conn" | jq -r '.uri')
+          if [ -z "$db_url" ] || [ "$db_url" = "null" ]; then
+            echo "ERROR: Failed to get connection URI for branch $branch_id"
+            exit 1
+          fi
+          echo "db_url=$db_url" >> $GITHUB_OUTPUT
 
-      - name: Test migrations on Neon branch
+      - name: Test migrations on Neon preview (staging base)
         run: npx tsx scripts/migrate.ts
         env:
           DATABASE_URL: ${{ steps.neon-branch.outputs.db_url }}
@@ -123,19 +149,94 @@ jobs:
       - name: Delete Neon preview branch
         if: always()
         run: |
-          curl -sf -X DELETE \
-            "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches/${{ steps.neon-branch.outputs.branch_id }}" \
-            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}"
+          if [ -n "${{ steps.neon-branch.outputs.branch_id }}" ] && [ "${{ steps.neon-branch.outputs.branch_id }}" != "null" ]; then
+            curl -sf -X DELETE \
+              "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches/${{ steps.neon-branch.outputs.branch_id }}" \
+              -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}"
+          fi
 
-      - name: Run Drizzle migrations
+      - name: Run migrations on staging DB
+        run: npx tsx scripts/migrate.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
+
+      - name: Deploy to Vercel (staging preview)
+        working-directory: ${{ github.workspace }}
+        run: npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: team_CisLLmpWltH87v1CVgGNdqSc
+          VERCEL_PROJECT_ID: prj_uipbuzcH6Hse0BE2hIpzlRuAwPlY
+
+  # ── 4b. Production deploy (push para production) ────────────────────────────
+  deploy-production:
+    name: Migrate & Deploy → Production
+    needs: validate-migrations
+    if: github.event_name == 'push' && github.ref == 'refs/heads/production'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - run: npm ci
+
+      - name: Create Neon preview branch from main (prod base)
+        id: neon-branch
+        run: |
+          response=$(curl -sf -X POST \
+            "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches" \
+            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"branch\":{\"name\":\"ci-prod-${{ github.run_id }}\"},\"endpoints\":[{\"type\":\"read_write\"}]}")
+          branch_id=$(echo "$response" | jq -r '.branch.id')
+          if [ -z "$branch_id" ] || [ "$branch_id" = "null" ]; then
+            echo "ERROR: Neon branch creation failed. Response: $response"
+            exit 1
+          fi
+          echo "branch_id=$branch_id" >> $GITHUB_OUTPUT
+          # Wait for endpoint to be ready (Neon cold-start up to 5s)
+          sleep 5
+          conn=$(curl -sf \
+            "https://console.neon.tech/api/v2/projects/wild-shape-63460566/connection_uri?branch_id=$branch_id&database_name=neondb&role_name=neondb_owner" \
+            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}")
+          db_url=$(echo "$conn" | jq -r '.uri')
+          if [ -z "$db_url" ] || [ "$db_url" = "null" ]; then
+            echo "ERROR: Failed to get connection URI for branch $branch_id"
+            exit 1
+          fi
+          echo "db_url=$db_url" >> $GITHUB_OUTPUT
+
+      - name: Test migrations on Neon preview (prod base)
+        run: npx tsx scripts/migrate.ts
+        env:
+          DATABASE_URL: ${{ steps.neon-branch.outputs.db_url }}
+
+      - name: Delete Neon preview branch
+        if: always()
+        run: |
+          if [ -n "${{ steps.neon-branch.outputs.branch_id }}" ] && [ "${{ steps.neon-branch.outputs.branch_id }}" != "null" ]; then
+            curl -sf -X DELETE \
+              "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches/${{ steps.neon-branch.outputs.branch_id }}" \
+              -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}"
+          fi
+
+      - name: Run Drizzle migrations on production
         run: npx tsx scripts/migrate.ts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - name: Deploy to Vercel (após migration)
+      - name: Deploy to Vercel (production)
         working-directory: ${{ github.workspace }}
         run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: team_CisLLmpWltH87v1CVgGNdqSc
           VERCEL_PROJECT_ID: prj_uipbuzcH6Hse0BE2hIpzlRuAwPlY
-

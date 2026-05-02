@@ -1,6 +1,6 @@
 {
-  "id": "511aa712-94ca-4a2f-9ca3-7ebf7ddd7a48",
-  "prevId": "ed6f0ec1-2304-47d0-8146-7dfaf4222f3d",
+  "id": "8acbe365-ff3b-41b7-bf9f-0aaab60b0d15",
+  "prevId": "511aa712-94ca-4a2f-9ca3-7ebf7ddd7a48",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -507,6 +507,70 @@
             "id"
           ],
           "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.email_otp_tokens": {
+      "name": "email_otp_tokens",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "used_at": {
+          "name": "used_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "email_otp_tokens_user_id_users_id_fk": {
+          "name": "email_otp_tokens_user_id_users_id_fk",
+          "tableFrom": "email_otp_tokens",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1141,52 +1205,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "asaas_customer_id": {
-          "name": "asaas_customer_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "asaas_subscription_id": {
-          "name": "asaas_subscription_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "asaas_plan_id": {
-          "name": "asaas_plan_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "subscription_status": {
-          "name": "subscription_status",
-          "type": "subscription_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'trial'"
-        },
-        "subscription_ends_at": {
-          "name": "subscription_ends_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
         "cnpj": {
           "name": "cnpj",
           "type": "text",
@@ -1234,6 +1252,82 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "asaas_customer_id": {
+          "name": "asaas_customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_subscription_id": {
+          "name": "asaas_subscription_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_plan_id": {
+          "name": "asaas_plan_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subscription_status": {
+          "name": "subscription_status",
+          "type": "subscription_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'trial'"
+        },
+        "subscription_ends_at": {
+          "name": "subscription_ends_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "setup_charge_asaas_id": {
+          "name": "setup_charge_asaas_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "setup_charge_amount": {
+          "name": "setup_charge_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "setup_charge_installments": {
+          "name": "setup_charge_installments",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "setup_charge_status": {
+          "name": "setup_charge_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "onboarding_whatsapp_clicked_at": {
+          "name": "onboarding_whatsapp_clicked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},

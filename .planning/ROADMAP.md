@@ -40,7 +40,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 01-02-PLAN.md — OTP flow (lib/otp, verify-otp + resend-otp routes, /verify-email page)
-- [ ] 01-03-PLAN.md — dashboard metrics (4 cards + onboarding checklist)
+- [x] 01-03-PLAN.md — dashboard metrics (4 cards + onboarding checklist)
 - [ ] 01-04-PLAN.md — org identity (name + logo edit, header logo display)
 
 **Wave 3** *(blocked on Wave 2 completion)*
@@ -141,7 +141,7 @@ Phases execute em ordem numérica: 1 → 2 → 3 → 4 → 5 (requer WABA aprova
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/6 | In progress | - |
+| 1. Foundation | 3/6 | In progress | - |
 | 2. Gestao e Auditoria | 0/TBD | Not started | - |
 | 3. Billing Self-Service | 0/TBD | Not started | - |
 | 4. Notificacoes e Phone OTP | 0/TBD | Not started | - |

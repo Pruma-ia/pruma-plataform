@@ -5,41 +5,34 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
-// ── Mocks (hoisted before imports) ────────────────────────────────────────────
+// ── Mocks (vi.mock hoisted — no top-level variables in factory) ───────────────
 
-const mockSelect = vi.fn()
-const mockFrom = vi.fn()
-const mockWhere = vi.fn()
-const mockLimit = vi.fn()
-const mockThen = vi.fn()
-const mockUpdate = vi.fn()
-const mockSet = vi.fn()
-
-// Chainable db mock
-vi.mock("@/lib/db", () => ({
-  db: {
-    select: mockSelect,
-    update: mockUpdate,
-  },
-}))
-
-// Mock drizzle-orm operators — just pass-through for assertion purposes
-vi.mock("drizzle-orm", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("drizzle-orm")>()
+vi.mock("@/lib/db", () => {
+  const mockSelectFn = vi.fn()
   return {
-    ...actual,
-    and: (...args: unknown[]) => ({ op: "and", args }),
-    eq: (col: unknown, val: unknown) => ({ op: "eq", col, val }),
-    gte: (col: unknown, val: unknown) => ({ op: "gte", col, val }),
-    inArray: (col: unknown, vals: unknown) => ({ op: "inArray", col, vals }),
-    count: () => ({ op: "count" }),
-    sql: Object.assign(
-      (strings: TemplateStringsArray, ...values: unknown[]) => ({ op: "sql", strings, values }),
-      { raw: (s: string) => ({ op: "sql_raw", s }) }
-    ),
+    db: { select: mockSelectFn },
+    __mockSelectFn: mockSelectFn,
   }
 })
 
+vi.mock("drizzle-orm", () => ({
+  and: vi.fn((...args: unknown[]) => args),
+  eq: vi.fn(),
+  gte: vi.fn(),
+  inArray: vi.fn(),
+  count: vi.fn(() => ({})),
+  sql: vi.fn(),
+}))
+
+vi.mock("../../db/schema", () => ({
+  approvals: {},
+  flows: {},
+  organizations: {},
+}))
+
+// ── Real imports after mocks ──────────────────────────────────────────────────
+
+import { db } from "@/lib/db"
 import {
   formatAvgTime,
   getResolvedTodayCount,
@@ -47,14 +40,17 @@ import {
   getOnboardingChecklistState,
 } from "./dashboard-metrics"
 
-// ── Helper: build chainable mock ──────────────────────────────────────────────
+// ── Helper: build chainable select mock for a single query returning rows ─────
 
-function buildChain(resolved: unknown) {
+function buildSelectChain(rows: unknown[]) {
+  const thenFn = vi.fn().mockImplementation((cb: (r: unknown[]) => unknown) =>
+    Promise.resolve(cb(rows))
+  )
   const chain = {
     from: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    then: vi.fn().mockImplementation((fn: (v: unknown) => unknown) => Promise.resolve(fn(resolved))),
+    limit: vi.fn().mockReturnValue({ then: thenFn }),
+    then: thenFn,
   }
   return chain
 }
@@ -84,8 +80,8 @@ describe("formatAvgTime", () => {
     expect(formatAvgTime(3_540_000)).toBe("59min")
   })
 
-  it("returns '1h' for 3_600_000ms (exactly 60 min → rounds to 1h)", () => {
-    // 3_600_000 / 60_000 = 60 min → 60 >= 60 → hours = Math.round(60/60) = 1 → "1h"
+  it("returns '1h' for 3_600_000ms (exactly 60 min → 1h)", () => {
+    // 3_600_000 / 60_000 = 60 min; 60 >= 60 → hours = Math.round(60/60) = 1 → "1h"
     expect(formatAvgTime(3_600_000)).toBe("1h")
   })
 
@@ -98,7 +94,7 @@ describe("formatAvgTime", () => {
   })
 
   it("returns '1d' for 86_400_000ms (24h exactly)", () => {
-    // 86_400_000 / 60_000 = 1440 min → 1440 / 60 = 24h → >= 24 → days = Math.round(24/24) = 1 → "1d"
+    // 86_400_000 / 60_000 = 1440 min → 1440 / 60 = 24h → >= 24 → days = 1 → "1d"
     expect(formatAvgTime(86_400_000)).toBe("1d")
   })
 
@@ -117,25 +113,19 @@ describe("getResolvedTodayCount", () => {
   })
 
   it("returns the count from DB", async () => {
-    const chain = buildChain([{ total: 7 }])
-    mockSelect.mockReturnValue(chain)
-
+    vi.mocked(db.select).mockReturnValue(buildSelectChain([{ total: 7 }]) as ReturnType<typeof db.select>)
     const result = await getResolvedTodayCount("org-1")
     expect(result).toBe(7)
   })
 
   it("returns 0 when DB returns empty array", async () => {
-    const chain = buildChain([])
-    mockSelect.mockReturnValue(chain)
-
+    vi.mocked(db.select).mockReturnValue(buildSelectChain([]) as ReturnType<typeof db.select>)
     const result = await getResolvedTodayCount("org-1")
     expect(result).toBe(0)
   })
 
   it("returns 0 when row.total is undefined", async () => {
-    const chain = buildChain([{}])
-    mockSelect.mockReturnValue(chain)
-
+    vi.mocked(db.select).mockReturnValue(buildSelectChain([{}]) as ReturnType<typeof db.select>)
     const result = await getResolvedTodayCount("org-1")
     expect(result).toBe(0)
   })
@@ -151,25 +141,19 @@ describe("getAvgResolutionMs", () => {
   })
 
   it("returns null when row.avgMs is null", async () => {
-    const chain = buildChain([{ avgMs: null }])
-    mockSelect.mockReturnValue(chain)
-
+    vi.mocked(db.select).mockReturnValue(buildSelectChain([{ avgMs: null }]) as ReturnType<typeof db.select>)
     const result = await getAvgResolutionMs("org-1")
     expect(result).toBeNull()
   })
 
   it("returns null when row.avgMs is undefined", async () => {
-    const chain = buildChain([{}])
-    mockSelect.mockReturnValue(chain)
-
+    vi.mocked(db.select).mockReturnValue(buildSelectChain([{}]) as ReturnType<typeof db.select>)
     const result = await getAvgResolutionMs("org-1")
     expect(result).toBeNull()
   })
 
   it("returns numeric value when DB returns avgMs", async () => {
-    const chain = buildChain([{ avgMs: 120_000 }])
-    mockSelect.mockReturnValue(chain)
-
+    vi.mocked(db.select).mockReturnValue(buildSelectChain([{ avgMs: 120_000 }]) as ReturnType<typeof db.select>)
     const result = await getAvgResolutionMs("org-1")
     expect(result).toBe(120_000)
   })
@@ -189,19 +173,20 @@ describe("getOnboardingChecklistState — D-10 shouldShow truth table", () => {
     flowCount: number
     approvalCount: number
   }) {
+    // Promise.all fires 3 selects concurrently; each call returns next mock in sequence
     let callCount = 0
-    mockSelect.mockImplementation(() => {
+    vi.mocked(db.select).mockImplementation((): ReturnType<typeof db.select> => {
       callCount++
       if (callCount === 1) {
-        // org query
-        return buildChain([{ clickedAt: opts.whatsappClickedAt }])
+        // org query — uses .limit().then()
+        return buildSelectChain([{ clickedAt: opts.whatsappClickedAt }]) as ReturnType<typeof db.select>
       }
       if (callCount === 2) {
-        // flow count query
-        return buildChain([{ total: opts.flowCount }])
+        // flow count query — uses .then()
+        return buildSelectChain([{ total: opts.flowCount }]) as ReturnType<typeof db.select>
       }
-      // approval count query
-      return buildChain([{ total: opts.approvalCount }])
+      // approval count query — uses .then()
+      return buildSelectChain([{ total: opts.approvalCount }]) as ReturnType<typeof db.select>
     })
   }
 
@@ -245,7 +230,7 @@ describe("getOnboardingChecklistState — D-10 shouldShow truth table", () => {
     expect(state.allDone).toBe(false)
   })
 
-  it("has flows and approvals, whatsappClicked=true → shouldShow=false (allDone=true; D-11)", async () => {
+  it("has flows+approvals, whatsappClicked=true → shouldShow=false (allDone=true; D-11)", async () => {
     setupMocks({ whatsappClickedAt: new Date(), flowCount: 2, approvalCount: 5 })
     const state = await getOnboardingChecklistState("org-1")
     expect(state.shouldShow).toBe(false)
@@ -255,7 +240,7 @@ describe("getOnboardingChecklistState — D-10 shouldShow truth table", () => {
     expect(state.allDone).toBe(true)
   })
 
-  it("has flows and approvals, whatsappClicked=false → shouldShow=true (NOT allDone; checklist visible until item 1 complete)", async () => {
+  it("has flows+approvals, whatsappClicked=false → shouldShow=true (NOT allDone; visible until item 1 complete)", async () => {
     setupMocks({ whatsappClickedAt: null, flowCount: 2, approvalCount: 5 })
     const state = await getOnboardingChecklistState("org-1")
     expect(state.shouldShow).toBe(true)

@@ -27,6 +27,15 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;")
 }
 
+// Escapes characters that can break out of an HTML attribute value context.
+// Applied to all URL values interpolated into MJML href attributes.
+function escapeAttr(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
   if (process.env.NODE_ENV === "production") {
     await resend.emails.send({ from: FROM, to, subject, html })
@@ -68,7 +77,7 @@ async function buildPasswordResetHtml(resetUrl: string): Promise<string> {
             </mj-text>
             <mj-button background-color="#00AEEF" color="#ffffff" border-radius="8px"
                        font-weight="700" font-size="14px" inner-padding="13px 32px"
-                       href="${resetUrl}" align="left">
+                       href="${escapeAttr(resetUrl)}" align="left">
               Redefinir senha
             </mj-button>
           </mj-column>
@@ -153,7 +162,7 @@ async function buildApprovalNotificationHtml(
             ` : ""}
             <mj-button background-color="#00AEEF" color="#ffffff" border-radius="8px"
                        font-weight="700" font-size="14px" inner-padding="13px 32px"
-                       href="${approvalUrl}" align="left">
+                       href="${escapeAttr(approvalUrl)}" align="left">
               Revisar agora
             </mj-button>
           </mj-column>

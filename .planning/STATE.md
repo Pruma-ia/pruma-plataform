@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-05-02)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 1 of 6 in current phase
+Plan: 2 of 6 in current phase
 Status: In progress
-Last activity: 2026-05-02 — 01-01-PLAN.md complete (schema + Upstash ratelimit + JWT emailVerified)
+Last activity: 2026-05-03 — 01-02-PLAN.md complete (OTP flow: lib/otp, verify-otp, resend-otp, /verify-email page)
 
-Progress: [█░░░░░░░░░] 17%
+Progress: [██░░░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: ~45 min
-- Total execution time: ~0.75 hours
+- Total plans completed: 2
+- Average duration: ~27 min
+- Total execution time: ~0.88 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Foundation | 1/6 | ~45 min | ~45 min |
+| 1. Foundation | 2/6 | ~53 min | ~27 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~45 min)
-- Trend: baseline
+- Last 5 plans: 01-01 (~45 min), 01-02 (~8 min)
+- Trend: fast (01-02 was mostly implementation, TDD kept scope tight)
 
 *Updated after each plan completion*
 
@@ -47,6 +47,9 @@ Recent decisions affecting current work:
 - 01-01: emailOtpTokens has no unique index on userId — resend uses delete-then-insert (simpler, prevents stale token reuse)
 - 01-01: Upstash Ratelimit singletons at module level with no-op dev fallback when env vars absent
 - 01-01: emailVerified boolean defaults to false in session callback for safety (unverified until DB confirms)
+- 01-02: sendOtpVerificationEmail/sendOtpResendEmail follow email.ts buildXxx+sendXxx pattern — sendEmail() stays internal per CLAUDE.md mandate
+- 01-02: NextAuth v5 update() is the single locked JWT refresh strategy after email verify — no signIn(), no router.refresh()
+- 01-02: Playwright spec 3 (happy path) skipped with TODO(Plan 06) — proxy.ts gate needed to make assertion observable
 
 ### Pending Todos
 
@@ -71,6 +74,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-02
-Stopped at: 01-01-PLAN.md complete. Próximo: execute 01-02-PLAN.md (Wave 2 — OTP flow)
-Resume file: .planning/phases/01-foundation/01-02-PLAN.md
+Last session: 2026-05-03
+Stopped at: 01-02-PLAN.md complete. Wave 2 em andamento — 01-03 e 01-04 prontos para execução paralela.
+Resume file: .planning/phases/01-foundation/01-03-PLAN.md

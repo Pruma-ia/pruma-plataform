@@ -144,6 +144,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.refreshedAt = Date.now()
       }
 
+      // Re-lê emailVerified do banco sempre que o token ainda carrega false e há userId.
+      // Necessário para que o update() chamado pela página /verify-email após OTP bem-sucedido
+      // propague a flag para o JWT — sem isso o proxy continua redirecionando para /verify-email
+      // até o usuário fazer logout e re-login. (AUTH-01 / CR-04)
+      if (!token.isSuperAdmin && token.emailVerified === false && token.id) {
+        const [dbUser] = await db
+          .select({ emailVerified: users.emailVerified })
+          .from(users)
+          .where(eq(users.id, token.id as string))
+          .limit(1)
+        if (dbUser?.emailVerified != null) {
+          token.emailVerified = true
+        }
+      }
+
       return token
     },
 

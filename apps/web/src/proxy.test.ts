@@ -52,18 +52,24 @@ type SessionUser = {
   subscriptionStatus?: "active" | "trial" | "past_due" | "canceled" | "inactive"
 }
 
+// NextAuth v5 attaches the full session object to req.auth.
+// The session object has a `user` property matching Session.user shape.
+type AuthSession = { user: SessionUser & { id: string; name: string; email: string } } | null
+
 function makeReq(
   pathname: string,
-  session: SessionUser | null,
+  sessionUser: SessionUser | null,
   ip = "1.2.3.4",
-): NextRequest & { auth: SessionUser | null } {
+): NextRequest & { auth: AuthSession } {
   const url = new URL(pathname, "http://localhost:3000")
   const req = new Request(url, {
     headers: { "x-forwarded-for": ip },
-  }) as unknown as NextRequest & { auth: SessionUser | null }
-  // NextAuth v5 attaches .auth to req inside the wrapper
+  }) as unknown as NextRequest & { auth: AuthSession }
+  // NextAuth v5 attaches .auth (the session) to req inside the wrapper
   Object.defineProperty(req, "nextUrl", { value: url })
-  req.auth = session ? { ...session } : null
+  req.auth = sessionUser
+    ? { user: { id: "user-1", name: "Test User", email: "test@test.com", ...sessionUser } }
+    : null
   return req
 }
 
@@ -163,8 +169,8 @@ describe("proxy.ts middleware", () => {
 
     const location = (res as Response).headers.get("location")
     // Must not redirect to /verify-email (would be a loop)
-    // Should return next() — status 200 or no location header pointing to verify-email
-    expect(location).not.toContain("/verify-email")
+    // location is null (next()) or points elsewhere — both are acceptable
+    expect(location === null || !location.includes("/verify-email")).toBe(true)
   })
 
   // ── Test f: emailVerified=false + /api/auth/verify-otp → does NOT redirect ──
@@ -180,7 +186,7 @@ describe("proxy.ts middleware", () => {
     const res = await handler(req)
 
     const location = (res as Response).headers.get("location")
-    expect(location).not.toContain("/verify-email")
+    expect(location === null || !location.includes("/verify-email")).toBe(true)
   })
 
   // ── Test g: emailVerified=false + /api/auth/resend-otp → does NOT redirect ──
@@ -196,7 +202,7 @@ describe("proxy.ts middleware", () => {
     const res = await handler(req)
 
     const location = (res as Response).headers.get("location")
-    expect(location).not.toContain("/verify-email")
+    expect(location === null || !location.includes("/verify-email")).toBe(true)
   })
 
   // ── Test h: emailVerified=true + /verify-email → redirect to /dashboard ─────
@@ -245,7 +251,7 @@ describe("proxy.ts middleware", () => {
     const res = await handler(req)
 
     const location = (res as Response).headers.get("location")
-    expect(location).not.toContain("/verify-email")
+    expect(location === null || !location.includes("/verify-email")).toBe(true)
   })
 
   // ── Test k: no session + /dashboard → no emailVerified redirect ──────────────
@@ -257,7 +263,7 @@ describe("proxy.ts middleware", () => {
     const res = await handler(req)
 
     const location = (res as Response).headers.get("location")
-    expect(location).not.toContain("/verify-email")
+    expect(location === null || !location.includes("/verify-email")).toBe(true)
   })
 
   // ── Test l: config.matcher contains required paths ────────────────────────────

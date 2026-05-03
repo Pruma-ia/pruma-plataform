@@ -1,5 +1,9 @@
 "use client"
 
+// Force dynamic rendering — this page uses useSession() which requires the request context.
+// Static pre-rendering would fail because session is not available at build time.
+export const dynamic = "force-dynamic"
+
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
@@ -9,7 +13,9 @@ const DIGIT_COUNT = 6
 const RESEND_COOLDOWN = 60
 
 export default function VerifyEmailPage() {
-  const { data: session, update } = useSession()
+  const sessionResult = useSession()
+  const session = sessionResult?.data
+  const update = sessionResult?.update ?? (async () => {})
   const router = useRouter()
 
   const [digits, setDigits] = useState<string[]>(Array(DIGIT_COUNT).fill(""))

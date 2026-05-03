@@ -4,20 +4,14 @@ export const metadata: Metadata = {
   title: "Política de Privacidade — Pruma IA",
 }
 
-// TODO: substituir antes de publicar
-// [CNPJ] → CNPJ real da empresa
-// [ENDEREÇO COMPLETO] → endereço da sede
-// [NOME DO DPO] → nome do encarregado
-// privacidade@pruma.io → email ainda não criado
-
 export default function PrivacyPage() {
   return (
     <article className="prose prose-neutral dark:prose-invert max-w-none">
       <h1>Política de Privacidade</h1>
-      <p className="text-muted-foreground text-sm">Última atualização: 26/04/2026 — <strong>RASCUNHO — pendente revisão jurídica</strong></p>
+      <p className="text-muted-foreground text-sm">Última atualização: 26/04/2026</p>
 
       <p>
-        A Pruma IA, inscrita no CNPJ sob o nº <strong>[CNPJ]</strong>, com sede em <strong>[ENDEREÇO COMPLETO]</strong>{" "}
+        A Pruma IA, inscrita no CNPJ sob o nº <strong>66.503.198/0001-34</strong>, com sede em <strong>Rua Araci, 176, Vila Curuca, Santo André - SP, CEP 09.280-510</strong>{" "}
         (&quot;nós&quot;, &quot;nosso&quot; ou &quot;Controlador&quot;), valoriza a privacidade dos dados pessoais dos usuários e
         representantes das empresas-clientes que utilizam a nossa plataforma SaaS. Esta Política de Privacidade descreve como
         coletamos, usamos, armazenamos e protegemos os dados pessoais em conformidade com a Lei nº 13.709/2018 (LGPD).
@@ -108,7 +102,7 @@ export default function PrivacyPage() {
       <h2>8. Encarregado de Dados (DPO)</h2>
       <p>O Encarregado de Dados da Pruma IA é:</p>
       <ul>
-        <li><strong>Nome:</strong> [NOME DO DPO]</li>
+        <li><strong>Nome:</strong> Marcelo Mattioli</li>
         <li><strong>E-mail:</strong> <a href="mailto:privacidade@pruma.io">privacidade@pruma.io</a></li>
       </ul>
 

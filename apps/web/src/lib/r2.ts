@@ -21,6 +21,15 @@ export const ALLOWED_MIME_TYPES = new Set([
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
+// Logo-specific allowlist (D-18). Subset of ALLOWED_MIME_TYPES; PNG/JPG/WebP only.
+export const LOGO_ALLOWED_MIME_TYPES = new Set<string>([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+])
+
+export const MAX_LOGO_SIZE_BYTES = 2 * 1024 * 1024 // 2MB (D-18)
+
 let _client: S3Client | undefined
 
 function getClient() {
@@ -42,6 +51,12 @@ export function buildR2Key(orgId: string, filename: string): string {
   const uuid = crypto.randomUUID()
   const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 100)
   return `${orgId}/${uuid}/${safe}`
+}
+
+export function buildOrgLogoR2Key(orgId: string, filename: string): string {
+  const uuid = crypto.randomUUID()
+  const safe = filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 100)
+  return `org-logos/${orgId}/${uuid}/${safe}`
 }
 
 export async function presignUploadUrl(r2Key: string, mimeType: string, sizeBytes: number) {

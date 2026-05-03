@@ -159,6 +159,8 @@ export const config = {
     "/flows/:path*",
     "/approvals/:path*",
     "/settings/:path*",
+    "/billing",
+    "/billing/:path*",
     "/verify-email",
     "/api/auth/:path*",
     "/api/auth/verify-otp",

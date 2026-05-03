@@ -44,7 +44,7 @@ Plans:
 - [x] 01-04-PLAN.md — org identity (name + logo edit, header logo display)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 01-05-PLAN.md — user profile (display name + connected accounts) — depends_on: [01, 04]
+- [x] 01-05-PLAN.md — user profile (display name + connected accounts) — depends_on: [01, 04]
 - [ ] 01-06-PLAN.md — proxy.ts emailVerified gate + Upstash migration — depends_on: [01, 02]
 
 Cross-cutting constraints:
@@ -141,7 +141,7 @@ Phases execute em ordem numérica: 1 → 2 → 3 → 4 → 5 (requer WABA aprova
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 4/6 | In progress | - |
+| 1. Foundation | 5/6 | In progress | - |
 | 2. Gestao e Auditoria | 0/TBD | Not started | - |
 | 3. Billing Self-Service | 0/TBD | Not started | - |
 | 4. Notificacoes e Phone OTP | 0/TBD | Not started | - |

@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-05-02)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 4 of 6 in current phase
+Plan: 5 of 6 in current phase
 Status: In progress
-Last activity: 2026-05-03 — 01-04-PLAN.md complete (org identity: name + logo edit, header org branding)
+Last activity: 2026-05-03 — 01-05-PLAN.md complete (user profile: display name edit + connected accounts view)
 
-Progress: [████░░░░░░] 67%
+Progress: [█████░░░░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: ~24 min
-- Total execution time: ~1.6 hours
+- Total plans completed: 5
+- Average duration: ~23 min
+- Total execution time: ~1.95 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Foundation | 4/6 | ~96 min | ~24 min |
+| 1. Foundation | 5/6 | ~121 min | ~24 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~45 min), 01-02 (~8 min), 01-03 (~13 min), 01-04 (~30 min)
+- Last 5 plans: 01-01 (~45 min), 01-02 (~8 min), 01-03 (~13 min), 01-04 (~30 min), 01-05 (~25 min)
 - Trend: fast (TDD kept scope tight; deviation fixes were quick)
 
 *Updated after each plan completion*
@@ -57,6 +57,10 @@ Recent decisions affecting current work:
 - 01-04: R2 lifecycle rule for org-logos/ deferred (T-04-08 accepted, future cleanup job)
 - 01-04: next/image unoptimized on OrgLogo — R2 signed URLs expire; Next/Image cache would 403 on reload
 - 01-04: Playwright spec 4 (logo upload E2E) guarded by PLAYWRIGHT_R2_ENABLED env var
+- 01-05: accounts table confirmed in schema.ts as `accounts` — provider + providerAccountId columns
+- 01-05: users.password (not passwordHash) — connected-accounts infers credentials from this column
+- 01-05: ConnectedAccountsList is pure Server Component (props-only) — no disconnect button per PROF-02
+- 01-05: ProfileDisplayNameForm disables submit when name.trim() === initialName.trim() — prevents no-op PATCH
 
 ### Pending Todos
 
@@ -82,5 +86,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-05-03
-Stopped at: 01-04-PLAN.md complete. Wave 2 em andamento — 01-05 e 01-06 prontos para execução.
-Resume file: .planning/phases/01-foundation/01-05-PLAN.md
+Stopped at: 01-05-PLAN.md complete. Wave 3 em andamento — 01-06 é o único plano restante da Phase 1.
+Resume file: .planning/phases/01-foundation/01-06-PLAN.md

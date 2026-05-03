@@ -108,6 +108,14 @@ Phase 1 — Foundation completa:
 - INFRA-01 (Upstash), AUTH-01 (emailVerified gate), DASH-01/02/03/04/05 (dashboard), ORG-01 (org identity), PROF-01/02 (user profile) fechados
 - Pronto para iniciar Phase 2: Gestão e Auditoria
 
+## Self-Check: PASSED
+
+- `.planning/phases/01-foundation/01-06-SUMMARY.md` — FOUND
+- `66ae1d0` (test RED) — FOUND
+- `148f0c1` (feat GREEN) — FOUND
+- `d79f8c4` (feat Playwright) — FOUND
+- `9e79043` (docs metadata) — created
+
 ---
 *Phase: 01-foundation*
 *Completed: 2026-05-02*

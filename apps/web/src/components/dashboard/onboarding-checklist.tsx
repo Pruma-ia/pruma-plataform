@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { CheckCircle2, Circle, ExternalLink, ListChecks } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -16,10 +17,12 @@ export function OnboardingChecklist({
   firstApproval,
   whatsappLink,
 }: OnboardingChecklistProps) {
-  const completedCount = [whatsappClicked, processConfigured, firstApproval].filter(Boolean).length
+  const [localWhatsappClicked, setLocalWhatsappClicked] = useState(whatsappClicked)
+  const completedCount = [localWhatsappClicked, processConfigured, firstApproval].filter(Boolean).length
 
   const handleClick = () => {
     window.open(whatsappLink, "_blank", "noopener,noreferrer")
+    setLocalWhatsappClicked(true)
     fetch("/api/onboarding/whatsapp-clicked", { method: "POST" }).catch(() => {
       // fire-and-forget; no UI error per UI-SPEC
     })
@@ -43,18 +46,18 @@ export function OnboardingChecklist({
         {/* Item 1 — Agendar suporte */}
         <li role="listitem" className="flex items-start gap-4 px-6 py-4">
           <div className="mt-0.5 shrink-0">
-            {whatsappClicked ? (
-              <CheckCircle2 className="h-5 w-5 text-[#00AEEF]" aria-hidden="true" />
+            {localWhatsappClicked ? (
+              <CheckCircle2 className="h-5 w-5 text-[#00AEEF] animate-in zoom-in-50 duration-300" aria-hidden="true" />
             ) : (
               <Circle className="h-5 w-5 text-muted-foreground/40" aria-hidden="true" />
             )}
           </div>
           <div className="flex-1">
-            <p className={whatsappClicked ? "text-sm text-muted-foreground line-through" : "text-sm font-normal"}>
+            <p className={localWhatsappClicked ? "text-sm text-muted-foreground line-through transition-all duration-300" : "text-sm font-normal"}>
               Agendar suporte com a Pruma
             </p>
           </div>
-          {!whatsappClicked && (
+          {!localWhatsappClicked && (
             <Button
               variant="secondary"
               size="sm"

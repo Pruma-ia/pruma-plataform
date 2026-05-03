@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-05-02)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 5 of 6 in current phase
-Status: In progress
-Last activity: 2026-05-03 — 01-05-PLAN.md complete (user profile: display name edit + connected accounts view)
+Plan: 6 of 6 in current phase
+Status: Phase complete
+Last activity: 2026-05-02 — 01-06-PLAN.md complete (proxy.ts emailVerified gate + Upstash migration)
 
-Progress: [█████░░░░░] 83%
+Progress: [██████████] 100% (Phase 1 complete)
 
 ## Performance Metrics
 
@@ -27,10 +27,10 @@ Progress: [█████░░░░░] 83%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Foundation | 5/6 | ~121 min | ~24 min |
+| 1. Foundation | 6/6 | ~141 min | ~23 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~45 min), 01-02 (~8 min), 01-03 (~13 min), 01-04 (~30 min), 01-05 (~25 min)
+- Last 6 plans: 01-01 (~45 min), 01-02 (~8 min), 01-03 (~13 min), 01-04 (~30 min), 01-05 (~25 min), 01-06 (~20 min)
 - Trend: fast (TDD kept scope tight; deviation fixes were quick)
 
 *Updated after each plan completion*
@@ -61,6 +61,9 @@ Recent decisions affecting current work:
 - 01-05: users.password (not passwordHash) — connected-accounts infers credentials from this column
 - 01-05: ConnectedAccountsList is pure Server Component (props-only) — no disconnect button per PROF-02
 - 01-05: ProfileDisplayNameForm disables submit when name.trim() === initialName.trim() — prevents no-op PATCH
+- 01-06: emailVerified gate posicionado após onboarding guard — org é pré-requisito para gate disparar
+- 01-06: Upstash fail-open: @upstash/ratelimit retorna success:true em falha Redis — app fica operacional durante outage
+- 01-06: isEmailVerifyBypass inclui /api/auth/* wildcard para evitar lockout em endpoints NextAuth
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-05-03
-Stopped at: 01-05-PLAN.md complete. Wave 3 em andamento — 01-06 é o único plano restante da Phase 1.
-Resume file: .planning/phases/01-foundation/01-06-PLAN.md
+Last session: 2026-05-02
+Stopped at: Phase 1 Foundation complete (6/6 plans). Próximo: Phase 2 — Gestão e Auditoria.
+Resume file: None (Phase 1 completa)

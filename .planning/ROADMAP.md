@@ -12,7 +12,7 @@ O core de aprovações já existe. Este milestone entrega tudo que converte o pr
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - OTP email, dashboard com métricas reais, org settings, onboarding checklist, perfil do usuário, Upstash rate limiting
+- [x] **Phase 1: Foundation** - OTP email, dashboard com métricas reais, org settings, onboarding checklist, perfil do usuário, Upstash rate limiting
 - [ ] **Phase 2: Gestao e Auditoria** - Filtros/busca/export de aprovações, audit log, dados cadastrais da org, refactor flow runs
 - [ ] **Phase 3: Billing Self-Service** - Troca de plano, cancelamento, histórico de faturas, fix webhook Asaas
 - [ ] **Phase 4: Notificacoes e Phone OTP** - Phone OTP, notificações in-app (bell + contador + dropdown), perfil com telefone
@@ -45,7 +45,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [x] 01-05-PLAN.md — user profile (display name + connected accounts) — depends_on: [01, 04]
-- [ ] 01-06-PLAN.md — proxy.ts emailVerified gate + Upstash migration — depends_on: [01, 02]
+- [x] 01-06-PLAN.md — proxy.ts emailVerified gate + Upstash migration — depends_on: [01, 02]
 
 Cross-cutting constraints:
 - All API routes must read `organizationId` from `session.user.organizationId` only (never request body)
@@ -141,7 +141,7 @@ Phases execute em ordem numérica: 1 → 2 → 3 → 4 → 5 (requer WABA aprova
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 5/6 | In progress | - |
+| 1. Foundation | 6/6 | Complete | 2026-05-02 |
 | 2. Gestao e Auditoria | 0/TBD | Not started | - |
 | 3. Billing Self-Service | 0/TBD | Not started | - |
 | 4. Notificacoes e Phone OTP | 0/TBD | Not started | - |

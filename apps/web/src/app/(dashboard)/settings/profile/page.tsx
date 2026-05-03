@@ -54,7 +54,7 @@ export default function ProfilePage() {
 
   return (
     <div>
-      <Header title="Meu perfil" />
+      <Header title="Meu perfil" orgName="" orgLogoUrl={null} />
       <div className="flex justify-center p-6 pt-12">
         <div className="w-full max-w-md rounded-xl border bg-card p-8 shadow-sm">
           <h2 className="text-base font-semibold mb-6">Alterar senha</h2>

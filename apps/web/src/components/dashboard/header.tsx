@@ -3,15 +3,25 @@
 import { useEffect, useState } from "react"
 import { useTheme } from "@/components/theme-provider"
 import { Bell, Sun, Moon } from "lucide-react"
+import { OrgLogo } from "@/components/dashboard/org-logo"
 
-export function Header({ title }: { title: string }) {
+interface HeaderProps {
+  title: string
+  orgName: string
+  orgLogoUrl: string | null
+}
+
+export function Header({ title, orgName, orgLogoUrl }: HeaderProps) {
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-background px-6">
-      <h1 className="text-lg font-semibold">{title}</h1>
+      <div className="flex items-center gap-3">
+        <OrgLogo logoUrl={orgLogoUrl} name={orgName} />
+        <h1 className="text-lg font-semibold">{title}</h1>
+      </div>
       <div className="flex items-center gap-4">
         <button
           onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}

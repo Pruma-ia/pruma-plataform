@@ -4,12 +4,15 @@ import { organizations } from "../../../../../db/schema"
 import { eq } from "drizzle-orm"
 import { redirect } from "next/navigation"
 import { Header } from "@/components/dashboard/header"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import { OrgProfileFormSettings } from "./org-profile-form-settings"
 
 export default async function OrganizationSettingsPage() {
   const session = await auth()
   const orgId = session?.user?.organizationId
   if (!orgId) redirect("/dashboard")
+
+  const orgHeader = await getOrgHeaderData(orgId)
 
   const [org] = await db
     .select({
@@ -29,7 +32,7 @@ export default async function OrganizationSettingsPage() {
 
   return (
     <div>
-      <Header title="Dados da organização" />
+      <Header title="Dados da organização" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="flex justify-center p-6 pt-8">
         <div className="w-full max-w-lg rounded-xl border bg-card p-8 shadow-sm">
           <h2 className="text-base font-semibold mb-6">Cadastro</h2>

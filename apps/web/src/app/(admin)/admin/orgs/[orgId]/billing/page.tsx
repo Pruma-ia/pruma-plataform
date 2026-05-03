@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { organizations } from "../../../../../../../db/schema"
 import { eq } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import { SetupChargeForm } from "./setup-charge-form"
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -19,12 +20,15 @@ export default async function AdminOrgBilling({
 }) {
   const { orgId } = await params
 
-  const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId))
+  const [[org], orgHeader] = await Promise.all([
+    db.select().from(organizations).where(eq(organizations.id, orgId)),
+    getOrgHeaderData(orgId),
+  ])
   const statusInfo = statusLabels[org?.subscriptionStatus ?? "inactive"]
 
   return (
     <div>
-      <Header title="Plano & Cobrança" />
+      <Header title="Plano & Cobrança" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="p-6 space-y-6 max-w-3xl mx-auto">
         {/* Status da assinatura */}
         <div className="rounded-xl border bg-card p-6 shadow-sm">

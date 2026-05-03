@@ -11,6 +11,7 @@ import {
   formatAvgTime,
   getOnboardingChecklistState,
 } from "@/lib/dashboard-metrics"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -18,7 +19,7 @@ export default async function DashboardPage() {
   const session = await auth()
   const orgId = session!.user.organizationId!
 
-  const [flowStats, pendingApprovals, recentRuns, resolvedToday, avgMs, checklist] = await Promise.all([
+  const [flowStats, pendingApprovals, recentRuns, resolvedToday, avgMs, checklist, orgHeader] = await Promise.all([
     db.select({ total: count() }).from(flows).where(eq(flows.organizationId, orgId)),
     db
       .select({ total: count() })
@@ -33,6 +34,7 @@ export default async function DashboardPage() {
     getResolvedTodayCount(orgId),
     getAvgResolutionMs(orgId),
     getOnboardingChecklistState(orgId),
+    getOrgHeaderData(orgId),
   ])
 
   const stats = [
@@ -56,7 +58,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <Header title="Dashboard" />
+      <Header title="Dashboard" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="p-6 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

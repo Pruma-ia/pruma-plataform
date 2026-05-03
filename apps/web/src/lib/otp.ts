@@ -12,9 +12,13 @@ export async function generateAndStoreOtp(userId: string): Promise<string> {
   const tokenHash = await bcrypt.hash(code, BCRYPT_ROUNDS)
   const expiresAt = new Date(Date.now() + OTP_TTL_MS)
 
-  // Delete-then-insert: one active row per user (resend-safe; D-03)
-  await db.delete(emailOtpTokens).where(eq(emailOtpTokens.userId, userId))
-  await db.insert(emailOtpTokens).values({ userId, tokenHash, expiresAt })
+  // Delete-then-insert wrapped in a transaction: one active row per user, race-safe (D-03).
+  // Without the transaction, two concurrent resend requests could both DELETE before either
+  // INSERTs, leaving two live rows or a constraint violation on a future UNIQUE index.
+  await db.transaction(async (tx) => {
+    await tx.delete(emailOtpTokens).where(eq(emailOtpTokens.userId, userId))
+    await tx.insert(emailOtpTokens).values({ userId, tokenHash, expiresAt })
+  })
 
   return code
 }

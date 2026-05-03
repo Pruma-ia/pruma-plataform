@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-05-02)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 3 of 6 in current phase
+Plan: 4 of 6 in current phase
 Status: In progress
-Last activity: 2026-05-03 — 01-03-PLAN.md complete (dashboard metrics + onboarding checklist + whatsapp-clicked API)
+Last activity: 2026-05-03 — 01-04-PLAN.md complete (org identity: name + logo edit, header org branding)
 
-Progress: [███░░░░░░░] 50%
+Progress: [████░░░░░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: ~22 min
-- Total execution time: ~1.1 hours
+- Total plans completed: 4
+- Average duration: ~24 min
+- Total execution time: ~1.6 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Foundation | 3/6 | ~66 min | ~22 min |
+| 1. Foundation | 4/6 | ~96 min | ~24 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (~45 min), 01-02 (~8 min), 01-03 (~13 min)
+- Last 5 plans: 01-01 (~45 min), 01-02 (~8 min), 01-03 (~13 min), 01-04 (~30 min)
 - Trend: fast (TDD kept scope tight; deviation fixes were quick)
 
 *Updated after each plan completion*
@@ -53,6 +53,10 @@ Recent decisions affecting current work:
 - 01-03: TooltipTrigger.asChild not supported in base-ui v1 — removed, trigger wraps element directly
 - 01-03: RESOLVED_STATUSES typed as Array<enum> to satisfy inArray overload (pgEnum strict typing)
 - 01-03: SUPPORT_WHATSAPP_LINK needs production value before launch (env var, fallback '#')
+- 01-04: R2 key namespace for logos: org-logos/{orgId}/{uuid}/{filename} — separate from approval_files for independent lifecycle
+- 01-04: R2 lifecycle rule for org-logos/ deferred (T-04-08 accepted, future cleanup job)
+- 01-04: next/image unoptimized on OrgLogo — R2 signed URLs expire; Next/Image cache would 403 on reload
+- 01-04: Playwright spec 4 (logo upload E2E) guarded by PLAYWRIGHT_R2_ENABLED env var
 
 ### Pending Todos
 
@@ -78,5 +82,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-05-03
-Stopped at: 01-03-PLAN.md complete. Wave 2 em andamento — 01-04 pronto para execução.
-Resume file: .planning/phases/01-foundation/01-04-PLAN.md
+Stopped at: 01-04-PLAN.md complete. Wave 2 em andamento — 01-05 e 01-06 prontos para execução.
+Resume file: .planning/phases/01-foundation/01-05-PLAN.md

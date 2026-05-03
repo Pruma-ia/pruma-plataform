@@ -177,6 +177,70 @@ async function buildApprovalNotificationHtml(
   return html
 }
 
+async function buildOtpEmailHtml(code: string): Promise<string> {
+  const { html } = await mjml2html(`
+    <mjml>
+      <mj-head>
+        <mj-attributes>
+          <mj-all font-family="Inter, Arial, sans-serif" />
+        </mj-attributes>
+      </mj-head>
+      <mj-body background-color="#f1f5f9">
+
+        <mj-section padding="24px 0 0" background-color="#f1f5f9">
+          <mj-column></mj-column>
+        </mj-section>
+
+        <mj-section background-color="#0D1B4B" border-radius="12px 12px 0 0" padding="28px 40px">
+          <mj-column>
+            <mj-text font-size="22px" font-weight="800" color="#ffffff" padding="0">
+              Pruma<span style="color:#00AEEF">IA</span>
+            </mj-text>
+          </mj-column>
+        </mj-section>
+
+        <mj-section background-color="#ffffff" padding="40px 40px 32px">
+          <mj-column>
+            <mj-text font-size="20px" font-weight="700" color="#0D1B4B" padding="0 0 12px 0">
+              Verifique seu e-mail
+            </mj-text>
+            <mj-text font-size="14px" line-height="1.7" color="#4B5563" padding="0 0 24px 0">
+              Use o código abaixo para ativar sua conta Pruma IA.
+              O código expira em <strong>15 minutos</strong>.
+            </mj-text>
+            <mj-text font-size="36px" font-weight="800" color="#0D1B4B" letter-spacing="8px" align="center" padding="16px 0">
+              ${code}
+            </mj-text>
+          </mj-column>
+        </mj-section>
+
+        <mj-section background-color="#F8FAFC" border-radius="0 0 12px 12px" padding="24px 40px">
+          <mj-column border-top="1px solid #E5E7EB" padding-top="24px">
+            <mj-text font-size="12px" color="#9CA3AF" line-height="1.6" padding="0">
+              Se você não criou uma conta na Pruma IA, ignore este e-mail.<br/>
+              A Pruma nunca solicita senhas ou dados sensíveis por e-mail.
+            </mj-text>
+          </mj-column>
+        </mj-section>
+
+        <mj-section padding="0 0 24px" background-color="#f1f5f9">
+          <mj-column></mj-column>
+        </mj-section>
+
+      </mj-body>
+    </mjml>
+  `)
+  return html
+}
+
+export async function sendOtpVerificationEmail(email: string, code: string): Promise<void> {
+  await sendEmail(email, "Verifique seu e-mail — Pruma IA", await buildOtpEmailHtml(code))
+}
+
+export async function sendOtpResendEmail(email: string, code: string): Promise<void> {
+  await sendEmail(email, "Reenvio do código — Pruma IA", await buildOtpEmailHtml(code))
+}
+
 export async function sendApprovalNotificationEmail(
   to: { email: string; name: string | null },
   params: { approvalId: string; title: string; flowName?: string; description?: string; filenames?: string[] }

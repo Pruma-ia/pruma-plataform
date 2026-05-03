@@ -6,7 +6,7 @@ const mockAuth = vi.hoisted(() => vi.fn())
 const mockGenerateAndStoreOtp = vi.hoisted(() => vi.fn())
 const mockGetLatestOtpCreatedAt = vi.hoisted(() => vi.fn())
 const mockOtpResendRatelimit = vi.hoisted(() => ({ limit: vi.fn() }))
-const mockSendEmail = vi.hoisted(() => vi.fn())
+const mockSendOtpResendEmail = vi.hoisted(() => vi.fn())
 const mockDbSelect = vi.hoisted(() => vi.fn())
 
 vi.mock("@/lib/auth", () => ({ auth: mockAuth }))
@@ -15,7 +15,7 @@ vi.mock("@/lib/otp", () => ({
   getLatestOtpCreatedAt: mockGetLatestOtpCreatedAt,
 }))
 vi.mock("@/lib/ratelimit", () => ({ otpResendRatelimit: mockOtpResendRatelimit }))
-vi.mock("@/lib/email", () => ({ sendEmail: mockSendEmail }))
+vi.mock("@/lib/email", () => ({ sendOtpResendEmail: mockSendOtpResendEmail }))
 vi.mock("@/lib/db", () => ({
   db: {
     select: () => ({
@@ -53,7 +53,7 @@ describe("POST /api/auth/resend-otp", () => {
     // Default: OTP generated
     mockGenerateAndStoreOtp.mockResolvedValue("654321")
     // Default: email sent
-    mockSendEmail.mockResolvedValue(undefined)
+    mockSendOtpResendEmail.mockResolvedValue(undefined)
   })
 
   it("retorna 401 quando sessão não existe", async () => {
@@ -125,14 +125,10 @@ describe("POST /api/auth/resend-otp", () => {
     expect(mockGenerateAndStoreOtp).toHaveBeenCalledWith("user-123")
   })
 
-  it("chama sendEmail com o email do usuário e o código gerado", async () => {
+  it("chama sendOtpResendEmail com o email do usuário", async () => {
     const { POST } = await import("./route")
     await POST()
-    expect(mockSendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "test@example.com",
-      })
-    )
+    expect(mockSendOtpResendEmail).toHaveBeenCalledWith("test@example.com", "654321")
   })
 
   it("chama otpResendRatelimit.limit com o userId da sessão", async () => {

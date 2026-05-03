@@ -4,6 +4,8 @@ import { users, organizations, organizationMembers } from "../../../../../db/sch
 import { eq } from "drizzle-orm"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { generateAndStoreOtp } from "@/lib/otp"
+import { sendOtpVerificationEmail } from "@/lib/email"
 
 const schema = z.object({
   name: z.string().min(2),
@@ -70,5 +72,14 @@ export async function POST(req: Request) {
     acceptedAt: new Date(),
   })
 
-  return NextResponse.json({ ok: true })
+  // Send OTP verification email — fire and forget; registration is not blocked on email failure
+  try {
+    const code = await generateAndStoreOtp(user.id)
+    await sendOtpVerificationEmail(user.email, code)
+  } catch (err) {
+    console.error("[register] OTP send failed", err)
+    // do not fail registration — user can resend from /verify-email
+  }
+
+  return NextResponse.json({ ok: true, redirectTo: "/verify-email" })
 }

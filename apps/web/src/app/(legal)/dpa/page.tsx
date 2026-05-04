@@ -8,7 +8,7 @@ export default function DpaPage() {
   return (
     <article className="prose prose-neutral dark:prose-invert max-w-none">
       <h1>Data Processing Agreement (DPA)</h1>
-      <p className="text-muted-foreground text-sm">Última atualização: abril de 2025 — <strong>RASCUNHO — pendente revisão jurídica</strong></p>
+      <p className="text-muted-foreground text-sm">Última atualização: 26/04/2026</p>
 
       <p>Este Acordo de Processamento de Dados (&quot;DPA&quot;) complementa os Termos de Uso e regula o tratamento de dados pessoais realizado pela Pruma IA em nome do Cliente, nos termos da Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).</p>
 

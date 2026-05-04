@@ -13,6 +13,23 @@
 
 **`when` no journal deve ser cronologicamente crescente.** O migrator usa `ORDER BY created_at DESC LIMIT 1` como high watermark — aplica só migrations com `when > lastMigration.when`. Se `drizzle-kit generate` for rodado com clock errado ou o campo for editado manualmente para um valor menor que a migration anterior, a migration **é silenciosamente pulada** mesmo sem erro. Sempre verificar que `when` da nova entry é maior que a anterior antes de commitar o journal.
 
+## Migrations devem ser idempotentes (obrigatório)
+
+Drizzle não aplica migrations em transação atômica com rollback automático. Se o CI falhar no meio de uma migration e o job for reexecutado, o migrator tenta rodar o arquivo inteiro de novo — mas o banco já tem parte do schema. Resultado: erros `already exists` que travam o deploy.
+
+**Regra:** toda migration gerada por `drizzle-kit generate` deve ser revisada antes do commit e ter as seguintes cláusulas adicionadas manualmente quando necessário:
+
+| Operação | Drizzle gera | Corrigir para |
+|---|---|---|
+| `CREATE TABLE` | sem `IF NOT EXISTS` | `CREATE TABLE IF NOT EXISTS` |
+| `ALTER TABLE ... ADD COLUMN` | sem `IF NOT EXISTS` | `ADD COLUMN IF NOT EXISTS` |
+| `ALTER TABLE ... ADD CONSTRAINT` (FK) | sem guarda | `DO $$ BEGIN ALTER TABLE ... ADD CONSTRAINT ...; EXCEPTION WHEN duplicate_object THEN NULL; END $$;` |
+| `CREATE INDEX` | sem `IF NOT EXISTS` | `CREATE INDEX IF NOT EXISTS` |
+
+**Sintoma do desastre:** CI falha com `relation "X" already exists` ou `column "X" of relation "Y" already exists`. Causa: run anterior aplicou parte do SQL mas não chegou a registrar a migration em `__drizzle_migrations`.
+
+**Remediação imediata:** adicionar `IF NOT EXISTS` nas statements que já foram aplicadas parcialmente, commitar e repushar. O migrator reexecuta o arquivo, as statements já aplicadas são puladas, as pendentes rodam normalmente.
+
 ## Aplicar migration no Docker local
 
 `npm run db:migrate` usa driver Neon HTTP — não funciona com Docker local. Aplicar diretamente:

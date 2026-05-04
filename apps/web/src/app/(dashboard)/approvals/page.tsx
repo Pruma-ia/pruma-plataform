@@ -4,10 +4,13 @@ import { approvals, approvalFiles, users } from "../../../../db/schema"
 import { eq, desc } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
 import { ApprovalsList } from "./approvals-list"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 
 export default async function ApprovalsPage() {
   const session = await auth()
   const orgId = session!.user.organizationId!
+
+  const orgHeader = await getOrgHeaderData(orgId)
 
   const rows = await db
     .select({
@@ -38,7 +41,7 @@ export default async function ApprovalsPage() {
 
   return (
     <div>
-      <Header title="Aprovações" />
+      <Header title="Aprovações" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <ApprovalsList approvals={rows} fileCounts={fileCountMap} />
     </div>
   )

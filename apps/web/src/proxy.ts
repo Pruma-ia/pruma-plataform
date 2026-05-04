@@ -1,61 +1,83 @@
 import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
-
-// Rate limiter em memória por instância.
-// Para múltiplas instâncias (Vercel production): migrar para Vercel KV ou @upstash/ratelimit.
-const authRateMap = new Map<string, { count: number; resetAt: number }>()
-const billingRateMap = new Map<string, { count: number; resetAt: number }>()
-
-function isRateLimited(
-  map: Map<string, { count: number; resetAt: number }>,
-  ip: string,
-  limit: number,
-  windowMs: number,
-): boolean {
-  const now = Date.now()
-  const entry = map.get(ip)
-  if (!entry || now > entry.resetAt) {
-    map.set(ip, { count: 1, resetAt: now + windowMs })
-    return false
-  }
-  if (entry.count >= limit) return true
-  entry.count++
-  return false
-}
+import { authRatelimit, billingRatelimit } from "@/lib/ratelimit"
 
 // Rotas do dashboard que exigem assinatura ativa
 const GUARDED_PREFIXES = ["/dashboard", "/flows", "/approvals", "/settings"]
 const BLOCKED_STATUSES = new Set(["canceled", "inactive"])
 
-export default auth((req) => {
+// emailVerified gate (D-01) — caminhos acessíveis enquanto não verificado.
+//
+// Estes caminhos são bypass obrigatórios para que o usuário possa:
+//   - Visualizar a página de verificação (/verify-email)
+//   - Verificar o código OTP (/api/auth/verify-otp)
+//   - Reenviar o código OTP (/api/auth/resend-otp)
+//   - Fazer logout (/api/auth/signout) sem precisar verificar
+//
+// Todos os outros caminhos /api/auth/* (signin, callback, csrf, session) também
+// são bypass para que o usuário possa re-autenticar ou sair enquanto não verificado.
+//
+// ORDEM DE GUARDS (importante):
+//   1. Rate limiting (INFRA-01)
+//   2. Onboarding guard (usuário sem org → /onboarding)
+//   3. emailVerified gate (usuário com org mas sem e-mail verificado → /verify-email)
+//   4. Admin guard
+//   5. Subscription guard
+//
+// Nota: o gate emailVerified roda DEPOIS do onboarding guard porque, no fluxo de
+// registro, o usuário é criado com emailVerified=null antes de ter uma org.
+// Sem org, o onboarding guard trata — o emailVerified gate não deve interferir.
+
+const EMAIL_VERIFY_BYPASS = new Set([
+  "/verify-email",
+  "/api/auth/verify-otp",
+  "/api/auth/resend-otp",
+  "/api/auth/signout",
+])
+
+function isEmailVerifyBypass(pathname: string): boolean {
+  if (EMAIL_VERIFY_BYPASS.has(pathname)) return true
+  // All /api/auth/* paths bypass the email gate (signin, callback, csrf, session, etc.).
+  // Email gate requires organizationId — onboarding users never have one, so they're
+  // handled by the onboarding guard before this function is reached.
+  if (pathname.startsWith("/api/auth/")) return true
+  return false
+}
+
+export default auth(async (req) => {
   const { pathname } = req.nextUrl
   const session = req.auth
 
-  // ── Design preview — somente em desenvolvimento ────────────────────────────
+  // ── Design preview — somente em desenvolvimento ─────────────────────────
   if (pathname.startsWith("/design-preview") && process.env.NODE_ENV === "production") {
     return new NextResponse(null, { status: 404 })
   }
 
-  // ── Rate limiting em endpoints de autenticação ─────────────────────────────
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+
+  // ── Rate limiting em endpoints de autenticação (Upstash; INFRA-01) ──────
+  // Substitui authRateMap + isRateLimited em-memória por singleton Upstash.
+  // Cobre: todos os fluxos de auth, n8n webhooks e alteração de senha.
   if (
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/api/n8n/") ||
     pathname === "/api/user/password"
   ) {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
-    if (isRateLimited(authRateMap, ip, 20, 60_000)) {
+    const { success } = await authRatelimit.limit(ip)
+    if (!success) {
       return new NextResponse("Too Many Requests", { status: 429 })
     }
   }
 
-  // ── Rate limiting em billing — 5 req/min por IP ────────────────────────────
+  // ── Rate limiting em billing (Upstash; INFRA-01) ─────────────────────────
+  // Substitui billingRateMap + isRateLimited em-memória por singleton Upstash.
   if (
     pathname === "/api/billing/checkout" ||
     pathname === "/api/billing/unified-checkout" ||
     pathname === "/api/billing/setup-charge/pay"
   ) {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
-    if (isRateLimited(billingRateMap, ip, 5, 60_000)) {
+    const { success } = await billingRatelimit.limit(ip)
+    if (!success) {
       return new NextResponse("Too Many Requests", { status: 429 })
     }
   }
@@ -76,7 +98,30 @@ export default auth((req) => {
     if (!session.user.organizationId) return NextResponse.redirect(new URL("/onboarding", req.url))
   }
 
-  // ── Proteção do painel admin ───────────────────────────────────────────────
+  // ── EmailVerified gate (D-01; AUTH-01) ──────────────────────────────────
+  // Usuário autenticado, tem org, NÃO verificou e-mail → redireciona para /verify-email.
+  // Pula caminhos do bypass para que o usuário possa verificar, reenviar ou sair.
+  // Superadmin é isento (acesso irrestrito ao admin panel sem org).
+  if (
+    session &&
+    !session.user.isSuperAdmin &&
+    session.user.organizationId &&
+    session.user.emailVerified === false &&
+    !isEmailVerifyBypass(pathname)
+  ) {
+    return NextResponse.redirect(new URL("/verify-email", req.url))
+  }
+
+  // Usuário verificado que acessa /verify-email diretamente → envia ao /dashboard.
+  if (
+    pathname === "/verify-email" &&
+    session?.user.emailVerified === true &&
+    session.user.organizationId
+  ) {
+    return NextResponse.redirect(new URL("/dashboard", req.url))
+  }
+
+  // ── Proteção do painel admin ─────────────────────────────────────────────
   if (pathname.startsWith("/admin")) {
     if (!session) {
       return NextResponse.redirect(new URL("/login", req.url))
@@ -110,7 +155,12 @@ export const config = {
     "/flows/:path*",
     "/approvals/:path*",
     "/settings/:path*",
+    "/billing",
+    "/billing/:path*",
+    "/verify-email",
     "/api/auth/:path*",
+    "/api/auth/verify-otp",
+    "/api/auth/resend-otp",
     "/api/n8n/:path*",
     "/api/user/:path*",
     "/api/billing/checkout",

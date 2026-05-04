@@ -12,7 +12,7 @@ O core de aprovações já existe. Este milestone entrega tudo que converte o pr
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - OTP email, dashboard com métricas reais, org settings, onboarding checklist, perfil do usuário, Upstash rate limiting
+- [x] **Phase 1: Foundation** - OTP email, dashboard com métricas reais, org settings, onboarding checklist, perfil do usuário, Upstash rate limiting
 - [ ] **Phase 2: Gestao e Auditoria** - Filtros/busca/export de aprovações, audit log, dados cadastrais da org, refactor flow runs
 - [ ] **Phase 3: Billing Self-Service** - Troca de plano, cancelamento, histórico de faturas, fix webhook Asaas
 - [ ] **Phase 4: Notificacoes e Phone OTP** - Phone OTP, notificações in-app (bell + contador + dropdown), perfil com telefone
@@ -31,7 +31,26 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Dashboard exibe métricas reais da org: pendentes, resolvidas hoje, fluxos ativos, tempo médio de resolução
   4. Org nova vê checklist de primeiros passos que se marca automaticamente conforme ações são completadas e desaparece quando tudo está feito
   5. Owner da org pode editar nome e logo; usuário pode editar nome e ver contas conectadas
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+
+**Wave 1**
+- [x] 01-01-PLAN.md — schema + Upstash ratelimit module + JWT emailVerified claim
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [x] 01-02-PLAN.md — OTP flow (lib/otp, verify-otp + resend-otp routes, /verify-email page)
+- [x] 01-03-PLAN.md — dashboard metrics (4 cards + onboarding checklist)
+- [x] 01-04-PLAN.md — org identity (name + logo edit, header logo display)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [x] 01-05-PLAN.md — user profile (display name + connected accounts) — depends_on: [01, 04]
+- [x] 01-06-PLAN.md — proxy.ts emailVerified gate + Upstash migration — depends_on: [01, 02]
+
+Cross-cutting constraints:
+- All API routes must read `organizationId` from `session.user.organizationId` only (never request body)
+- All DB queries must be scoped by `eq(<table>.organizationId, orgId)` — multi-tenant isolation
+- `drizzle-kit push` is forbidden — use `drizzle-kit generate` + psql apply only
 **UI hint**: yes
 
 **External dependency (INICIAR IMEDIATAMENTE — paralelo ao desenvolvimento):**
@@ -122,7 +141,7 @@ Phases execute em ordem numérica: 1 → 2 → 3 → 4 → 5 (requer WABA aprova
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 6/6 | Complete | 2026-05-02 |
 | 2. Gestao e Auditoria | 0/TBD | Not started | - |
 | 3. Billing Self-Service | 0/TBD | Not started | - |
 | 4. Notificacoes e Phone OTP | 0/TBD | Not started | - |

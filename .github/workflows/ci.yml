@@ -112,49 +112,7 @@ jobs:
           node-version: "20"
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
-
       - run: npm ci
-
-      - name: Create Neon preview branch from staging
-        id: neon-branch
-        run: |
-          response=$(curl -sf -X POST \
-            "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches" \
-            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"branch\":{\"name\":\"ci-staging-${{ github.run_id }}\",\"parent_id\":\"${{ secrets.NEON_STAGING_BRANCH_ID }}\"},\"endpoints\":[{\"type\":\"read_write\"}]}")
-          branch_id=$(echo "$response" | jq -r '.branch.id')
-          if [ -z "$branch_id" ] || [ "$branch_id" = "null" ]; then
-            echo "ERROR: Neon branch creation failed. Response: $response"
-            exit 1
-          fi
-          echo "branch_id=$branch_id" >> $GITHUB_OUTPUT
-          # Wait for endpoint to be ready (Neon cold-start up to 5s)
-          sleep 5
-          conn=$(curl -sf \
-            "https://console.neon.tech/api/v2/projects/wild-shape-63460566/connection_uri?branch_id=$branch_id&database_name=neondb&role_name=neondb_owner" \
-            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}")
-          db_url=$(echo "$conn" | jq -r '.uri')
-          if [ -z "$db_url" ] || [ "$db_url" = "null" ]; then
-            echo "ERROR: Failed to get connection URI for branch $branch_id"
-            exit 1
-          fi
-          echo "db_url=$db_url" >> $GITHUB_OUTPUT
-
-      - name: Test migrations on Neon preview (staging base)
-        run: npx tsx scripts/migrate.ts
-        env:
-          DATABASE_URL: ${{ steps.neon-branch.outputs.db_url }}
-
-      - name: Delete Neon preview branch
-        if: always()
-        run: |
-          if [ -n "${{ steps.neon-branch.outputs.branch_id }}" ] && [ "${{ steps.neon-branch.outputs.branch_id }}" != "null" ]; then
-            curl -sf -X DELETE \
-              "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches/${{ steps.neon-branch.outputs.branch_id }}" \
-              -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}"
-          fi
-
       - name: Run migrations on staging DB
         run: npx tsx scripts/migrate.ts
         env:
@@ -188,47 +146,6 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
 
       - run: npm ci
-
-      - name: Create Neon preview branch from main (prod base)
-        id: neon-branch
-        run: |
-          response=$(curl -sf -X POST \
-            "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches" \
-            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"branch\":{\"name\":\"ci-prod-${{ github.run_id }}\"},\"endpoints\":[{\"type\":\"read_write\"}]}")
-          branch_id=$(echo "$response" | jq -r '.branch.id')
-          if [ -z "$branch_id" ] || [ "$branch_id" = "null" ]; then
-            echo "ERROR: Neon branch creation failed. Response: $response"
-            exit 1
-          fi
-          echo "branch_id=$branch_id" >> $GITHUB_OUTPUT
-          # Wait for endpoint to be ready (Neon cold-start up to 5s)
-          sleep 5
-          conn=$(curl -sf \
-            "https://console.neon.tech/api/v2/projects/wild-shape-63460566/connection_uri?branch_id=$branch_id&database_name=neondb&role_name=neondb_owner" \
-            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}")
-          db_url=$(echo "$conn" | jq -r '.uri')
-          if [ -z "$db_url" ] || [ "$db_url" = "null" ]; then
-            echo "ERROR: Failed to get connection URI for branch $branch_id"
-            exit 1
-          fi
-          echo "db_url=$db_url" >> $GITHUB_OUTPUT
-
-      - name: Test migrations on Neon preview (prod base)
-        run: npx tsx scripts/migrate.ts
-        env:
-          DATABASE_URL: ${{ steps.neon-branch.outputs.db_url }}
-
-      - name: Delete Neon preview branch
-        if: always()
-        run: |
-          if [ -n "${{ steps.neon-branch.outputs.branch_id }}" ] && [ "${{ steps.neon-branch.outputs.branch_id }}" != "null" ]; then
-            curl -sf -X DELETE \
-              "https://console.neon.tech/api/v2/projects/wild-shape-63460566/branches/${{ steps.neon-branch.outputs.branch_id }}" \
-              -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}"
-          fi
-
       - name: Run Drizzle migrations on production
         run: npx tsx scripts/migrate.ts
         env:

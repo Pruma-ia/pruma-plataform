@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-05-02)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-05-02 — Roadmap created (6 phases, 43 requirements mapped)
+Plan: 6 of 6 in current phase
+Status: Phase complete
+Last activity: 2026-05-02 — 01-06-PLAN.md complete (proxy.ts emailVerified gate + Upstash migration)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100% (Phase 1 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 5
+- Average duration: ~23 min
+- Total execution time: ~1.95 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 1. Foundation | 6/6 | ~141 min | ~23 min |
 
 **Recent Trend:**
-- Last 5 plans: -
-- Trend: -
+- Last 6 plans: 01-01 (~45 min), 01-02 (~8 min), 01-03 (~13 min), 01-04 (~30 min), 01-05 (~25 min), 01-06 (~20 min)
+- Trend: fast (TDD kept scope tight; deviation fixes were quick)
 
 *Updated after each plan completion*
 
@@ -44,6 +44,26 @@ Recent decisions affecting current work:
 
 - Roadmap: 6 phases derived from dependency chain; Phase 5 (WhatsApp) gated on Meta WABA external approval
 - Roadmap: Phase 6 (SLA) depends on Phase 4 (not Phase 5) — can run in parallel with WhatsApp if needed
+- 01-01: emailOtpTokens has no unique index on userId — resend uses delete-then-insert (simpler, prevents stale token reuse)
+- 01-01: Upstash Ratelimit singletons at module level with no-op dev fallback when env vars absent
+- 01-01: emailVerified boolean defaults to false in session callback for safety (unverified until DB confirms)
+- 01-02: sendOtpVerificationEmail/sendOtpResendEmail follow email.ts buildXxx+sendXxx pattern — sendEmail() stays internal per CLAUDE.md mandate
+- 01-02: NextAuth v5 update() is the single locked JWT refresh strategy after email verify — no signIn(), no router.refresh()
+- 01-02: Playwright spec 3 (happy path) skipped with TODO(Plan 06) — proxy.ts gate needed to make assertion observable
+- 01-03: TooltipTrigger.asChild not supported in base-ui v1 — removed, trigger wraps element directly
+- 01-03: RESOLVED_STATUSES typed as Array<enum> to satisfy inArray overload (pgEnum strict typing)
+- 01-03: SUPPORT_WHATSAPP_LINK needs production value before launch (env var, fallback '#')
+- 01-04: R2 key namespace for logos: org-logos/{orgId}/{uuid}/{filename} — separate from approval_files for independent lifecycle
+- 01-04: R2 lifecycle rule for org-logos/ deferred (T-04-08 accepted, future cleanup job)
+- 01-04: next/image unoptimized on OrgLogo — R2 signed URLs expire; Next/Image cache would 403 on reload
+- 01-04: Playwright spec 4 (logo upload E2E) guarded by PLAYWRIGHT_R2_ENABLED env var
+- 01-05: accounts table confirmed in schema.ts as `accounts` — provider + providerAccountId columns
+- 01-05: users.password (not passwordHash) — connected-accounts infers credentials from this column
+- 01-05: ConnectedAccountsList is pure Server Component (props-only) — no disconnect button per PROF-02
+- 01-05: ProfileDisplayNameForm disables submit when name.trim() === initialName.trim() — prevents no-op PATCH
+- 01-06: emailVerified gate posicionado após onboarding guard — org é pré-requisito para gate disparar
+- 01-06: Upstash fail-open: @upstash/ratelimit retorna success:true em falha Redis — app fica operacional durante outage
+- 01-06: isEmailVerifyBypass inclui /api/auth/* wildcard para evitar lockout em endpoints NextAuth
 
 ### Pending Todos
 
@@ -63,9 +83,11 @@ Recent decisions affecting current work:
 |----------|------|--------|-------------|
 | Security | 2FA TOTP (SEC-01/02/03) | Deferred to v2 | Roadmap init |
 | Notifications | Preferências por canal (NOTIF-07) | Deferred to v2 | Roadmap init |
+| Infra | Apply migration 0008 to Docker local pruma_dev | **Done** (applied in 01-03) | 01-01 |
+| TypeScript | .next/types/validator.ts — missing setup-charge/pay/route.js | Pre-existing, out of scope | 01-01 |
 
 ## Session Continuity
 
 Last session: 2026-05-02
-Stopped at: Roadmap criado. Nenhuma fase planejada ou executada ainda.
-Resume file: None
+Stopped at: Phase 1 Foundation complete (6/6 plans). Próximo: Phase 2 — Gestão e Auditoria.
+Resume file: None (Phase 1 completa)

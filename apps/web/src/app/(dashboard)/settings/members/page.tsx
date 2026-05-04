@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { organizationMembers, organizations, users } from "../../../../../db/schema"
 import { eq } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import { InviteMemberForm } from "./invite-form"
 import { MemberRow } from "./member-row"
 
@@ -10,7 +11,7 @@ export default async function MembersPage() {
   const session = await auth()
   const orgId = session!.user.organizationId!
 
-  const [members, org] = await Promise.all([
+  const [members, org, orgHeader] = await Promise.all([
     db
       .select({
         memberId: organizationMembers.id,
@@ -29,6 +30,7 @@ export default async function MembersPage() {
       .from(organizations)
       .where(eq(organizations.id, orgId))
       .then((r) => r[0]),
+    getOrgHeaderData(orgId),
   ])
 
   const canManage = ["owner", "admin"].includes(session!.user.role ?? "")
@@ -36,7 +38,7 @@ export default async function MembersPage() {
 
   return (
     <div>
-      <Header title="Equipe" />
+      <Header title="Equipe" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="p-6 space-y-6">
         {canManage && <InviteMemberForm />}
 

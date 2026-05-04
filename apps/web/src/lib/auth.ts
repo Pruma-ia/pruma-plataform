@@ -24,6 +24,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       credentials: {
@@ -66,7 +67,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const [dbUser, membership] = await Promise.all([
           db
-            .select({ isSuperAdmin: users.isSuperAdmin })
+            .select({ isSuperAdmin: users.isSuperAdmin, emailVerified: users.emailVerified })
             .from(users)
             .where(eq(users.id, userId))
             .limit(1)
@@ -87,6 +88,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ])
 
         token.isSuperAdmin = dbUser?.isSuperAdmin ?? false
+        // emailVerified: timestamp value in DB = verified; null = unverified
+        token.emailVerified = dbUser?.emailVerified != null
 
         if (!dbUser?.isSuperAdmin && membership) {
           token.organizationId = membership.orgId
@@ -142,6 +145,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.refreshedAt = Date.now()
       }
 
+      // Re-lê emailVerified do banco sempre que o token ainda carrega false e há userId.
+      // Necessário para que o update() chamado pela página /verify-email após OTP bem-sucedido
+      // propague a flag para o JWT — sem isso o proxy continua redirecionando para /verify-email
+      // até o usuário fazer logout e re-login. (AUTH-01 / CR-04)
+      if (!token.isSuperAdmin && token.emailVerified === false && token.id) {
+        const [dbUser] = await db
+          .select({ emailVerified: users.emailVerified })
+          .from(users)
+          .where(eq(users.id, token.id as string))
+          .limit(1)
+        if (dbUser?.emailVerified != null) {
+          token.emailVerified = true
+        }
+      }
+
       return token
     },
 
@@ -159,6 +177,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         | "canceled"
         | "inactive"
         | undefined
+      // Cast required: DrizzleAdapter augments Session.user.emailVerified as Date|null;
+      // our JWT carries a derived boolean. The intersection is resolved at runtime.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(session.user as any).emailVerified = (token.emailVerified as boolean | undefined) ?? false
       return session
     },
   },

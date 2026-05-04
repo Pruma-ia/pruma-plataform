@@ -9,7 +9,9 @@ declare module "next-auth" {
       organizationSlug?: string
       role?: "owner" | "admin" | "member" | "viewer"
       subscriptionStatus?: "active" | "trial" | "past_due" | "canceled" | "inactive"
-    } & DefaultSession["user"]
+      /** Boolean form of users.emailVerified — true when DB timestamp is non-null */
+      emailVerified?: boolean
+    } & Omit<NonNullable<DefaultSession["user"]>, "emailVerified">
   }
 }
 
@@ -21,6 +23,7 @@ declare module "next-auth/jwt" {
     organizationSlug?: string
     role?: "owner" | "admin" | "member" | "viewer"
     subscriptionStatus?: "active" | "trial" | "past_due" | "canceled" | "inactive"
+    emailVerified?: boolean
     /** Timestamp da última sincronização com o banco (ms). Usado para refresh de subscriptionStatus. */
     refreshedAt?: number
   }

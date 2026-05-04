@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { approvals, users } from "../../../../../../../db/schema"
 import { eq, desc } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import { ApprovalCard } from "@/app/(dashboard)/approvals/approval-card"
 
 export default async function AdminOrgApprovals({
@@ -10,6 +11,8 @@ export default async function AdminOrgApprovals({
   params: Promise<{ orgId: string }>
 }) {
   const { orgId } = await params
+
+  const orgHeader = await getOrgHeaderData(orgId)
 
   const rows = await db
     .select({
@@ -34,7 +37,7 @@ export default async function AdminOrgApprovals({
 
   return (
     <div>
-      <Header title="Aprovações" />
+      <Header title="Aprovações" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="p-6 space-y-6">
         {pendingList.length > 0 && (
           <section>

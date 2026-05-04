@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { Header } from "@/components/dashboard/header"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import { ApprovalDetail } from "./approval-detail"
 
 export default async function ApprovalDetailPage({
@@ -16,6 +17,8 @@ export default async function ApprovalDetailPage({
   const { id } = await params
   const session = await auth()
   const orgId = session!.user.organizationId!
+
+  const orgHeader = await getOrgHeaderData(orgId)
 
   const [row] = await db
     .select({
@@ -44,7 +47,7 @@ export default async function ApprovalDetailPage({
 
   return (
     <div>
-      <Header title="Detalhes da Aprovação" />
+      <Header title="Detalhes da Aprovação" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="p-6">
         <Link
           href="/approvals"

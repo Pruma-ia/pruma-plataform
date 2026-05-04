@@ -4,15 +4,11 @@ export const metadata: Metadata = {
   title: "Termos de Uso — Pruma IA",
 }
 
-// TODO: substituir antes de publicar
-// [CNPJ] → CNPJ real da empresa
-// privacidade@pruma.io → email ainda não criado
-
 export default function TermsPage() {
   return (
     <article className="prose prose-neutral dark:prose-invert max-w-none">
       <h1>Termos de Uso</h1>
-      <p className="text-muted-foreground text-sm">Última atualização: 26/04/2026 — <strong>RASCUNHO — pendente revisão jurídica</strong></p>
+      <p className="text-muted-foreground text-sm">Última atualização: 26/04/2026</p>
 
       <p>
         Estes Termos de Uso (&quot;Termos&quot;) regulam a relação entre a Pruma IA (&quot;Fornecedor&quot;) e a empresa-cliente

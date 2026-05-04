@@ -5,6 +5,25 @@ const mockInsert = vi.fn()
 let selectCallCount = 0
 let insertCallCount = 0
 
+const makeTx = () => ({
+  select: () => ({
+    from: () => ({
+      where: () => {
+        selectCallCount++
+        return Promise.resolve(mockSelect())
+      },
+    }),
+  }),
+  insert: () => ({
+    values: () => {
+      insertCallCount++
+      if (insertCallCount === 1) return { returning: () => Promise.resolve([{ id: "user-1", email: "joao@test.com" }]) }
+      if (insertCallCount === 2) return { returning: () => Promise.resolve([{ id: "org-1" }]) }
+      return Promise.resolve([])
+    },
+  }),
+})
+
 vi.mock("@/lib/db", () => ({
   db: {
     select: () => ({
@@ -18,17 +37,23 @@ vi.mock("@/lib/db", () => ({
     insert: () => ({
       values: () => {
         insertCallCount++
-        if (insertCallCount === 1) return { returning: () => Promise.resolve([{ id: "user-1" }]) }
+        if (insertCallCount === 1) return { returning: () => Promise.resolve([{ id: "user-1", email: "joao@test.com" }]) }
         if (insertCallCount === 2) return { returning: () => Promise.resolve([{ id: "org-1" }]) }
         return Promise.resolve([])
       },
     }),
+    transaction: async (fn: (tx: unknown) => unknown) => fn(makeTx()),
   },
 }))
 
-vi.mock("drizzle-orm", () => ({ eq: vi.fn() }))
+vi.mock("drizzle-orm", () => ({ eq: vi.fn(), slugify: vi.fn() }))
 vi.mock("../../../../../db/schema", () => ({ users: {}, organizations: {}, organizationMembers: {} }))
 vi.mock("bcryptjs", () => ({ default: { hash: vi.fn().mockResolvedValue("hashed-pw") } }))
+vi.mock("@/lib/otp", () => ({ generateAndStoreOtp: vi.fn().mockResolvedValue("123456") }))
+vi.mock("@/lib/email", () => ({
+  sendOtpVerificationEmail: vi.fn().mockResolvedValue(undefined),
+  sendOtpResendEmail: vi.fn().mockResolvedValue(undefined),
+}))
 
 function makeRequest(body: object) {
   return new Request("http://localhost/api/auth/register", {

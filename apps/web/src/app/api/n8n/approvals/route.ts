@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { approvals, approvalFiles, approvalFileUploads, flows, organizations, organizationMembers, users } from "../../../../../db/schema"
+import { approvals, approvalEvents, approvalFiles, approvalFileUploads, flows, organizations, organizationMembers, users } from "../../../../../db/schema"
 import { eq, and, inArray, isNotNull } from "drizzle-orm"
 import { verifyN8nSecret, validateCallbackUrl } from "@/lib/n8n"
 import { sendApprovalNotificationEmail } from "@/lib/email"
@@ -145,6 +145,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Aprovação já criada para este execution ID" }, { status: 409 })
   }
   const [approval] = approvalResult
+
+  await db.insert(approvalEvents).values({
+    id: crypto.randomUUID(),
+    approvalId: approval.id,
+    eventType: "approval_created",
+    actorType: "system",
+    actorId: null,
+  })
 
   if (files && files.length > 0) {
     await db.insert(approvalFiles).values(

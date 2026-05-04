@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { approvals, approvalFiles } from "../../../../../../db/schema"
+import { approvals, approvalEvents, approvalFiles } from "../../../../../../db/schema"
 import { eq, and } from "drizzle-orm"
 import { z } from "zod"
 import { dispatchCallback } from "@/lib/n8n"
@@ -59,6 +59,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       updatedAt: new Date(),
     })
     .where(and(eq(approvals.id, id), eq(approvals.organizationId, session.user.organizationId)))
+
+  await db.insert(approvalEvents).values({
+    id: crypto.randomUUID(),
+    approvalId: id,
+    eventType: "approval_resolved",
+    actorType: "user",
+    actorId: session.user.id,
+    metadata: {
+      status: "rejected",
+      comment: comment ?? null,
+      decisionValues: decisionValues ?? null,
+    },
+  })
 
   if (approval.callbackUrl) {
     const files = await db

@@ -68,7 +68,17 @@ Cross-cutting constraints:
   3. Usuário consegue ver o histórico completo de decisão de cada aprovação: decisor, timestamp, comentário e decision values
   4. Owner da org pode editar e salvar CNPJ, endereço e telefone da organização no onboarding e nas configurações
   5. Dados cadastrais coletados no onboarding pré-preenchem automaticamente os campos de billing no Asaas
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+
+**Wave 1**
+- [ ] 02-01-PLAN.md — approval_events schema + migration + 3 API call-site instrumentation (APPROV-05)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 02-02-PLAN.md — /approvals refactor: searchParams filters + debounced search + pagination + CSV export (APPROV-01/02/03/04)
+- [ ] 02-03-PLAN.md — /approvals/[id] timeline + approval_viewed insert (APPROV-05) — depends_on: [01]
+- [ ] 02-04-PLAN.md — JWT orgCnpjFilled + proxy CNPJ guard + /onboarding/cadastral + Asaas sync + /flows/[id] runs UX (ORG-02/03/04, INFRA-03)
 **UI hint**: yes
 
 ---

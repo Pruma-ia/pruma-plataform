@@ -1,13 +1,14 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { approvals, approvalFiles, users } from "../../../../../db/schema"
-import { eq, and } from "drizzle-orm"
+import { approvals, approvalFiles, approvalEvents, users } from "../../../../../db/schema"
+import { eq, and, asc } from "drizzle-orm"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { Header } from "@/components/dashboard/header"
 import { getOrgHeaderData } from "@/lib/org-header-data"
 import { ApprovalDetail } from "./approval-detail"
+import { ApprovalTimeline } from "./approval-timeline"
 
 export default async function ApprovalDetailPage({
   params,
@@ -45,6 +46,29 @@ export default async function ApprovalDetailPage({
     .from(approvalFiles)
     .where(and(eq(approvalFiles.approvalId, id), eq(approvalFiles.organizationId, orgId)))
 
+  const eventRows = await db
+    .select({
+      id: approvalEvents.id,
+      eventType: approvalEvents.eventType,
+      actorType: approvalEvents.actorType,
+      actorId: approvalEvents.actorId,
+      actorName: users.name,
+      metadata: approvalEvents.metadata,
+      createdAt: approvalEvents.createdAt,
+    })
+    .from(approvalEvents)
+    .leftJoin(users, eq(approvalEvents.actorId, users.id))
+    .where(eq(approvalEvents.approvalId, id))
+    .orderBy(asc(approvalEvents.createdAt))
+
+  // Fire-and-forget: do NOT await — must not block render (RESEARCH anti-pattern)
+  void db.insert(approvalEvents).values({
+    approvalId: id,
+    eventType: "approval_viewed",
+    actorType: "user",
+    actorId: session!.user.id,
+  })
+
   return (
     <div>
       <Header title="Detalhes da Aprovação" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
@@ -60,6 +84,7 @@ export default async function ApprovalDetailPage({
           approval={row}
           canResolve={row.status === "pending"}
           fileCount={fileRows.length}
+          timeline={<ApprovalTimeline events={eventRows} />}
         />
       </div>
     </div>

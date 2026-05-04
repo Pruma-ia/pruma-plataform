@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, type ReactNode } from "react"
 import "highlight.js/styles/github-dark.css"
 import DOMPurify from "dompurify"
 import {
@@ -47,10 +47,12 @@ export function ApprovalDetail({
   approval,
   fileCount,
   canResolve,
+  timeline,
 }: {
   approval: Approval
   fileCount: number
   canResolve: boolean
+  timeline?: ReactNode
 }) {
   const [comment, setComment] = useState("")
   const [decisionValues, setDecisionValues] = useState<Record<string, string>>({})
@@ -382,6 +384,7 @@ export function ApprovalDetail({
       <div className="max-w-2xl mx-auto flex flex-col gap-4">
         {headerCard}
         {decisionPanel}
+        {timeline}
       </div>
     )
   }
@@ -597,9 +600,10 @@ export function ApprovalDetail({
         </div>
       </div>
 
-      {/* RIGHT: Decision panel */}
-      <div className="w-full xl:w-80 2xl:w-96 shrink-0 xl:sticky xl:top-6">
+      {/* RIGHT: Decision panel + Timeline */}
+      <div className="w-full xl:w-80 2xl:w-96 shrink-0 xl:sticky xl:top-6 flex flex-col gap-4">
         {decisionPanel}
+        {timeline}
       </div>
     </div>
   )

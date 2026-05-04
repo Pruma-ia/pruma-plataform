@@ -1,4 +1,4 @@
-CREATE TABLE "email_otp_tokens" (
+CREATE TABLE IF NOT EXISTS "email_otp_tokens" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
 	"token_hash" text NOT NULL,
@@ -12,4 +12,4 @@ ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "setup_charge_amount" integ
 ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "setup_charge_installments" integer;--> statement-breakpoint
 ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "setup_charge_status" text;--> statement-breakpoint
 ALTER TABLE "organizations" ADD COLUMN IF NOT EXISTS "onboarding_whatsapp_clicked_at" timestamp;--> statement-breakpoint
-ALTER TABLE "email_otp_tokens" ADD CONSTRAINT "email_otp_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "email_otp_tokens" ADD CONSTRAINT IF NOT EXISTS "email_otp_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;

@@ -254,6 +254,19 @@ export const approvalFiles = pgTable(
   (t) => [index("approval_files_approval_idx").on(t.approvalId)]
 )
 
+// ─── Approval Events (audit trail) ───────────────────────────────────────────
+
+export const approvalEvents = pgTable("approval_events", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  approvalId: text("approval_id").notNull()
+    .references(() => approvals.id, { onDelete: "cascade" }),
+  eventType: text("event_type").notNull(),   // text NOT pgEnum (D-06)
+  actorType: text("actor_type").notNull(),   // "user" | "system" | "whatsapp"
+  actorId: text("actor_id"),                 // null for system
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [index("approval_events_approval_idx").on(t.approvalId, t.createdAt)])
+
 // ─── Approval File Uploads (presign tracking) ─────────────────────────────────
 
 export const approvalFileUploads = pgTable(
@@ -358,6 +371,7 @@ export const approvalsRelations = relations(approvals, ({ one, many }) => ({
     references: [users.id],
   }),
   files: many(approvalFiles),
+  events: many(approvalEvents),
 }))
 
 export const approvalFilesRelations = relations(approvalFiles, ({ one }) => ({
@@ -368,5 +382,12 @@ export const approvalFilesRelations = relations(approvalFiles, ({ one }) => ({
   organization: one(organizations, {
     fields: [approvalFiles.organizationId],
     references: [organizations.id],
+  }),
+}))
+
+export const approvalEventsRelations = relations(approvalEvents, ({ one }) => ({
+  approval: one(approvals, {
+    fields: [approvalEvents.approvalId],
+    references: [approvals.id],
   }),
 }))

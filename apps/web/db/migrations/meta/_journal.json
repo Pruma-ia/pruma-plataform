@@ -64,6 +64,13 @@
       "when": 1777761711320,
       "tag": "0008_silent_susan_delgado",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1777891401472,
+      "tag": "0009_approval_events",
+      "breakpoints": true
     }
   ]
 }

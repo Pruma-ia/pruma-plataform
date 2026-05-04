@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/dashboard/header"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import { CheckoutForm } from "./checkout-form"
 
 export default async function CheckoutPage() {
@@ -13,7 +14,10 @@ export default async function CheckoutPage() {
   const orgId = session?.user?.organizationId
   if (!orgId) redirect("/dashboard")
 
-  const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId))
+  const [[org], orgHeader] = await Promise.all([
+    db.select().from(organizations).where(eq(organizations.id, orgId)),
+    getOrgHeaderData(orgId),
+  ])
   if (!org) redirect("/billing")
 
   const profileIncomplete = !org.cnpj || !org.addressZipCode || !org.addressNumber
@@ -27,7 +31,7 @@ export default async function CheckoutPage() {
 
   return (
     <div>
-      <Header title="Contratar" />
+      <Header title="Contratar" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="p-6 max-w-lg mx-auto">
         <Link
           href="/billing"

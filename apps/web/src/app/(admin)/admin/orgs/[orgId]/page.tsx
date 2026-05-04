@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { flows, approvals, flowRuns, organizations } from "../../../../../../db/schema"
 import { eq, desc, count, and } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import { GitBranch, CheckSquare, Activity, AlertCircle } from "lucide-react"
 
 const statusColors: Record<string, string> = {
@@ -18,7 +19,7 @@ export default async function AdminOrgDashboard({
 }) {
   const { orgId } = await params
 
-  const [flowStats, pendingApprovals, recentRuns] = await Promise.all([
+  const [flowStats, pendingApprovals, recentRuns, orgHeader] = await Promise.all([
     db.select({ total: count() }).from(flows).where(eq(flows.organizationId, orgId)),
     db
       .select({ total: count() })
@@ -30,6 +31,7 @@ export default async function AdminOrgDashboard({
       .where(eq(flowRuns.organizationId, orgId))
       .orderBy(desc(flowRuns.createdAt))
       .limit(5),
+    getOrgHeaderData(orgId),
   ])
 
   const stats = [
@@ -51,7 +53,7 @@ export default async function AdminOrgDashboard({
 
   return (
     <div>
-      <Header title="Dashboard" />
+      <Header title="Dashboard" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {stats.map((s) => (

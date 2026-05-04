@@ -4,14 +4,11 @@ export const metadata: Metadata = {
   title: "Aviso de Cookies — Pruma IA",
 }
 
-// TODO: substituir antes de publicar
-// privacidade@pruma.io → email ainda não criado
-
 export default function CookiesPage() {
   return (
     <article className="prose prose-neutral dark:prose-invert max-w-none">
       <h1>Aviso de Cookies</h1>
-      <p className="text-muted-foreground text-sm">Última atualização: 26/04/2026 — <strong>RASCUNHO — pendente revisão jurídica</strong></p>
+      <p className="text-muted-foreground text-sm">Última atualização: 26/04/2026</p>
 
       <p>
         A Pruma IA utiliza cookies e tecnologias similares no website institucional e na plataforma para garantir seu

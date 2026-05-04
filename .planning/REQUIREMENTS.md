@@ -48,8 +48,8 @@
 - [ ] **ORG-02**: Owner da org pode editar dados cadastrais: CNPJ, endereço, telefone
 - [ ] **ORG-03**: Dados cadastrais da org são coletados no onboarding ao criar a organização
 - [ ] **ORG-04**: Dados cadastrais coletados no onboarding pré-preenchem automaticamente os campos de billing no Asaas
-- [ ] **PROF-01**: Usuário pode editar seu nome de exibição
-- [ ] **PROF-02**: Usuário pode ver e gerenciar contas conectadas (Google, credentials)
+- [x] **PROF-01**: Usuário pode editar seu nome de exibição
+- [x] **PROF-02**: Usuário pode ver e gerenciar contas conectadas (Google, credentials)
 - [ ] **PROF-03**: Usuário vê o número de telefone verificado na página de perfil com opção de alterar
 
 ### Billing
@@ -138,8 +138,8 @@
 | ORG-02 | Phase 2 | Pending |
 | ORG-03 | Phase 2 | Pending |
 | ORG-04 | Phase 2 | Pending |
-| PROF-01 | Phase 1 | Pending |
-| PROF-02 | Phase 1 | Pending |
+| PROF-01 | Phase 1 | Complete |
+| PROF-02 | Phase 1 | Complete |
 | PROF-03 | Phase 4 | Pending |
 | BILL-01 | Phase 3 | Pending |
 | BILL-02 | Phase 3 | Pending |

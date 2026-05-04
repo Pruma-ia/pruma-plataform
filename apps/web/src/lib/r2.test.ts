@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { buildR2Key, ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from "./r2"
+import { buildR2Key, ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES, LOGO_ALLOWED_MIME_TYPES, MAX_LOGO_SIZE_BYTES, buildOrgLogoR2Key } from "./r2"
 
 // ── S3 function mocks ─────────────────────────────────────────────────────────
 const mockSend = vi.hoisted(() => vi.fn())
@@ -133,6 +133,48 @@ describe("deleteObject", () => {
     const { deleteObject } = await import("./r2")
     await deleteObject("org-1/uuid/file.pdf")
     expect(mockSend).toHaveBeenCalledOnce()
+  })
+})
+
+// ─── Logo-specific helpers (D-18) ────────────────────────────────────────────
+
+describe("LOGO_ALLOWED_MIME_TYPES", () => {
+  it("allows image/png", () => expect(LOGO_ALLOWED_MIME_TYPES.has("image/png")).toBe(true))
+  it("allows image/jpeg", () => expect(LOGO_ALLOWED_MIME_TYPES.has("image/jpeg")).toBe(true))
+  it("allows image/webp", () => expect(LOGO_ALLOWED_MIME_TYPES.has("image/webp")).toBe(true))
+  it("rejects image/gif (excluded per D-18)", () => expect(LOGO_ALLOWED_MIME_TYPES.has("image/gif")).toBe(false))
+  it("rejects application/pdf", () => expect(LOGO_ALLOWED_MIME_TYPES.has("application/pdf")).toBe(false))
+  it("contains EXACTLY 3 entries", () => expect(LOGO_ALLOWED_MIME_TYPES.size).toBe(3))
+})
+
+describe("MAX_LOGO_SIZE_BYTES", () => {
+  it("is 2MB (2097152)", () => expect(MAX_LOGO_SIZE_BYTES).toBe(2_097_152))
+})
+
+describe("buildOrgLogoR2Key", () => {
+  it("returns string starting with 'org-logos/{orgId}/'", () => {
+    const key = buildOrgLogoR2Key("org_123", "logo.png")
+    expect(key.startsWith("org-logos/org_123/")).toBe(true)
+  })
+
+  it("sanitizes filename (spaces and special chars replaced with _)", () => {
+    const key = buildOrgLogoR2Key("org_123", "Logo Empresa!.png")
+    expect(key.endsWith("Logo_Empresa_.png")).toBe(true)
+  })
+
+  it("generates different keys on two consecutive calls (UUID varies)", () => {
+    const k1 = buildOrgLogoR2Key("org_123", "logo.png")
+    const k2 = buildOrgLogoR2Key("org_123", "logo.png")
+    expect(k1).not.toBe(k2)
+  })
+
+  it("format is org-logos/{orgId}/{uuid}/{filename}", () => {
+    const key = buildOrgLogoR2Key("org_abc", "logo.png")
+    const parts = key.split("/")
+    expect(parts[0]).toBe("org-logos")
+    expect(parts[1]).toBe("org_abc")
+    expect(parts[2]).toMatch(/^[0-9a-f-]{36}$/) // UUID
+    expect(parts[3]).toBe("logo.png")
   })
 })
 

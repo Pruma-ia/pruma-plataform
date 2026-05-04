@@ -4,6 +4,8 @@ import { users, organizations, organizationMembers } from "../../../../../db/sch
 import { eq } from "drizzle-orm"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { generateAndStoreOtp } from "@/lib/otp"
+import { sendOtpVerificationEmail } from "@/lib/email"
 
 const schema = z.object({
   name: z.string().min(2),
@@ -48,27 +50,47 @@ export async function POST(req: Request) {
   }
 
   const hashed = await bcrypt.hash(password, 12)
-  const [user] = await db
-    .insert(users)
-    .values({ name, email, password: hashed, acceptedTermsAt: new Date(), marketingConsent })
-    .returning()
 
-  // Cria a organização com slug único
-  let slug = slugify(organizationName)
-  const [slugConflict] = await db.select().from(organizations).where(eq(organizations.slug, slug))
-  if (slugConflict) slug = `${slug}-${Date.now()}`
+  // All DB writes in a single transaction — prevents orphaned user/org rows on partial failure
+  let newUserId: string
+  let newUserEmail: string
+  await db.transaction(async (tx) => {
+    const [user] = await tx
+      .insert(users)
+      .values({ name, email, password: hashed, acceptedTermsAt: new Date(), marketingConsent })
+      .returning()
 
-  const [org] = await db
-    .insert(organizations)
-    .values({ name: organizationName, slug })
-    .returning()
+    // Cria a organização com slug único
+    let slug = slugify(organizationName)
+    const [slugConflict] = await tx.select().from(organizations).where(eq(organizations.slug, slug))
+    if (slugConflict) slug = `${slug}-${Date.now()}`
 
-  await db.insert(organizationMembers).values({
-    organizationId: org.id,
-    userId: user.id,
-    role: "owner",
-    acceptedAt: new Date(),
+    const [org] = await tx
+      .insert(organizations)
+      .values({ name: organizationName, slug })
+      .returning()
+
+    await tx.insert(organizationMembers).values({
+      organizationId: org.id,
+      userId: user.id,
+      role: "owner",
+      acceptedAt: new Date(),
+    })
+
+    newUserId = user.id
+    newUserEmail = user.email
   })
 
-  return NextResponse.json({ ok: true })
+  // Send OTP verification email — fire and forget outside transaction; network I/O must not
+  // extend the transaction or block registration on email failure
+  try {
+    const code = await generateAndStoreOtp(newUserId!)
+    await sendOtpVerificationEmail(newUserEmail!, code)
+  } catch (err) {
+    // Log only the message to avoid leaking SMTP/Resend config details from the error object
+    console.error("[register] OTP send failed:", err instanceof Error ? err.message : String(err))
+    // do not fail registration — user can resend from /verify-email
+  }
+
+  return NextResponse.json({ ok: true, redirectTo: "/verify-email" })
 }

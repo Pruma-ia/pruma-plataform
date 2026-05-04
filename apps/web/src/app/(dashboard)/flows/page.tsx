@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { flows } from "../../../../db/schema"
 import { eq, desc } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import Link from "next/link"
 import { GitBranch, ChevronRight } from "lucide-react"
 
@@ -24,6 +25,8 @@ export default async function FlowsPage() {
   const session = await auth()
   const orgId = session!.user.organizationId!
 
+  const orgHeader = await getOrgHeaderData(orgId)
+
   const allFlows = await db
     .select()
     .from(flows)
@@ -32,7 +35,7 @@ export default async function FlowsPage() {
 
   return (
     <div>
-      <Header title="Fluxos" />
+      <Header title="Fluxos" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="p-6">
         <div className="rounded-xl border bg-card shadow-sm">
           <div className="flex items-center gap-2 border-b px-6 py-4">

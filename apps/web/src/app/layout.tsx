@@ -32,14 +32,6 @@ export default function RootLayout({
       className={`${barlow.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        {/* Aplica o tema antes da hidratação para evitar flash */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('theme')||'system';document.documentElement.classList.add(t==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t)}catch(e){}`,
-          }}
-        />
-      </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ThemeProvider>
           {children}

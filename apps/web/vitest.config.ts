@@ -1,10 +1,15 @@
 import { defineConfig } from "vitest/config"
+import react from "@vitejs/plugin-react"
 import path from "path"
 
 export default defineConfig({
+  plugins: [react()],
   test: {
     environment: "node",
+    // .test.tsx files run in jsdom (React component tests)
+    environmentMatchGlobs: [["**/*.test.tsx", "jsdom"]],
     globals: true,
+    setupFiles: ["./src/test-setup.ts"],
     exclude: ["tests/integration/**", "tests/e2e/**", "node_modules/**"],
     coverage: {
       provider: "v8",

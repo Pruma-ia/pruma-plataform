@@ -4,6 +4,7 @@ import { organizations } from "../../../../db/schema"
 import { eq } from "drizzle-orm"
 import { AlertTriangle } from "lucide-react"
 import { Header } from "@/components/dashboard/header"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import { BillingPlans } from "./billing-plans"
 import { BillingBundle } from "./billing-bundle"
 import { redirect } from "next/navigation"
@@ -28,8 +29,12 @@ export default async function BillingPage() {
   const orgId = session?.user?.organizationId
   if (!orgId) redirect("/dashboard")
 
-  const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId))
+  const [org, orgHeader] = await Promise.all([
+    db.select().from(organizations).where(eq(organizations.id, orgId)).then((rows) => rows[0]),
+    getOrgHeaderData(orgId),
+  ])
   const statusInfo = statusLabels[org?.subscriptionStatus ?? "inactive"]
+
 
   const profileIncomplete = !org?.cnpj || !org?.addressZipCode || !org?.addressNumber
   const hasSetupCharge =
@@ -45,7 +50,7 @@ export default async function BillingPage() {
 
   return (
     <div>
-      <Header title="Plano & Cobrança" />
+      <Header title="Plano & Cobrança" orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="p-6 space-y-6 max-w-3xl mx-auto">
         {/* Banner dados incompletos — só quando não há setup (bundle já trata internamente) */}
         {profileIncomplete && !hasSetupCharge && (

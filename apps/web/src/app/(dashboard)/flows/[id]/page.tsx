@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { flows, flowRuns } from "../../../../../db/schema"
 import { eq, and, desc } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
+import { getOrgHeaderData } from "@/lib/org-header-data"
 import { notFound } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -11,6 +12,8 @@ export default async function FlowDetailPage({ params }: { params: Promise<{ id:
   const { id } = await params
   const session = await auth()
   const orgId = session!.user.organizationId!
+
+  const orgHeader = await getOrgHeaderData(orgId)
 
   const [flow] = await db
     .select()
@@ -28,7 +31,7 @@ export default async function FlowDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div>
-      <Header title={flow.name} />
+      <Header title={flow.name} orgName={orgHeader.name} orgLogoUrl={orgHeader.logoUrl} />
       <div className="p-6 space-y-6">
         <Link
           href="/flows"

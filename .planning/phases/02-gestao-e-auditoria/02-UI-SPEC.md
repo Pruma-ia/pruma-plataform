@@ -46,7 +46,7 @@ Sistema base 4px (Tailwind spacing scale). Fonte: `design-system/MASTER.md`.
 
 **Exceções nesta fase:**
 - Toolbar de filtros: `gap-2` (8px) entre pills de status — mantém compactação do padrão existente em `approvals-list.tsx`
-- Timeline de eventos: `gap-3` (12px) entre linhas do log — menor que o padrão de seção para comunicar agrupamento
+- Timeline de eventos: `gap-2` (8px) entre linhas do log — mantém compactação e pertence ao conjunto padrão
 - Célula de tabela `flow_runs`: `px-4 py-3` — conforme `design-system/components/tables.md`
 - Inputs de onboarding cadastral: `space-y-4` (16px) entre campos — igual ao `OrgProfileForm` já existente
 
@@ -61,11 +61,11 @@ Fonte: `design-system/MASTER.md`. Não criar variantes fora desta escala.
 | Page title | Barlow | 24px (`text-2xl`) | 600 (`font-semibold`) | 1.375 (`leading-snug`) | "Aprovações", "Configurações" no `<Header>` |
 | Section heading | Barlow | 20px (`text-xl`) | 600 (`font-semibold`) | 1.375 (`leading-snug`) | "Histórico de decisão", "Execuções recentes" |
 | Body / label | Inter | 14px (`text-sm`) | 400 (`font-normal`) | 1.625 (`leading-relaxed`) | Conteúdo de tabela, descrições, metadata |
-| Caption / badge | Inter | 12px (`text-xs`) | 500 (`font-medium`) | 1.375 (`leading-snug`) | Badges de status, timestamps, labels de coluna |
+| Caption / badge | Inter | 12px (`text-xs`) | 400 (`font-normal`) | 1.375 (`leading-snug`) | Badges de status, timestamps, labels de coluna |
 
 **Regras obrigatórias:**
 - Headings de seção dentro de card: `font-heading text-xl font-semibold`
-- Label de coluna de tabela: `text-sm font-medium text-muted-foreground`
+- Label de coluna de tabela: `text-sm text-muted-foreground`
 - Timestamps: `text-xs text-muted-foreground tabular-nums`
 - IDs / slugs / valores mono: `font-mono text-xs text-muted-foreground`
 
@@ -185,7 +185,7 @@ div.rounded-xl.border.border-border.bg-card.shadow-sm.overflow-hidden
     p.text-xs.font-semibold.uppercase.tracking-widest.text-muted-foreground
       "Histórico de decisão"
   ol  (lista ordenada — semântica de auditoria)
-    li.flex.items-start.gap-3.px-5.py-4.border-b.last:border-b-0
+    li.flex.items-start.gap-2.px-5.py-4.border-b.last:border-b-0
       div.shrink-0.mt-0.5
         [ícone do evento — h-4 w-4]
       div.flex-1.min-w-0

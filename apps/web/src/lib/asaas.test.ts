@@ -142,6 +142,83 @@ describe("asaas client", () => {
     expect(opts?.method).toBeUndefined()
   })
 
+  // ── updateAsaasCustomer tests (ORG-04) ──────────────────────────────────────
+
+  it("updateAsaasCustomer issues PUT to /customers/{id} with correct body (ORG-04)", async () => {
+    mockFetch({ id: "cus_1", cpfCnpj: "12345678000195" })
+    const { updateAsaasCustomer } = await import("./asaas")
+    const result = await updateAsaasCustomer("cus_1", {
+      cnpj: "12345678000195",
+      phone: "11999990000",
+      addressStreet: "Rua Exemplo",
+      addressNumber: "100",
+      addressComplement: "Sala 1",
+      addressZipCode: "01310100",
+      addressCity: "São Paulo",
+      addressState: "SP",
+    })
+    expect(result.ok).toBe(true)
+    const [url, opts] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toContain("/customers/cus_1")
+    expect(opts.method).toBe("PUT")
+    const body = JSON.parse(opts.body)
+    expect(body.cpfCnpj).toBe("12345678000195")
+    expect(body.city).toBe("São Paulo")
+    expect(body.province).toBe("SP")
+  })
+
+  it("updateAsaasCustomer returns ok:false (no throw) when fetch fails", async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error("network failure"))
+    const { updateAsaasCustomer } = await import("./asaas")
+    const result = await updateAsaasCustomer("cus_1", {
+      cnpj: "12345678000195",
+      phone: null,
+      addressStreet: null,
+      addressNumber: null,
+      addressComplement: null,
+      addressZipCode: null,
+      addressCity: null,
+      addressState: null,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.error).toBeDefined()
+  })
+
+  it("updateAsaasCustomer returns ok:false when response status is not 2xx", async () => {
+    mockFetch({ errors: [{ description: "Customer not found" }] }, false, 404)
+    const { updateAsaasCustomer } = await import("./asaas")
+    const result = await updateAsaasCustomer("cus_unknown", {
+      cnpj: "12345678000195",
+      phone: null,
+      addressStreet: null,
+      addressNumber: null,
+      addressComplement: null,
+      addressZipCode: null,
+      addressCity: null,
+      addressState: null,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.error).toBeDefined()
+  })
+
+  it("updateAsaasCustomer returns ok:false with descriptive error when ASAAS_API_KEY missing", async () => {
+    delete process.env.ASAAS_API_KEY
+    mockFetch({})
+    const { updateAsaasCustomer } = await import("./asaas")
+    const result = await updateAsaasCustomer("cus_1", {
+      cnpj: "12345678000195",
+      phone: null,
+      addressStreet: null,
+      addressNumber: null,
+      addressComplement: null,
+      addressZipCode: null,
+      addressCity: null,
+      addressState: null,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.error).toMatch(/ASAAS_API_KEY/i)
+  })
+
   it("payments.create sends POST /payments with body", async () => {
     mockFetch({ id: "pay_1", installmentCount: 3 })
     const { asaas } = await import("./asaas")

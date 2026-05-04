@@ -79,6 +79,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               orgSlug: organizations.slug,
               role: organizationMembers.role,
               subscriptionStatus: organizations.subscriptionStatus,
+              cnpj: organizations.cnpj,
             })
             .from(organizationMembers)
             .innerJoin(organizations, eq(organizationMembers.organizationId, organizations.id))
@@ -96,6 +97,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.organizationSlug = membership.orgSlug
           token.role = membership.role
           token.subscriptionStatus = membership.subscriptionStatus
+          // orgCnpjFilled: true when organizations.cnpj IS NOT NULL (D-10 / ORG-02)
+          token.orgCnpjFilled = !!membership.cnpj
         }
 
         token.refreshedAt = Date.now()
@@ -111,6 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             orgSlug: organizations.slug,
             role: organizationMembers.role,
             subscriptionStatus: organizations.subscriptionStatus,
+            cnpj: organizations.cnpj,
           })
           .from(organizationMembers)
           .innerJoin(organizations, eq(organizationMembers.organizationId, organizations.id))
@@ -122,6 +126,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.organizationSlug = membership.orgSlug
           token.role = membership.role
           token.subscriptionStatus = membership.subscriptionStatus
+          token.orgCnpjFilled = !!membership.cnpj
           token.refreshedAt = Date.now()
         }
 
@@ -129,6 +134,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       // Re-lê subscriptionStatus a cada 5 min para refletir mudanças de billing (Asaas webhook)
+      // Também re-lê orgCnpjFilled para refletir preenchimento do CNPJ durante onboarding cadastral
       if (
         !token.isSuperAdmin &&
         token.organizationId &&
@@ -136,13 +142,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         Date.now() - (token.refreshedAt as number) > SUBSCRIPTION_REFRESH_MS
       ) {
         const [org] = await db
-          .select({ subscriptionStatus: organizations.subscriptionStatus })
+          .select({ subscriptionStatus: organizations.subscriptionStatus, cnpj: organizations.cnpj })
           .from(organizations)
           .where(eq(organizations.id, token.organizationId as string))
           .limit(1)
 
-        if (org) token.subscriptionStatus = org.subscriptionStatus
+        if (org) {
+          token.subscriptionStatus = org.subscriptionStatus
+          token.orgCnpjFilled = !!org.cnpj
+        }
         token.refreshedAt = Date.now()
+      }
+
+      // Re-lê orgCnpjFilled do banco quando token ainda carrega false e há organizationId.
+      // Necessário para que update() chamado pela página /onboarding/cadastral após submit
+      // propague a flag para o JWT — sem isso o proxy continuaria redirecionando para
+      // /onboarding/cadastral até o usuário fazer logout e re-login. (D-10 / ORG-03)
+      if (!token.isSuperAdmin && token.organizationId && token.orgCnpjFilled === false) {
+        const [org] = await db
+          .select({ cnpj: organizations.cnpj })
+          .from(organizations)
+          .where(eq(organizations.id, token.organizationId as string))
+          .limit(1)
+        if (org?.cnpj) {
+          token.orgCnpjFilled = true
+        }
       }
 
       // Re-lê emailVerified do banco sempre que o token ainda carrega false e há userId.
@@ -181,6 +205,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // our JWT carries a derived boolean. The intersection is resolved at runtime.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(session.user as any).emailVerified = (token.emailVerified as boolean | undefined) ?? false
+      session.user.orgCnpjFilled = (token.orgCnpjFilled as boolean | undefined) ?? false
       return session
     },
   },

@@ -21,8 +21,9 @@ const BLOCKED_STATUSES = new Set(["canceled", "inactive"])
 //   1. Rate limiting (INFRA-01)
 //   2. Onboarding guard (usuário sem org → /onboarding)
 //   3. emailVerified gate (usuário com org mas sem e-mail verificado → /verify-email)
-//   4. Admin guard
-//   5. Subscription guard
+//   4. CNPJ guard (usuário verificado mas sem CNPJ → /onboarding/cadastral) [D-10 / ORG-02]
+//   5. Admin guard
+//   6. Subscription guard
 //
 // Nota: o gate emailVerified roda DEPOIS do onboarding guard porque, no fluxo de
 // registro, o usuário é criado com emailVerified=null antes de ter uma org.
@@ -121,6 +122,31 @@ export default auth(async (req) => {
     return NextResponse.redirect(new URL("/dashboard", req.url))
   }
 
+  // ── CNPJ guard (D-10 / ORG-02 / ORG-03) — verificado mas sem CNPJ → /onboarding/cadastral ──
+  // Roda DEPOIS do emailVerified gate (usuário deve estar verificado antes de ser
+  // cobrado pelo CNPJ). Superadmin é isento (acesso irrestrito). Bypass obrigatório
+  // para que o usuário possa preencher o formulário e fazer logout sem loop.
+  const CADASTRAL_BYPASS = new Set([
+    "/onboarding/cadastral",
+    "/api/auth/signout",
+  ])
+  function isCadastralBypass(p: string): boolean {
+    if (CADASTRAL_BYPASS.has(p)) return true
+    if (p.startsWith("/api/auth/")) return true
+    if (p.startsWith("/api/user/org-profile")) return true
+    return false
+  }
+  if (
+    session &&
+    !session.user.isSuperAdmin &&
+    session.user.organizationId &&
+    session.user.emailVerified === true &&
+    session.user.orgCnpjFilled === false &&
+    !isCadastralBypass(pathname)
+  ) {
+    return NextResponse.redirect(new URL("/onboarding/cadastral", req.url))
+  }
+
   // ── Proteção do painel admin ─────────────────────────────────────────────
   if (pathname.startsWith("/admin")) {
     if (!session) {
@@ -151,6 +177,7 @@ export const config = {
     "/admin/:path*",
     "/onboarding/:path*",
     "/onboarding",
+    "/onboarding/cadastral",
     "/dashboard/:path*",
     "/flows/:path*",
     "/approvals/:path*",

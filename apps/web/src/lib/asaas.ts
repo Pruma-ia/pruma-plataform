@@ -1,6 +1,60 @@
 const ASAAS_API_URL = process.env.ASAAS_API_URL ?? "https://sandbox.asaas.com/api/v3"
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY!
 
+// ── Cadastral sync helper (ORG-04) ────────────────────────────────────────────
+
+export interface OrgCadastralData {
+  cnpj: string
+  phone: string | null
+  addressStreet: string | null
+  addressNumber: string | null
+  addressComplement: string | null
+  addressZipCode: string | null
+  addressCity: string | null
+  addressState: string | null
+}
+
+/**
+ * PUTs cadastral data to the Asaas customer record.
+ * Called at onboarding/cadastral form submit — sync failure is logged but NEVER blocks completion.
+ * Returns { ok: true } on 2xx, { ok: false, error } otherwise. Never throws.
+ */
+export async function updateAsaasCustomer(
+  asaasCustomerId: string,
+  data: OrgCadastralData,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!ASAAS_API_KEY) {
+    return { ok: false, error: "ASAAS_API_KEY not configured" }
+  }
+  try {
+    const res = await fetch(`${ASAAS_API_URL}/customers/${asaasCustomerId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        access_token: ASAAS_API_KEY,
+      },
+      body: JSON.stringify({
+        cpfCnpj: data.cnpj,
+        phone: data.phone ?? undefined,
+        address: data.addressStreet ?? undefined,
+        addressNumber: data.addressNumber ?? undefined,
+        complement: data.addressComplement ?? undefined,
+        postalCode: data.addressZipCode ?? undefined,
+        city: data.addressCity ?? undefined,
+        province: data.addressState ?? undefined,
+      }),
+    })
+    if (!res.ok) {
+      const errorBody = await res.json().catch(() => ({}))
+      return { ok: false, error: `Asaas API error ${res.status}: ${JSON.stringify(errorBody)}` }
+    }
+    return { ok: true }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return { ok: false, error: message }
+  }
+}
+
 async function asaasRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${ASAAS_API_URL}${path}`, {
     ...options,

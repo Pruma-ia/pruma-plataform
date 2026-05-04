@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { organizations, organizationMembers } from "../../../../../db/schema"
 import { eq, and } from "drizzle-orm"
 import { z } from "zod"
+import { updateAsaasCustomer } from "@/lib/asaas"
 
 const patchSchema = z.object({
   cnpj: z.string().regex(/^\d{14}$/, "CNPJ deve ter 14 dígitos"),
@@ -68,10 +69,26 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 })
   }
 
-  await db
+  const [updatedOrg] = await db
     .update(organizations)
     .set({ ...parsed.data, updatedAt: new Date() })
     .where(eq(organizations.id, session.user.organizationId))
+    .returning()
+
+  // Sync cadastral data to Asaas — fire-and-forget, failure is logged but NEVER blocks response
+  if (updatedOrg?.asaasCustomerId && updatedOrg.cnpj) {
+    const sync = await updateAsaasCustomer(updatedOrg.asaasCustomerId, {
+      cnpj: updatedOrg.cnpj,
+      phone: updatedOrg.phone,
+      addressStreet: updatedOrg.addressStreet,
+      addressNumber: updatedOrg.addressNumber,
+      addressComplement: updatedOrg.addressComplement,
+      addressZipCode: updatedOrg.addressZipCode,
+      addressCity: updatedOrg.addressCity,
+      addressState: updatedOrg.addressState,
+    })
+    if (!sync.ok) console.error("[org-profile] Asaas sync failed:", sync.error)
+  }
 
   return NextResponse.json({ ok: true })
 }

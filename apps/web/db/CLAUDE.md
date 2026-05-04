@@ -23,7 +23,7 @@ Drizzle não aplica migrations em transação atômica com rollback automático.
 |---|---|---|
 | `CREATE TABLE` | sem `IF NOT EXISTS` | `CREATE TABLE IF NOT EXISTS` |
 | `ALTER TABLE ... ADD COLUMN` | sem `IF NOT EXISTS` | `ADD COLUMN IF NOT EXISTS` |
-| `ALTER TABLE ... ADD CONSTRAINT` | sem `IF NOT EXISTS` | `ADD CONSTRAINT IF NOT EXISTS` |
+| `ALTER TABLE ... ADD CONSTRAINT` (FK) | sem guarda | `DO $$ BEGIN ALTER TABLE ... ADD CONSTRAINT ...; EXCEPTION WHEN duplicate_object THEN NULL; END $$;` |
 | `CREATE INDEX` | sem `IF NOT EXISTS` | `CREATE INDEX IF NOT EXISTS` |
 
 **Sintoma do desastre:** CI falha com `relation "X" already exists` ou `column "X" of relation "Y" already exists`. Causa: run anterior aplicou parte do SQL mas não chegou a registrar a migration em `__drizzle_migrations`.

@@ -55,6 +55,13 @@ describe("generateAndStoreOtp", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.resetModules()
+    mockTransaction.mockImplementation(async (fn: (tx: unknown) => unknown) => {
+      const tx = {
+        delete: () => ({ where: () => Promise.resolve(mockDelete()) }),
+        insert: () => ({ values: () => Promise.resolve(mockInsert()) }),
+      }
+      return fn(tx)
+    })
   })
 
   it("retorna string numérica de 6 dígitos", async () => {

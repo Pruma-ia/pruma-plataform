@@ -31,7 +31,7 @@ interface OwnerCreds {
 
 async function registerOwner(
   request: Parameters<typeof test>[1] extends (args: { request: infer R }) => unknown ? R : never,
-  ts = Date.now(),
+  ts = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
 ): Promise<OwnerCreds> {
   const email = `owner-ident-${ts}@test.pruma`
   const password = "TestPass123!"
@@ -48,6 +48,10 @@ async function registerOwner(
     },
   })
   expect(res.ok(), `Register failed: ${await res.text()}`).toBeTruthy()
+
+  // Bypass OTP gate so tests can reach protected pages without completing email verification
+  await request.post("/api/test/verify-email", { data: { email } })
+
   return { email, password, orgName }
 }
 
@@ -145,8 +149,9 @@ test("invalid file type rejected with error message", async ({ page, request }) 
     buffer: Buffer.from("GIF89a fake gif content"),
   })
 
-  // Client-side validation fires immediately — role="alert" region must appear
-  const alertRegion = page.locator("[role='alert']")
+  // Client-side validation fires immediately — error paragraph must appear.
+  // Use `p[role='alert']` to avoid matching the Next.js route announcer div.
+  const alertRegion = page.locator("p[role='alert']")
   await expect(alertRegion).toBeVisible({ timeout: 3_000 })
   await expect(alertRegion).toContainText(/tipo de arquivo/i)
 

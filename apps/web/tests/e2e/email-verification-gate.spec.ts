@@ -23,6 +23,10 @@ import { test, expect } from "@playwright/test"
 import path from "path"
 import fs from "fs"
 
+// Auth-flow tests share the same server state — run serially to avoid
+// concurrent registration race conditions (slug uniqueness, DB contention).
+test.describe.configure({ mode: "serial" })
+
 const SHOTS = path.join(__dirname, "screenshots", "email-verification-gate")
 
 test.beforeAll(() => {
@@ -34,7 +38,7 @@ test.beforeAll(() => {
 async function registerUnverified(
   page: Parameters<typeof test>[1] extends (args: { page: infer P }) => unknown ? P : never,
 ) {
-  const ts = Date.now()
+  const ts = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
   const email = `gate-e2e-${ts}@test.pruma`
   const password = "TestPass123!"
 
@@ -120,9 +124,9 @@ test("03 — OTP API endpoints are reachable while unverified (no 3xx redirect)"
   // What's NOT acceptable: a 3xx redirect to /verify-email
   const res = await page.request.post("/api/auth/resend-otp")
 
-  // Status must not be a redirect (30x)
-  expect(res.status()).toBeGreaterThanOrEqual(200)
-  expect(res.status()).toBeLessThan(300)
+  // 200 = resent, 429 = cooldown from OTP created at registration — both acceptable.
+  // A 3xx would mean the route is behind the email gate, which is the bug being tested.
+  expect([200, 429]).toContain(res.status())
 
   await page.screenshot({
     path: path.join(SHOTS, "03-otp-endpoints-reachable.png"),

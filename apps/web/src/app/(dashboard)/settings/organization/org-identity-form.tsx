@@ -41,7 +41,7 @@ export function OrgIdentityForm({ canEdit, initial }: OrgIdentityFormProps) {
       e.target.value = ""
       return
     }
-    if (!(file.size <= MAX_BYTES)) {
+    if (file.size > MAX_BYTES) {
       setFileError("Arquivo muito grande. O tamanho máximo é 2MB.")
       e.target.value = ""
       return

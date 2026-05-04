@@ -14,8 +14,8 @@ const RESEND_COOLDOWN = 60
 
 export default function VerifyEmailPage() {
   const sessionResult = useSession()
-  const session = sessionResult?.data
-  const update = sessionResult?.update ?? (async () => {})
+  const session = sessionResult.data
+  const update = sessionResult.update
   const router = useRouter()
 
   const [digits, setDigits] = useState<string[]>(Array(DIGIT_COUNT).fill(""))

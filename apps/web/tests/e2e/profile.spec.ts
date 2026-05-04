@@ -31,7 +31,7 @@ interface OwnerCreds {
 
 async function registerOwner(
   request: Parameters<typeof test>[1] extends (args: { request: infer R }) => unknown ? R : never,
-  ts = Date.now(),
+  ts = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
 ): Promise<OwnerCreds> {
   const email = `owner-profile-${ts}@test.pruma`
   const password = "TestPass123!"
@@ -48,6 +48,10 @@ async function registerOwner(
     },
   })
   expect(res.ok(), `Register failed: ${await res.text()}`).toBeTruthy()
+
+  // Bypass OTP gate so tests can reach protected pages without completing email verification
+  await request.post("/api/test/verify-email", { data: { email } })
+
   return { email, password, orgName }
 }
 

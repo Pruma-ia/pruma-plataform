@@ -37,14 +37,10 @@ const EMAIL_VERIFY_BYPASS = new Set([
 
 function isEmailVerifyBypass(pathname: string): boolean {
   if (EMAIL_VERIFY_BYPASS.has(pathname)) return true
-  // Permite todos os caminhos /api/auth/* (signin, callback, csrf, session, etc.)
-  // exceto o proxy de onboarding que é gerenciado pelo guard separado.
-  if (
-    pathname.startsWith("/api/auth/") &&
-    !pathname.startsWith("/api/auth/onboarding")
-  ) {
-    return true
-  }
+  // All /api/auth/* paths bypass the email gate (signin, callback, csrf, session, etc.).
+  // Email gate requires organizationId — onboarding users never have one, so they're
+  // handled by the onboarding guard before this function is reached.
+  if (pathname.startsWith("/api/auth/")) return true
   return false
 }
 

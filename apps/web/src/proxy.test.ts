@@ -49,6 +49,7 @@ type SessionUser = {
   isSuperAdmin?: boolean
   organizationId?: string
   emailVerified?: boolean
+  orgCnpjFilled?: boolean
   subscriptionStatus?: "active" | "trial" | "past_due" | "canceled" | "inactive"
 }
 
@@ -276,5 +277,89 @@ describe("proxy.ts middleware", () => {
     const matcherStr = config.matcher.join(",")
     expect(matcherStr).toContain("/api/auth/verify-otp")
     expect(matcherStr).toContain("/api/auth/resend-otp")
+  })
+
+  // ── CNPJ guard tests (D-10 / ORG-02 / ORG-03) ────────────────────────────────
+
+  // Test m (T-02-01): orgCnpjFilled=false + /dashboard → redirect to /onboarding/cadastral
+  it("m (T-02-01) — verified org user with orgCnpjFilled=false accessing /dashboard → redirect /onboarding/cadastral", async () => {
+    const { handler } = await getHandler()
+
+    const req = makeReq("/dashboard", {
+      isSuperAdmin: false,
+      organizationId: "org-1",
+      emailVerified: true,
+      orgCnpjFilled: false,
+    })
+    const res = await handler(req)
+
+    const location = (res as Response).headers.get("location")
+    expect((res as Response).status).toBeGreaterThanOrEqual(300)
+    expect((res as Response).status).toBeLessThan(400)
+    expect(location).toContain("/onboarding/cadastral")
+  })
+
+  // Test n: orgCnpjFilled=true + /dashboard → NextResponse.next (no redirect)
+  it("n — verified org user with orgCnpjFilled=true accessing /dashboard → NOT redirected", async () => {
+    const { handler } = await getHandler()
+
+    const req = makeReq("/dashboard", {
+      isSuperAdmin: false,
+      organizationId: "org-1",
+      emailVerified: true,
+      orgCnpjFilled: true,
+    })
+    const res = await handler(req)
+
+    const location = (res as Response).headers.get("location")
+    expect(location === null || !location.includes("/onboarding/cadastral")).toBe(true)
+  })
+
+  // Test o: superadmin + orgCnpjFilled=false → NOT redirected to /onboarding/cadastral
+  it("o — superadmin with orgCnpjFilled=false is NOT redirected to /onboarding/cadastral", async () => {
+    const { handler } = await getHandler()
+
+    const req = makeReq("/dashboard", {
+      isSuperAdmin: true,
+      organizationId: undefined,
+      emailVerified: false,
+      orgCnpjFilled: false,
+    })
+    const res = await handler(req)
+
+    const location = (res as Response).headers.get("location")
+    expect(location === null || !location.includes("/onboarding/cadastral")).toBe(true)
+  })
+
+  // Test p: request to /onboarding/cadastral with orgCnpjFilled=false → NOT redirected (bypass)
+  it("p — request to /onboarding/cadastral with orgCnpjFilled=false is NOT redirected (bypass)", async () => {
+    const { handler } = await getHandler()
+
+    const req = makeReq("/onboarding/cadastral", {
+      isSuperAdmin: false,
+      organizationId: "org-1",
+      emailVerified: true,
+      orgCnpjFilled: false,
+    })
+    const res = await handler(req)
+
+    const location = (res as Response).headers.get("location")
+    expect(location === null || !location.includes("/onboarding/cadastral")).toBe(true)
+  })
+
+  // Test q: request to /api/user/org-profile with orgCnpjFilled=false → NOT redirected (bypass)
+  it("q — request to /api/user/org-profile with orgCnpjFilled=false is NOT redirected (bypass)", async () => {
+    const { handler } = await getHandler()
+
+    const req = makeReq("/api/user/org-profile", {
+      isSuperAdmin: false,
+      organizationId: "org-1",
+      emailVerified: true,
+      orgCnpjFilled: false,
+    })
+    const res = await handler(req)
+
+    const location = (res as Response).headers.get("location")
+    expect(location === null || !location.includes("/onboarding/cadastral")).toBe(true)
   })
 })

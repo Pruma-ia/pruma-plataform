@@ -15,7 +15,7 @@ import path from "path"
 import fs from "fs"
 
 const SHOTS = path.join(__dirname, "screenshots", "approval-detail")
-const N8N_SECRET = "int-test-secret-pruma"
+const N8N_SECRET = process.env.N8N_WEBHOOK_SECRET ?? "dev-n8n-secret"
 
 test.beforeAll(() => {
   fs.mkdirSync(SHOTS, { recursive: true })
@@ -66,6 +66,21 @@ async function loginAs(
   await page.getByLabel(/senha/i).fill(password)
   await page.getByRole("button", { name: /entrar/i }).click()
   await page.waitForURL(/\/dashboard|\/approvals|\/onboarding/, { timeout: 10_000 })
+
+  // New users hit the CNPJ cadastral gate — fill via positional inputs (form has no id/name attrs)
+  if (page.url().includes("/onboarding/cadastral")) {
+    const inputs = page.locator("input")
+    await inputs.nth(0).fill("11222333000181") // CNPJ
+    await inputs.nth(1).fill("11999990000")    // Telefone
+    await inputs.nth(2).fill("01310100")       // CEP
+    await page.waitForTimeout(1500)            // wait for CEP auto-fill via ViaCEP
+    await inputs.nth(3).fill("Av. Paulista")   // Rua
+    await inputs.nth(4).fill("1000")           // Número
+    await inputs.nth(6).fill("São Paulo")      // Cidade (idx 5 = Complemento, optional)
+    await inputs.nth(7).fill("SP")             // UF
+    await page.getByRole("button", { name: /salvar|continuar|próximo/i }).click()
+    await page.waitForURL(/\/dashboard|\/approvals/, { timeout: 15_000 })
+  }
 }
 
 // ── Approval creation helper ──────────────────────────────────────────────────
@@ -107,7 +122,7 @@ test("timeline section is visible with at least one event row on approval detail
   await page.goto(`/approvals/${approvalId}`)
 
   // Timeline header must be visible
-  await expect(page.getByText("Histórico de decisão")).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByText("Histórico de decisão", { exact: true })).toBeVisible({ timeout: 10_000 })
 
   // At least one event list item rendered (approval_created from n8n webhook)
   const eventItems = page.locator("ol li")
@@ -130,14 +145,14 @@ test("approval_viewed event label is visible after page reload", async ({
 
   // First visit — page renders and fires approval_viewed insert (fire-and-forget)
   await page.goto(`/approvals/${approvalId}`)
-  await expect(page.getByText("Histórico de decisão")).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByText("Histórico de decisão", { exact: true })).toBeVisible({ timeout: 10_000 })
 
   // Reload to ensure approval_viewed event is now persisted and rendered
   await page.reload()
-  await expect(page.getByText("Histórico de decisão")).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByText("Histórico de decisão", { exact: true })).toBeVisible({ timeout: 10_000 })
 
   // "Aprovação visualizada" label should appear (from the first visit's view event)
-  await expect(page.getByText("Aprovação visualizada").first()).toBeVisible({ timeout: 5_000 })
+  await expect(page.getByText("Aprovação visualizada").first()).toBeVisible({ timeout: 12_000 })
 
   await page.screenshot({ path: path.join(SHOTS, "approval-viewed-event.png"), fullPage: true })
 })

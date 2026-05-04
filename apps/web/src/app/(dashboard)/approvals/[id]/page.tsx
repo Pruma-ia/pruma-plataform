@@ -5,6 +5,7 @@ import { eq, and, asc } from "drizzle-orm"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
+import { after } from "next/server"
 import { Header } from "@/components/dashboard/header"
 import { getOrgHeaderData } from "@/lib/org-header-data"
 import { ApprovalDetail } from "./approval-detail"
@@ -61,12 +62,14 @@ export default async function ApprovalDetailPage({
     .where(eq(approvalEvents.approvalId, id))
     .orderBy(asc(approvalEvents.createdAt))
 
-  // Fire-and-forget: do NOT await — must not block render (RESEARCH anti-pattern)
-  void db.insert(approvalEvents).values({
-    approvalId: id,
-    eventType: "approval_viewed",
-    actorType: "user",
-    actorId: session!.user.id,
+  // Run after response is sent — after() guarantees execution (unlike void)
+  after(async () => {
+    await db.insert(approvalEvents).values({
+      approvalId: id,
+      eventType: "approval_viewed",
+      actorType: "user",
+      actorId: session!.user.id,
+    })
   })
 
   return (

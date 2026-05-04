@@ -72,7 +72,21 @@ async function loginAs(
       await acceptBtn.click()
     }
   }
-  await page.waitForURL(/\/(dashboard|verify-email)/, { timeout: 10_000 })
+  await page.waitForURL(/\/dashboard|\/approvals|\/onboarding|\/verify-email/, { timeout: 10_000 })
+
+  if (page.url().includes("/onboarding/cadastral")) {
+    const inputs = page.locator("input")
+    await inputs.nth(0).fill("11222333000181") // CNPJ
+    await inputs.nth(1).fill("11999990000")    // Telefone
+    await inputs.nth(2).fill("01310100")       // CEP
+    await page.waitForTimeout(1500)            // wait for CEP auto-fill via ViaCEP
+    await inputs.nth(3).fill("Av. Paulista")   // Rua
+    await inputs.nth(4).fill("1000")           // Número
+    await inputs.nth(6).fill("São Paulo")      // Cidade (idx 5 = Complemento, optional)
+    await inputs.nth(7).fill("SP")             // UF
+    await page.getByRole("button", { name: /salvar|continuar|próximo/i }).click()
+    await page.waitForURL(/\/dashboard|\/approvals/, { timeout: 15_000 })
+  }
 }
 
 // ── Spec 1: owner sees editable form ─────────────────────────────────────────

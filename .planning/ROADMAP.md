@@ -72,13 +72,13 @@ Cross-cutting constraints:
 
 Plans:
 
-**Wave 1**
+**Wave 1** *(runs in parallel)*
 - [ ] 02-01-PLAN.md — approval_events schema + migration + 3 API call-site instrumentation (APPROV-05)
+- [ ] 02-04-PLAN.md — JWT orgCnpjFilled + proxy CNPJ guard + /onboarding/cadastral + Asaas sync + /flows/[id] runs UX (ORG-02/03/04, INFRA-03)
 
-**Wave 2** *(blocked on Wave 1 completion)*
+**Wave 2** *(blocked on 02-01 completion)*
 - [ ] 02-02-PLAN.md — /approvals refactor: searchParams filters + debounced search + pagination + CSV export (APPROV-01/02/03/04)
 - [ ] 02-03-PLAN.md — /approvals/[id] timeline + approval_viewed insert (APPROV-05) — depends_on: [01]
-- [ ] 02-04-PLAN.md — JWT orgCnpjFilled + proxy CNPJ guard + /onboarding/cadastral + Asaas sync + /flows/[id] runs UX (ORG-02/03/04, INFRA-03)
 **UI hint**: yes
 
 ---
@@ -152,7 +152,7 @@ Phases execute em ordem numérica: 1 → 2 → 3 → 4 → 5 (requer WABA aprova
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 6/6 | Complete | 2026-05-02 |
-| 2. Gestao e Auditoria | 0/TBD | Not started | - |
+| 2. Gestao e Auditoria | 0/4 | Planning complete | - |
 | 3. Billing Self-Service | 0/TBD | Not started | - |
 | 4. Notificacoes e Phone OTP | 0/TBD | Not started | - |
 | 5. WhatsApp | 0/TBD | Not started | - |

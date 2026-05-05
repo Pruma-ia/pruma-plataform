@@ -53,6 +53,12 @@ function statusBadge(status: string) {
           Em execução
         </span>
       )
+    case "waiting":
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+          Aguardando
+        </span>
+      )
     default:
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground capitalize">
@@ -130,7 +136,7 @@ export default async function FlowDetailPage({ params }: { params: Promise<{ id:
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Status</dt>
-              <dd className="mt-1 text-sm font-medium capitalize">{flow.status}</dd>
+              <dd className="mt-1">{statusBadge(flow.status)}</dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Última execução</dt>
@@ -139,14 +145,38 @@ export default async function FlowDetailPage({ params }: { params: Promise<{ id:
               </dd>
             </div>
           </dl>
-          {flow.metadata != null && (
-            <div className="mt-4">
-              <dt className="text-xs text-muted-foreground mb-1">Metadata</dt>
-              <pre className="rounded-lg bg-muted p-3 text-xs overflow-auto max-h-40">
-                {JSON.stringify(flow.metadata, null, 2)}
-              </pre>
-            </div>
-          )}
+          {flow.metadata != null && (() => {
+            const meta = flow.metadata as Record<string, unknown>
+            const etapas = Array.isArray(meta.etapas) ? (meta.etapas as string[]) : null
+            if (etapas) {
+              return (
+                <div className="mt-4">
+                  <dt className="text-xs text-muted-foreground mb-2">Etapas do fluxo</dt>
+                  <dd className="flex flex-wrap gap-2">
+                    {etapas.map((e, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1 rounded-full bg-[#E0F6FE] px-3 py-1 text-xs font-medium text-[#0D1B4B] dark:bg-[#00AEEF]/15 dark:text-[#5CCFF5]"
+                      >
+                        <span className="tabular-nums text-[10px] opacity-60">{i + 1}</span>
+                        {e}
+                      </span>
+                    ))}
+                  </dd>
+                </div>
+              )
+            }
+            return (
+              <details className="mt-4">
+                <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  Metadata técnico
+                </summary>
+                <pre className="mt-2 rounded-lg bg-muted p-3 text-xs overflow-auto max-h-40">
+                  {JSON.stringify(meta, null, 2)}
+                </pre>
+              </details>
+            )
+          })()}
         </div>
 
         {/* Execuções recentes */}

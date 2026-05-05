@@ -18,7 +18,8 @@
     "test:coverage": "vitest --coverage",
     "test:int": "vitest --config vitest.integration.config.ts",
     "test:int:keep": "KEEP_DATA=1 vitest --config vitest.integration.config.ts",
-    "seed:dev": "npx tsx scripts/seed-dev.ts"
+    "seed:dev": "npx tsx scripts/seed-dev.ts",
+    "seed:uat": "npx tsx scripts/seed-uat.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

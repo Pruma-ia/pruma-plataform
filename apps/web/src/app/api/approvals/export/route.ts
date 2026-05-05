@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { approvals, users, flows } from "../../../../../db/schema"
-import { and, eq, gte, lte, ilike, desc } from "drizzle-orm"
+import { and, eq, gte, lt, ilike, desc } from "drizzle-orm"
 
 // ── CSV helpers (RFC 4180 + injection-safety) ─────────────────────────────────
 
@@ -42,14 +42,17 @@ export async function GET(req: Request) {
 
   const dateFrom = sp.get("dateFrom")
   if (dateFrom) {
-    const d = new Date(dateFrom)
+    const d = new Date(dateFrom + "T03:00:00Z") // 00:00 BRT = 03:00 UTC
     if (!isNaN(d.getTime())) conditions.push(gte(approvals.createdAt, d))
   }
 
   const dateTo = sp.get("dateTo")
   if (dateTo) {
-    const d = new Date(dateTo)
-    if (!isNaN(d.getTime())) conditions.push(lte(approvals.createdAt, d))
+    const d = new Date(dateTo + "T03:00:00Z")
+    if (!isNaN(d.getTime())) {
+      d.setDate(d.getDate() + 1) // end of day BRT = next day 03:00 UTC
+      conditions.push(lt(approvals.createdAt, d))
+    }
   }
 
   const q = sp.get("q")
@@ -75,7 +78,8 @@ export async function GET(req: Request) {
     .orderBy(desc(approvals.createdAt))
 
   // ── Serialize CSV ─────────────────────────────────────────────────────────────
-  const header = "ID,Título,Status,Fluxo,Data,Resolvido Por,Comentário\n"
+  const SEP = ";"
+  const header = ["ID", "Título", "Status", "Fluxo", "Data", "Resolvido Por", "Comentário"].join(SEP) + "\n"
   const body = rows
     .map((r) =>
       [
@@ -83,14 +87,15 @@ export async function GET(req: Request) {
         csvEscape(csvSafe(r.title ?? "")),
         r.status,
         csvEscape(r.flowName ?? ""),
-        r.createdAt.toISOString(),
+        r.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
         csvEscape(r.resolvedByName ?? ""),
         csvEscape(csvSafe(r.comment ?? "")),
-      ].join(",")
+      ].join(SEP)
     )
     .join("\n")
 
-  return new Response(header + body, {
+  // UTF-8 BOM (﻿) ensures Excel BR opens with correct encoding and semicolon delimiter
+  return new Response("﻿" + header + body, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="aprovacoes-${Date.now()}.csv"`,

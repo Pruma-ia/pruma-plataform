@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { approvals, approvalFiles, approvalEvents, users } from "../../../../../db/schema"
-import { eq, and, asc } from "drizzle-orm"
+import { eq, and, asc, exists } from "drizzle-orm"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
@@ -62,14 +62,27 @@ export default async function ApprovalDetailPage({
     .where(eq(approvalEvents.approvalId, id))
     .orderBy(asc(approvalEvents.createdAt))
 
-  // Run after response is sent — after() guarantees execution (unlike void)
   after(async () => {
-    await db.insert(approvalEvents).values({
-      approvalId: id,
-      eventType: "approval_viewed",
-      actorType: "user",
-      actorId: session!.user.id,
-    })
+    const userId = session!.user.id
+    const alreadyViewed = await db
+      .select({ id: approvalEvents.id })
+      .from(approvalEvents)
+      .where(
+        and(
+          eq(approvalEvents.approvalId, id),
+          eq(approvalEvents.eventType, "approval_viewed"),
+          eq(approvalEvents.actorId, userId),
+        )
+      )
+      .limit(1)
+    if (alreadyViewed.length === 0) {
+      await db.insert(approvalEvents).values({
+        approvalId: id,
+        eventType: "approval_viewed",
+        actorType: "user",
+        actorId: userId,
+      })
+    }
   })
 
   return (

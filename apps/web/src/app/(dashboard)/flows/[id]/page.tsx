@@ -12,10 +12,14 @@ import Link from "next/link"
 
 function extractEtapas(payload: unknown): number {
   if (!payload || typeof payload !== "object") return 0
-  const runData = (payload as Record<string, unknown> & {
-    executionData?: { resultData?: { runData?: Record<string, unknown> } }
-  })?.executionData?.resultData?.runData
-  return runData && typeof runData === "object" ? Object.keys(runData).length : 0
+  const p = payload as Record<string, unknown>
+  // Native n8n execution payload
+  const runData = (p as { executionData?: { resultData?: { runData?: Record<string, unknown> } } })
+    ?.executionData?.resultData?.runData
+  if (runData && typeof runData === "object") return Object.keys(runData).length
+  // Simplified/seed format: { etapas: string[] }
+  if (Array.isArray(p.etapas)) return p.etapas.length
+  return 0
 }
 
 function durationLabel(startedAt: Date | null, finishedAt: Date | null): string {

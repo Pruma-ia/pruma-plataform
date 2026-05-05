@@ -136,13 +136,15 @@ const APPROVALS = [
   {
     title: "Pagamento Fornecedor ABC Ltda",
     description: "Aprovação de NF #3847 — R$45.000 referente ao contrato de licença de software.",
-    n8nExecutionId: `seed-uat-1-${ts}`,
+    // Shares executionId with waiting despesas run → shows in APROVAÇÕES column on /flows/[id]
+    n8nExecutionId: `seed-flow-despesas-3-${ts}`,
     prumaFlowId: "seed-despesas",
   },
   {
     title: "Contrato de Prestação de Serviços",
     description: "Contrato trimestral com empresa de consultoria. Prazo: 30 dias para revisão jurídica.",
-    n8nExecutionId: `seed-uat-2-${ts}`,
+    // Shares executionId with waiting contratos run
+    n8nExecutionId: `seed-flow-contratos-3-${ts}`,
     prumaFlowId: "seed-contratos",
   },
   {
@@ -160,7 +162,8 @@ const APPROVALS = [
   {
     title: "Contratação Estagiário Dev",
     description: "Aprovação para abertura de vaga de estágio em engenharia. Início previsto: 01/06.",
-    n8nExecutionId: `seed-uat-5-${ts}`,
+    // Shares executionId with waiting contratacao run
+    n8nExecutionId: `seed-flow-rh-3-${ts}`,
     prumaFlowId: "seed-contratacao",
   },
   {

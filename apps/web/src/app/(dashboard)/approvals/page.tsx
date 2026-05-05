@@ -1,14 +1,15 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { approvals, approvalFiles, users, flows } from "../../../../db/schema"
-import { eq, desc, and, gte, lte, ilike, sql } from "drizzle-orm"
+import { eq, desc, and, gte, lt, ilike, sql } from "drizzle-orm"
 import { Header } from "@/components/dashboard/header"
 import { ApprovalsSearchBar } from "./approvals-search-bar"
+import { ApprovalsFilters } from "./approvals-filters"
 import { ApprovalsTable } from "./approvals-table"
 import { getOrgHeaderData } from "@/lib/org-header-data"
 import { Download } from "lucide-react"
 
-const PAGE_SIZE = 50
+const PAGE_SIZE = 10
 
 // ── Status pill config ────────────────────────────────────────────────────────
 
@@ -51,25 +52,32 @@ export default async function ApprovalsPage({
   const page = Math.max(1, parseInt(sp.page ?? "1", 10))
 
   // ── Build WHERE conditions — orgId always first (multi-tenant isolation) ─────
-  const conditions = [eq(approvals.organizationId, orgId)]
+  // baseConditions: all filters except status — used for status pill counts
+  const baseConditions = [eq(approvals.organizationId, orgId)]
 
-  if (sp.status) {
-    conditions.push(eq(approvals.status, sp.status as "pending" | "approved" | "rejected"))
-  }
   if (sp.flowId) {
-    conditions.push(eq(approvals.flowId, sp.flowId))
+    baseConditions.push(eq(approvals.flowId, sp.flowId))
   }
   if (sp.dateFrom) {
-    const d = new Date(sp.dateFrom)
-    if (!isNaN(d.getTime())) conditions.push(gte(approvals.createdAt, d))
+    // 00:00 BRT = 03:00 UTC (UTC-3)
+    const d = new Date(sp.dateFrom + "T03:00:00Z")
+    if (!isNaN(d.getTime())) baseConditions.push(gte(approvals.createdAt, d))
   }
   if (sp.dateTo) {
-    const d = new Date(sp.dateTo)
-    if (!isNaN(d.getTime())) conditions.push(lte(approvals.createdAt, d))
+    // end of day BRT = next day 03:00 UTC
+    const d = new Date(sp.dateTo + "T03:00:00Z")
+    if (!isNaN(d.getTime())) {
+      d.setDate(d.getDate() + 1)
+      baseConditions.push(lt(approvals.createdAt, d))
+    }
   }
   if (sp.q) {
-    conditions.push(ilike(approvals.title, `%${sp.q}%`))
+    baseConditions.push(ilike(approvals.title, `%${sp.q}%`))
   }
+
+  const conditions = sp.status
+    ? [...baseConditions, eq(approvals.status, sp.status as "pending" | "approved" | "rejected")]
+    : baseConditions
 
   // ── Parallel fetch: rows + total count + org flows + file counts + status pills
   const [rows, [{ total }], orgFlows, fileRows, statusCounts] = await Promise.all([
@@ -111,11 +119,11 @@ export default async function ApprovalsPage({
       .from(approvalFiles)
       .where(eq(approvalFiles.organizationId, orgId)),
 
-    // Status counts for pills (unfiltered — full org counts so pills act as navigation)
+    // Status counts for pills — apply base filters (date/flow/q) so counts match current view
     db
       .select({ status: approvals.status, count: sql<number>`count(*)::int` })
       .from(approvals)
-      .where(eq(approvals.organizationId, orgId))
+      .where(and(...baseConditions))
       .groupBy(approvals.status),
   ])
 
@@ -131,6 +139,7 @@ export default async function ApprovalsPage({
     return acc
   }, {})
   const totalOrgCount = Object.values(countsByStatus).reduce((a, b) => a + b, 0)
+
 
   // Build current search params string (for export link + pagination hrefs)
   const currentSearchParams = new URLSearchParams(
@@ -149,68 +158,21 @@ export default async function ApprovalsPage({
           <div className="flex items-center gap-2 flex-wrap">
             <ApprovalsSearchBar defaultValue={sp.q} />
 
-            {/* Flow + date filters submitted as a native form (progressive enhancement) */}
-            <form method="get" action="/approvals" className="contents">
-              {sp.q && <input type="hidden" name="q" value={sp.q} />}
-              {sp.status && <input type="hidden" name="status" value={sp.status} />}
+            <ApprovalsFilters
+              orgFlows={orgFlows}
+              defaultFlowId={sp.flowId}
+              defaultDateFrom={sp.dateFrom}
+              defaultDateTo={sp.dateTo}
+            />
 
-              <label htmlFor="flowId" className="sr-only">
-                Fluxo
-              </label>
-              <select
-                id="flowId"
-                name="flowId"
-                defaultValue={sp.flowId ?? ""}
-                className="h-9 w-48 rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            {hasActiveFilters && (
+              <a
+                href="/approvals"
+                className="inline-flex items-center h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground hover:bg-muted/40 transition-colors"
               >
-                <option value="">Todos os fluxos</option>
-                {orgFlows.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
-
-              <label htmlFor="dateFrom" className="sr-only">
-                De
-              </label>
-              <input
-                id="dateFrom"
-                name="dateFrom"
-                type="date"
-                defaultValue={sp.dateFrom ?? ""}
-                className="h-9 w-36 rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              />
-
-              <label htmlFor="dateTo" className="sr-only">
-                Até
-              </label>
-              <input
-                id="dateTo"
-                name="dateTo"
-                type="date"
-                defaultValue={sp.dateTo ?? ""}
-                className="h-9 w-36 rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              />
-
-              {hasActiveFilters && (
-                <a
-                  href="/approvals"
-                  className="inline-flex items-center h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground hover:bg-muted/40 transition-colors"
-                >
-                  Limpar filtros
-                </a>
-              )}
-
-              <noscript>
-                <button
-                  type="submit"
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground hover:bg-muted/40 transition-colors"
-                >
-                  Aplicar
-                </button>
-              </noscript>
-            </form>
+                Limpar filtros
+              </a>
+            )}
           </div>
 
           {/* Line 2: status pills + export button */}
@@ -219,9 +181,14 @@ export default async function ApprovalsPage({
               {STAT_CONFIG.map((s) => {
                 const count = s.value === null ? totalOrgCount : (countsByStatus[s.value] ?? 0)
                 const isActive = (sp.status ?? null) === s.value
-                const href = s.value
-                  ? `/approvals?status=${s.value}${sp.q ? `&q=${encodeURIComponent(sp.q)}` : ""}`
-                  : `/approvals${sp.q ? `?q=${encodeURIComponent(sp.q)}` : ""}`
+                const pillParams = new URLSearchParams()
+                if (sp.q) pillParams.set("q", sp.q)
+                if (sp.dateFrom) pillParams.set("dateFrom", sp.dateFrom)
+                if (sp.dateTo) pillParams.set("dateTo", sp.dateTo)
+                if (sp.flowId) pillParams.set("flowId", sp.flowId)
+                if (s.value) pillParams.set("status", s.value)
+                const pillStr = pillParams.toString()
+                const href = pillStr ? `/approvals?${pillStr}` : "/approvals"
                 return (
                   <a
                     key={s.value ?? "all"}
@@ -258,6 +225,7 @@ export default async function ApprovalsPage({
           totalPages={totalPages}
           currentPage={page}
           totalCount={total}
+          pageSize={PAGE_SIZE}
           currentSearchParams={currentSearchParams}
         />
       </div>

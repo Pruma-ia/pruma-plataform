@@ -50,6 +50,7 @@ interface ApprovalsTableProps {
   totalPages: number
   currentPage: number
   totalCount: number
+  pageSize: number
   currentSearchParams: string
 }
 
@@ -61,6 +62,7 @@ export function ApprovalsTable({
   totalPages,
   currentPage,
   totalCount,
+  pageSize,
   currentSearchParams,
 }: ApprovalsTableProps) {
   // Build pagination hrefs by swapping ?page=
@@ -72,8 +74,8 @@ export function ApprovalsTable({
 
   const prevHref = buildPageHref(currentPage - 1)
   const nextHref = buildPageHref(currentPage + 1)
-  const showFrom = (currentPage - 1) * 50 + 1
-  const showTo = Math.min(currentPage * 50, totalCount)
+  const showFrom = (currentPage - 1) * pageSize + 1
+  const showTo = Math.min(currentPage * pageSize, totalCount)
 
   // Empty state: distinguish filtered-empty vs no approvals at all
   if (rows.length === 0) {
